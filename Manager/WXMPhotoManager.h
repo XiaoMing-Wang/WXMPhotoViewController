@@ -33,6 +33,9 @@
 
 + (instancetype)sharedInstance;
 
+/** 是否有权限 */
+- (BOOL)photoPermission;
+
 /** 获得所有的相册对象 */
 - (void)getAllPhotoListBlock:(void (^)(NSArray<WXMPhotoList *> *))block;
 
@@ -40,7 +43,8 @@
 - (NSArray<PHAsset *> *)getAllAssetInPhotoAblumWithAscending:(BOOL)ascending;
 
 /**  获取指定相册的所有图片 */
-- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection ascending:(BOOL)ascending;
+- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
+                                         ascending:(BOOL)ascending;
 
 /**
  *  取到对应的照片实体

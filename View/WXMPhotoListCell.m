@@ -54,7 +54,13 @@
 }
 
 @end
+
 /** 单个相册CollectionViewCell*/
+@interface WXMPhotoCollectionCell ()
+@property (nonatomic, strong) UIView *photoMaskView;
+@property (nonatomic, strong) UIImageView *imageView;
+@property (nonatomic, strong) WXMPhotoSignView *sign;
+@end
 @implementation WXMPhotoCollectionCell
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
@@ -63,13 +69,7 @@
         _imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
         _imageView.contentMode = UIViewContentModeScaleAspectFill;
         _imageView.clipsToBounds = YES;
-
-//        _seleIcon = [[UIImageView alloc] initWithFrame:CGRectMake(0, 2, 20, 20)];
-//        _seleIcon.right = self.width - 2;
-//        _seleIcon.hidden = YES;
-//        _seleIcon.image = [UIImage imageNamed:@"sign"];
         [self.contentView addSubview:_imageView];
-        [self.contentView addSubview:_seleIcon];
     }
     return self;
 }
@@ -84,6 +84,37 @@
             self.imageView.image = AssetImage;
             photoAsset.smallImage = AssetImage;
         }];
+    }
+}
+- (void)setPhotoType:(WXMPhotoDetailType)photoType {
+    _photoType = photoType;
+    if (photoType == WXMPhotoDetailTypeMultiSelect && !_photoMaskView && !_sign) {
+        CGFloat w = self.frame.size.width;
+        CGFloat h = self.frame.size.height;
+        _photoMaskView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
+        _photoMaskView.userInteractionEnabled = NO;
+        _photoMaskView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.65];
+        _sign = [[WXMPhotoSignView alloc] initWithSupViewSize:_imageView.frame.size];
+        [self.contentView addSubview:_photoMaskView];
+        [self.contentView addSubview:_sign];
+        _photoMaskView.hidden = YES;
+    }
+}
+- (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
+          indexPath:(NSIndexPath *)indexPath
+          signModel:(WXMPhotoSignModel *)signModel
+            respond:(BOOL)respond {
+    _sign.signModel = signModel;
+    _sign.delegate = delegate;
+    _sign.indexPath = indexPath;
+     
+    /** 白色蒙版 */
+    if (respond == NO) {
+        _photoMaskView.hidden = (signModel != nil);
+        _sign.userInteractionEnabled = _photoMaskView.hidden;
+    } else {
+        _photoMaskView.hidden = YES;
+        _sign.userInteractionEnabled = YES;
     }
 }
 @end

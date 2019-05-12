@@ -8,6 +8,10 @@
 
 #import <UIKit/UIKit.h>
 #import "WXMPhotoManager.h"
+#import "WXMPhotoConfiguration.h"
+#import "WXMPhotoSignView.h"
+#import "WXMPhotoSignModel.h"
+
 /** 全部相册UITableViewCell*/
 @interface WXMPhotoListCell : UITableViewCell
 @property (nonatomic, strong) WXMPhotoList *phoneList;
@@ -17,9 +21,13 @@
 
 /** 单个相册CollectionViewCell*/
 @interface WXMPhotoCollectionCell : UICollectionViewCell
-@property (nonatomic, strong) UIImageView *imageView;
-@property (nonatomic, strong) UIImageView *seleIcon;
 @property (nonatomic, strong) WXMPhotoAsset *photoAsset;
-//
-//- (void)setPhotoAsset:(PhotoAsset *)photoAsset mainThread:(BOOL)mainThread;
+@property (nonatomic, assign) WXMPhotoDetailType photoType;
+@property (nonatomic, assign) BOOL canRespond;
+
+/** 设置代理 */
+- (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
+          indexPath:(NSIndexPath *)indexPath
+          signModel:(WXMPhotoSignModel *)signModel
+            respond:(BOOL)respond;
 @end

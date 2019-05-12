@@ -24,7 +24,27 @@
     });
     return manager;
 }
-
+/** 是否有权限 */
+- (BOOL)photoPermission {
+    if (PHPhotoLibrary.authorizationStatus == AVAuthorizationStatusNotDetermined ||
+        PHPhotoLibrary.authorizationStatus == AVAuthorizationStatusAuthorized) {
+        return YES;
+    }
+    
+    NSString *msg = @"请在系统设置中打开“允许访问照片”，否则将无法获取照片";
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提示"
+                                                                   message:msg
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *cancle = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *action = [UIAlertAction actionWithTitle:@"去开启" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+    }];
+    [alert addAction:cancle];
+    [alert addAction:action];
+    UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
+    [window.rootViewController presentViewController:alert animated:YES completion:nil];
+    return NO;
+}
 /** 相册名称转换 */
 - (NSString *)transformAblumTitle:(NSString *)title {
     if ([title isEqualToString:@"Slo-mo"]) return @"慢动作";
@@ -153,7 +173,7 @@
                                                       targetSize:size
                                                      contentMode:PHImageContentModeAspectFill
                                                          options:option
-                                                   resultHandler:^(UIImage *_Nullable image, NSDictionary *_Nullable info) {
+                                                   resultHandler:^(UIImage *image, NSDictionary *info) {
                                                        dispatch_async(dispatch_get_main_queue(), ^{
                                                            completion(image);
                                                        });
@@ -166,12 +186,12 @@
     PHImageRequestOptions *option = [[PHImageRequestOptions alloc] init];
     option.resizeMode = PHImageRequestOptionsResizeModeNone;//控制照片尺寸
     option.synchronous = NO;
-    option.deliveryMode = PHImageRequestOptionsDeliveryModeOpportunistic;
+    option.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
     [[PHCachingImageManager defaultManager] requestImageForAsset:asset
                                                       targetSize:size
                                                      contentMode:PHImageContentModeAspectFill
                                                          options:option
-                                                   resultHandler:^(UIImage *_Nullable image, NSDictionary *_Nullable info) {
+                                                   resultHandler:^(UIImage *image, NSDictionary *info) {
                                                        dispatch_async(dispatch_get_main_queue(), ^{
                                                            completion(image);
                                                        });
@@ -195,7 +215,9 @@
 
 #pragma mark __________________________________________________ 获得指定相册的PHAsset资源
 
-- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection ascending:(BOOL)ascending {
+- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
+                                         ascending:(BOOL)ascending {
+    
     NSMutableArray<PHAsset *> *arr = @[].mutableCopy;
     PHFetchResult *result = [self fetchAssetsInAssetCollection:assetCollection ascending:ascending];
     [result enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
