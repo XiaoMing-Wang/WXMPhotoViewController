@@ -80,9 +80,9 @@
         PHAsset *asset = photoAsset.asset;
         CGSize size = CGSizeMake(iW, iW);
         WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
-        [manager getImageByAsset_Asynchronous:asset size:size completion:^(UIImage *AssetImage) {
-            self.imageView.image = AssetImage;
-            photoAsset.smallImage = AssetImage;
+        [manager getImageByAsset_Asynchronous:asset size:size completion:^(UIImage *assetImage) {
+            self.imageView.image = assetImage;
+            photoAsset.smallImage = assetImage;
         }];
     }
 }
@@ -111,10 +111,11 @@
     /** 白色蒙版 */
     if (respond == NO) {
         _photoMaskView.hidden = (signModel != nil);
-        _sign.userInteractionEnabled = _photoMaskView.hidden;
+        _sign.userInteraction = _photoMaskView.hidden;
     } else {
         _photoMaskView.hidden = YES;
-        _sign.userInteractionEnabled = YES;
+        _sign.userInteraction = YES;
     }
+    _canRespond = _photoMaskView.hidden;
 }
 @end

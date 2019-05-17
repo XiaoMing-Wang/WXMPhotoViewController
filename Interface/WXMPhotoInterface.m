@@ -18,13 +18,16 @@
 
 @implementation WXMPhotoInterface
 
-//+ (NSArray *)events {
-//    return @[@"1001",@"1000"];
-//}
-//+ (NSArray *)modules {
-//    return @[@"AModule"];
-//}
++ (NSArray *)events {
+    return @[@"1001",@"1000"];
+}
++ (NSArray *)modules {
+    return @[@"WXMPhotoInterFaceProtocol"];
+}
 + (void)providedEventModule_event:(NSString *)module_event eventObj:(id)eventObj {
+    /** WXMPhotoInterFaceProtocol:1000 */
+    
+    
     NSLog(@"%@",module_event);
 }
 /** 判断权限 */

@@ -5,6 +5,11 @@
 //  Created by edz on 2019/5/12.
 //  Copyright © 2019年 wq. All rights reserved.
 //
+#define WXMPhoto_Width [UIScreen mainScreen].bounds.size.width
+#define WXMPhoto_Height [UIScreen mainScreen].bounds.size.height
+#define WXMPhoto_IPHONEX ((WXMPhoto_Height == 812.0f) ? YES : NO)
+#define WXMPhoto_BarHeight ((WXMPhoto_IPHONEX) ? 88.0f : 64.0f)
+#define WXMPhoto_RGBColor(r, g, b) [UIColor colorWithRed:(r)/255.0f green:(g)/255.0f blue:(b)/255.0f alpha:1]
 
 #ifndef WXMPhotoConfiguration_h
 #define WXMPhotoConfiguration_h
@@ -17,19 +22,25 @@
 #define WXMBarTitleColor [[UIColor blackColor] colorWithAlphaComponent:1]
 
 /** 导航栏线条颜色  */
-#define WXMBarLineColor [[UIColor whiteColor] colorWithAlphaComponent:1]
+#define WXMBarLineColor [[UIColor whiteColor] colorWithAlphaComponent:0]
 
 /** 选中图标颜色  */
 #define WXMSelectedColor [[UIColor greenColor] colorWithAlphaComponent:1]
 
 /** 选中图标大小  */
-#define WXMSelectedWH 20.5
+#define WXMSelectedWH 20
 
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
 #define WXMMultiSelectMax 4
 
 /** 默认传递大小  */
 #define WXMDefaultSize CGSizeMake(200, 200 * 1.78)
+
+/** 预览间距 */
+#define WXMPhotoPreviewSpace 20
+
+/** 手势下拉缩小最小倍数 */
+#define WXMPhotoMinification 0.3
 
 
 /** 类型 */
@@ -41,15 +52,32 @@ typedef NS_ENUM(NSInteger, WXMPhotoDetailType) {
     WXMPhotoDetailTypeTailoring = 4,    /* 裁剪 */
 };
 
-/** 相册回调协议 */
+/** 获取相册回调协议 */
 @protocol WXMPhotoProtocol <NSObject>
 @optional;
 - (void)wxm_singlePhotoAlbumWithImage:(UIImage *)image;
 - (void)wxm_morePhotoAlbumWithImages:(NSArray<UIImage *>*)images;
 @end
 
-/** 点击标记选中view回调 WXMPhotoDetailTypeMultiSelect模式 */
+#pragma mark _____________________________________________ 多选模式
+/** 点击标记Sign选中view回调 WXMPhotoDetailTypeMultiSelect模式 */
 @protocol WXMPhotoSignProtocol <NSObject>
 - (NSInteger)touchWXMPhotoSignView:(NSIndexPath *)index selected:(BOOL)selected;
 @end
+
+/** 预览缩放cell回调 */
+@protocol WXMPreviewCellProtocol <NSObject>
+- (void)wxm_respondsToTapSingle;
+- (void)wxm_respondsBeginDragCell;
+- (void)wxm_respondsEndDragCell:(UIScrollView *)jump;
+@end
+
+/** 工具栏回调 */
+@protocol WXMPreviewToolbarProtocol <NSObject>
+- (void)wxm_touchTopLeftItem;
+- (void)wxm_touchTopRightItem:(id)obj;
+- (void)wxm_touchButtomFinsh;
+@end
+
+
 #endif /* WXMPhotoConfiguration_h */

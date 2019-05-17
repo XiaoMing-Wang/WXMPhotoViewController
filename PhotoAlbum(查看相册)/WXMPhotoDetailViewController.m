@@ -18,12 +18,14 @@
 #import "WXMPhotoManager.h"
 #import "WXMPhotoListCell.h"
 #import "WXMPhotoSignModel.h"
+#import "WXMPhotoPreviewController.h"
 
 @interface WXMPhotoDetailViewController () <
-    UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
+UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) NSMutableArray *dataSource;
 @property (nonatomic, strong) NSMutableDictionary *signDictionary;
+@property (nonatomic, strong) UIImage *naviImage;
 @property (nonatomic, assign) BOOL sign;
 @end
 
@@ -95,6 +97,8 @@
     WXMPhotoAsset *phsset = self.dataSource[indexPath.row];
     PHAsset *asset = phsset.asset;
     NSString *indexString = @(indexPath.row).stringValue;
+    BOOL respond = (self.signDictionary.allKeys.count < WXMMultiSelectMax);
+    WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)[collectionView cellForItemAtIndexPath:indexPath];
     
     /** 获取图片 */
     if (_photoType == WXMPhotoDetailTypeGetPhoto) {
@@ -104,6 +108,7 @@
         }];
     }
     
+    
     /** 获取256图片  */
     if (_photoType == WXMPhotoDetailTypeGetPhoto_256) {
         size = CGSizeMake(256, 256);
@@ -112,6 +117,7 @@
             [self dismissViewController];
         }];
     }
+    
     
     /** 多选 (点图标) */
     if (_photoType == WXMPhotoDetailTypeMultiSelect && self.sign) {
@@ -126,20 +132,49 @@
             [self.signDictionary setObject:signModel forKey:indexString];
             if (self.signDictionary.allKeys.count>=WXMMultiSelectMax) [self.collectionView reloadData];
         }];
+        return;
     }
     
     
     /** 多选 (点大图)) */
     if (_photoType == WXMPhotoDetailTypeMultiSelect && !self.sign) {
-        size = CGSizeEqualToSize(self.expectSize, CGSizeZero) ? WXMDefaultSize : self.expectSize;
-        [manager getImageByAsset_Synchronous:asset size:size completion:^(UIImage * image) {
-            
+        if (respond == NO && cell.canRespond == NO) return;
+        size = CGSizeMake(KWidth, KHeight);
+        [manager getImageByAsset_Synchronous:asset size:size completion:^(UIImage *assetImage) {
+            phsset.bigImage = assetImage;
+            WXMPhotoPreviewController * preview = [WXMPhotoPreviewController new];
+            preview.dataSource = self.dataSource;
+            preview.signDictionary = self.signDictionary;
+            preview.indexPath = indexPath;
+            preview.windowImage = [self makeNavigationControllerViewImage:self.navigationController.view];
+            self.naviImage = preview.windowImage;
+            [self.navigationController pushViewController:preview animated:YES];
+            preview.callback = ^NSDictionary *(NSInteger index,NSInteger rank) {
+                return [self previewCallBack:index rank:rank];
+            };
         }];
     }
-    
-    
 }
-
+/**预览模式回调 */
+- (NSDictionary *)previewCallBack:(NSInteger)index rank:(NSInteger)rank{
+    NSString *indexString = @(index).stringValue;
+    if ([self.signDictionary.allKeys containsObject:indexString]) {
+        [self.signDictionary removeObjectForKey:indexString];
+        [self signDictionarySorting:rank];
+        [self.collectionView reloadData];
+    } else {
+        NSIndexPath * indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+        WXMPhotoAsset *phsset = self.dataSource[index];
+        WXMPhotoSignModel *signModel = [WXMPhotoSignModel new];
+        signModel.albumName = self.phoneList.title;
+        signModel.rank = self.signDictionary.allKeys.count + 1;
+        signModel.indexPath = indexPath;
+        signModel.image = phsset.smallImage;
+        [self.signDictionary setObject:signModel forKey:indexString];
+        [self.collectionView reloadData];
+    }
+    return self.signDictionary;
+}
 /** 多选模式下的回调 */
 - (NSInteger)touchWXMPhotoSignView:(NSIndexPath *)index selected:(BOOL)selected {
     if (selected) {
@@ -192,5 +227,17 @@
         [_collectionView registerClass:[WXMPhotoCollectionCell class] forCellWithReuseIdentifier:@"cell"];
     }
     return _collectionView;
+}
+- (UICollectionView *)transitionCollectionView {
+    return _collectionView;
+}
+/** 截图 */
+- (UIImage *)makeNavigationControllerViewImage:(UIView *)screenshots {
+    CGSize size = CGSizeMake(KWidth, KHeight);
+    UIGraphicsBeginImageContextWithOptions(size, NO, [UIScreen mainScreen].scale);
+    [screenshots.layer renderInContext:UIGraphicsGetCurrentContext()];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return image;
 }
 @end

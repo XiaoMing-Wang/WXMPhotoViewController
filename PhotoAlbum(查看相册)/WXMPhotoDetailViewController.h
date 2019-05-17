@@ -15,6 +15,7 @@
 @property (nonatomic, assign) WXMPhotoDetailType photoType;
 @property (nonatomic, assign) CGSize expectSize;
 @property (nonatomic, weak) id<WXMPhotoProtocol> delegate;
-@property (nonatomic, strong) void (^results) (UIImage * image);
+@property (nonatomic, strong) void (^results)(UIImage *image);
 @property (nonatomic, strong) void (^resultArray)(NSArray<UIImage *> *images);
+- (UICollectionView *)transitionCollectionView;
 @end

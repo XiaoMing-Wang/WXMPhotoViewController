@@ -51,6 +51,11 @@
 
 /** 点击 */
 - (void)touchEvent {
+    if (self.userInteraction == NO) {
+        [self showAlertController];
+        return;
+    }
+    
     self.selected = !self.selected;
     [self setProperties];
     if (self.delegate && [self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
@@ -80,6 +85,20 @@
     self.selected = (signModel != nil);
     [self setProperties];
     self.numberLabel.text = @(signModel.rank).stringValue;
-    //NSLog(@"%zd",signModel.rank);
+}
+/** 提示框 */
+- (void)showAlertController {
+    NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
+                                                                   message:@""
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *c = [UIAlertAction actionWithTitle:@"知道了" style:UIAlertActionStyleCancel handler:nil];
+    [alert addAction:c];
+    UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
+    UIViewController * vc = window.rootViewController;
+    if (window.rootViewController.presentedViewController)  {
+        vc = window.rootViewController.presentedViewController;
+    }
+    [vc presentViewController:alert animated:YES completion:nil];
 }
 @end
