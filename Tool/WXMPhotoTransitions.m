@@ -10,6 +10,8 @@
 #import "WXMPhotoDetailViewController.h"
 #import "WXMPhotoConfiguration.h"
 #import <objc/runtime.h>
+#import "WXMPhotoImageView.h"
+
 @interface WXMPhotoTransitions ()
 @property (nonatomic, assign) CGFloat scale;
 @property (nonatomic, strong) UIView *mask;
@@ -22,7 +24,7 @@
     return transitions;
 }
 - (NSTimeInterval)transitionDuration:(id <UIViewControllerContextTransitioning>)transitionContext{
-    return 0.5;
+    return 0.35;
 }
 - (void)animateTransition:(id <UIViewControllerContextTransitioning>)transitionContext {
     if (self.transitionsType == WXMPhotoTransitionsTypePush) {
@@ -39,7 +41,6 @@
 
 /** pop */
 - (void)popWithTransitionContext:(id <UIViewControllerContextTransitioning>)transitionContext {
-    NSLog(@"22222");
     
     WXMPhotoDetailViewController *toViewController = [transitionContext
         viewControllerForKey:UITransitionContextToViewControllerKey];
@@ -48,50 +49,53 @@
     UIView *toView = toViewController.view;
     UIView *fromView = fromViewController.view;
     
-    UIScrollView *scr = fromViewController.transitionScrollerView;
-    NSInteger row = fromViewController.transitionIndex;
-    UICollectionView *collectionView = toViewController.transitionCollectionView;
-    
-    NSIndexPath * indexPath = [NSIndexPath indexPathForRow:row inSection:0];
-    UICollectionViewCell *cell = [collectionView cellForItemAtIndexPath:indexPath];
-    UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-    CGRect aRect = [cell convertRect:cell.bounds toView:window];
-    
-    /** from */
-    UIImageView *mainImageView = [self mainImageView:scr];
-    UIImageView *blackView = objc_getAssociatedObject(scr, @"black");
-    CGFloat scale = mainImageView.frame.size.height / mainImageView.frame.size.width;
-    [mainImageView removeFromSuperview];
-    
-    /** wrap */
-    CGRect rect = CGRectMake(0, 0, scr.frame.size.width, scr.frame.size.width * scale);
-    UIImageView *wrapImageView = [[UIImageView alloc] initWithFrame:rect];
-    wrapImageView.center = scr.center;
-    wrapImageView.image = mainImageView.image;
-    wrapImageView.contentMode = UIViewContentModeScaleAspectFill;
-    wrapImageView.clipsToBounds = YES;
-    
-    [self setMaskview:wrapImageView.frame mRect:aRect];
-    wrapImageView.maskView = self.mask;
-    
-    [[transitionContext containerView] insertSubview:toView belowSubview:fromView];
-    [[transitionContext containerView] addSubview:wrapImageView];
-    [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
-        if (CGRectEqualToRect(aRect, CGRectZero))  wrapImageView.alpha = 0;
-        if (!CGRectEqualToRect(aRect, CGRectZero)) {
-            wrapImageView.frame = aRect;
-            self.mask.frame = CGRectMake(0, 0, aRect.size.width, aRect.size.height);
-            CGRect rect = self.maskContent.frame;
-            rect.origin.y = aRect.size.height * self.scale;
-            rect.size.width = aRect.size.width;
-            rect.size.height = aRect.size.height;
-            self.maskContent.frame = rect;
+    @autoreleasepool {
+        UIScrollView *scr = fromViewController.transitionScrollerView;
+        NSInteger row = fromViewController.transitionIndex;
+        UICollectionView *collectionView = toViewController.transitionCollectionView;
+        if (collectionView) {
+            NSIndexPath * indexPath = [NSIndexPath indexPathForRow:row inSection:0];
+            UICollectionViewCell *cell = [collectionView cellForItemAtIndexPath:indexPath];
+            UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
+            CGRect aRect = [cell convertRect:cell.bounds toView:window];
+            
+            /** from */
+            UIImageView *mainImageView = [self mainImageView:scr];
+            UIImageView *blackView = objc_getAssociatedObject(scr, @"black");
+            CGFloat scale = mainImageView.frame.size.height / mainImageView.frame.size.width;
+            [mainImageView removeFromSuperview];
+            
+            /** wrap */
+            CGRect rect = CGRectMake(0, 0, scr.frame.size.width, scr.frame.size.width * scale);
+            WXMPhotoImageView *wrapImageView = [[WXMPhotoImageView alloc] initWithFrame:rect];
+            wrapImageView.center = scr.center;
+            wrapImageView.image = mainImageView.image;
+            wrapImageView.contentMode = UIViewContentModeScaleAspectFill;
+            wrapImageView.clipsToBounds = YES;
+            
+            [self setMaskview:wrapImageView.frame mRect:aRect];
+            wrapImageView.maskView = self.mask;
+            
+            [[transitionContext containerView] insertSubview:toView belowSubview:fromView];
+            [[transitionContext containerView] addSubview:wrapImageView];
+            [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
+                if (CGRectEqualToRect(aRect, CGRectZero))  wrapImageView.alpha = 0;
+                if (!CGRectEqualToRect(aRect, CGRectZero)) {
+                    wrapImageView.frame = aRect;
+                    self.mask.frame = CGRectMake(0, 0, aRect.size.width, aRect.size.height);
+                    CGRect rect = self.maskContent.frame;
+                    rect.origin.y = aRect.size.height * self.scale;
+                    rect.size.width = aRect.size.width;
+                    rect.size.height = aRect.size.height;
+                    self.maskContent.frame = rect;
+                }
+                blackView.alpha = 0;
+            } completion:^(BOOL finished) {
+                [wrapImageView removeFromSuperview];
+                [transitionContext completeTransition:!transitionContext.transitionWasCancelled];
+            }];
         }
-        blackView.alpha = 0;
-    } completion:^(BOOL finished) {
-        [wrapImageView removeFromSuperview];
-        [transitionContext completeTransition:!transitionContext.transitionWasCancelled];
-    }];
+    }
 }
 - (UIImageView *)mainImageView:(UIScrollView *)scrollView {
     __block UIImageView * imageView = nil;

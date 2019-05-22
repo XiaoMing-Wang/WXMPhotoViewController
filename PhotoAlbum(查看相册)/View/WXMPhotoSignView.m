@@ -7,14 +7,13 @@
 //
 #import "WXMPhotoConfiguration.h"
 #import "WXMPhotoSignView.h"
+
 @interface WXMPhotoSignView ()
 @property (nonatomic, assign) CGSize supSize;
-@property (nonatomic, strong) UIView *contentView;
-@property (nonatomic, strong) UILabel *numberLabel;
+@property (nonatomic, strong) UIButton *contentView;
 @end
 @implementation WXMPhotoSignView
 
-/**  */
 - (instancetype)initWithSupViewSize:(CGSize)size {
     if (self = [super initWithFrame:CGRectZero]) {
         self.supSize = size;
@@ -31,21 +30,14 @@
     self.frame = CGRectMake(supWH * 0.5, 0, supWH * 0.5, supWH * 0.4);
     [self addTarget:self action:@selector(touchEvent) forControlEvents:UIControlEventTouchUpInside];
 
-    _contentView = [[UIView alloc] initWithFrame:CGRectMake(x, y, wh, wh)];
-    _contentView.layer.cornerRadius = wh / 2;
-    _contentView.layer.borderWidth = 1;
-    _contentView.layer.borderColor = [UIColor whiteColor].CGColor;
+    _contentView = [[UIButton alloc] initWithFrame:CGRectMake(x, y, wh, wh)];
     _contentView.userInteractionEnabled = NO;
+    _contentView.titleLabel.font = [UIFont systemFontOfSize:WXMSelectedFont];
     
-    _numberLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, wh, wh)];
-    _numberLabel.textAlignment = NSTextAlignmentCenter;
-    _numberLabel.text = @"1";
-    _numberLabel.font = [UIFont systemFontOfSize:15];
-    _numberLabel.textColor = [UIColor whiteColor];
-    _numberLabel.hidden = YES;
-    _numberLabel.userInteractionEnabled = NO;
-    [_contentView addSubview:_numberLabel];
-    
+    UIImage *normal = [UIImage imageNamed:@"photo_sign_default"];
+    UIImage *selected = [UIImage imageNamed:@"photo_sign_background"];
+    [_contentView setBackgroundImage:normal forState:UIControlStateNormal];
+    [_contentView setBackgroundImage:selected forState:UIControlStateSelected];
     [self addSubview:_contentView];
 }
 
@@ -58,47 +50,39 @@
     
     self.selected = !self.selected;
     [self setProperties];
+    [self setAnimation];
+    
     if (self.delegate && [self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
         NSInteger count = [self.delegate touchWXMPhotoSignView:self.indexPath selected:self.selected];
-        if (count >= 0 && count < WXMMultiSelectMax) self.numberLabel.text = @(count+1).stringValue;
+        if (count >= 0 && count < WXMMultiSelectMax)  {
+            [self.contentView setTitle:@(count + 1).stringValue forState:UIControlStateSelected];
+        }
     }
-    [self setAnimation];
 }
 
 /** 设置属性 */
 - (void)setProperties {
-    self.numberLabel.text = @"";
-    self.contentView.backgroundColor = self.selected ? WXMSelectedColor : [UIColor clearColor];
-    self.contentView.layer.borderColor = (self.selected ?[UIColor clearColor]:[UIColor whiteColor]).CGColor;
-    self.numberLabel.hidden = !self.selected;
+    self.contentView.selected = self.selected;
+    [self.contentView setTitle:@"" forState:UIControlStateNormal];
+    [self.contentView setTitle:@"" forState:UIControlStateSelected];
 }
 /** 设置动画 */
 - (void)setAnimation {
-    if (self.numberLabel.hidden) return;
+    if (!self.selected) return;
     self.contentView.transform = CGAffineTransformMakeScale(0.3, 0.3);
     [UIView animateWithDuration:1.f delay:0 usingSpringWithDamping:0.4 initialSpringVelocity:0.0 options:UIViewAnimationOptionLayoutSubviews animations:^{
         self.contentView.transform = CGAffineTransformIdentity;
     } completion:nil];
 }
-/**  */
+/** 赋值 */
 - (void)setSignModel:(WXMPhotoSignModel *)signModel {
     self.selected = (signModel != nil);
     [self setProperties];
-    self.numberLabel.text = @(signModel.rank).stringValue;
+    [self.contentView setTitle:@(signModel.rank).stringValue forState:UIControlStateSelected];
 }
 /** 提示框 */
 - (void)showAlertController {
     NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
-                                                                   message:@""
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *c = [UIAlertAction actionWithTitle:@"知道了" style:UIAlertActionStyleCancel handler:nil];
-    [alert addAction:c];
-    UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
-    UIViewController * vc = window.rootViewController;
-    if (window.rootViewController.presentedViewController)  {
-        vc = window.rootViewController.presentedViewController;
-    }
-    [vc presentViewController:alert animated:YES completion:nil];
+    [WXMPhotoAssistant showAlertViewControllerWithTitle:title message:@"" cancel:@"知道了" otherAction:nil completeBlock:nil];
 }
 @end

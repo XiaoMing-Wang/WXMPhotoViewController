@@ -12,6 +12,7 @@
 #import "WXMPreviewBottom.h"
 #import "WXMPhotoTransitions.h"
 
+
 @interface WXMPhotoPreviewController ()<UICollectionViewDelegate, UICollectionViewDataSource,WXMPreviewCellProtocol,WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, weak) UINavigationController *weakNavigationVC;
@@ -38,7 +39,6 @@
     self.view.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:1.0];
     if (self.windowImage) self.view.layer.contents = (id)self.windowImage.CGImage;
     [self.view addSubview:self.collectionView];
-
     
     self.navigationController.navigationBar.translucent = YES;
     self.automaticallyAdjustsScrollViewInsets = NO;
@@ -49,7 +49,8 @@
     self.navigationController.navigationBar.shadowImage = [[UIImage alloc] init];
     self.navigationController.navigationBar.backgroundColor = [UIColor clearColor];
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
-    [self.navigationController.navigationBar setBackgroundImage:[self imageWithColor:whiteColor] forBarMetrics:UIBarMetricsDefault];
+    UIImage *imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
+    [self.navigationController.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
     
     @try {
         UIViewController * firstVC = self.navigationController.viewControllers.firstObject;
@@ -63,6 +64,7 @@
     [self.view addSubview:self.bottomView];
     
     /**  */
+    if (_dataSource.count <= 1) self.collectionView.alwaysBounceHorizontal = YES;
     if (_dataSource.count <= _indexPath.row) return;
     self.selectedIndex = self.indexPath.row;
     NSIndexPath * index = [NSIndexPath indexPathForRow:self.indexPath.row inSection:0];
@@ -184,29 +186,19 @@
     self.topView.signModel = [self.signDictionary objectForKey:indexString];
     self.bottomView.seletedIdx = location;
 }
-- (UIImage *)imageWithColor:(UIColor *)color {
-    CGRect rect = CGRectMake(0, 0, 1, 1);
-    UIGraphicsBeginImageContext(rect.size);
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextSetFillColorWithColor(context, [color CGColor]);
-    CGContextFillRect(context, rect);
-    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    return image;
-}
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
     self.lastStatusBarStyle = [UIApplication sharedApplication].statusBarStyle;
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
-    UIImage * image = [self imageWithColor:whiteColor];
+    UIImage * image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
     [self.weakNavigationVC.navigationBar setBackgroundImage:image forBarMetrics:UIBarMetricsDefault];
 }
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:1.0];
-    UIImage * image = [self imageWithColor:whiteColor];
+    UIImage * image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
     [self.weakNavigationVC.navigationBar setBackgroundImage:image forBarMetrics:UIBarMetricsDefault];
 }
 - (void)viewWillDisappear:(BOOL)animated {
@@ -244,17 +236,8 @@
 /** 提示框 */
 - (void)showAlertController {
     NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
-                                                                   message:@""
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *c = [UIAlertAction actionWithTitle:@"知道了" style:UIAlertActionStyleCancel handler:nil];
-    [alert addAction:c];
-    UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
-    UIViewController * vc = window.rootViewController;
-    if (window.rootViewController.presentedViewController)  {
-        vc = window.rootViewController.presentedViewController;
-    }
-    [vc presentViewController:alert animated:YES completion:nil];
+    [WXMPhotoAssistant showAlertViewControllerWithTitle:title message:@"" cancel:@"知道了"
+                                            otherAction:nil completeBlock:nil];
 }
 - (UIScrollView *)transitionScrollerView {
     return self.transitionScrollView;
@@ -262,7 +245,10 @@
 - (NSInteger)transitionIndex {
     return self.selectedIndex;
 }
-- (id<UIViewControllerAnimatedTransitioning>)navigationController:(UINavigationController *)navigationController animationControllerForOperation:(UINavigationControllerOperation)operation fromViewController:(UIViewController *)fromVC toViewController:(UIViewController *)toVC {
+- (id<UIViewControllerAnimatedTransitioning>)navigationController:(UINavigationController *)navigationController
+                                  animationControllerForOperation:(UINavigationControllerOperation)operation
+                                               fromViewController:(UIViewController *)fromVC
+                                                 toViewController:(UIViewController *)toVC {
     if (operation == UINavigationControllerOperationPop) {
         return [WXMPhotoTransitions photoTransitionsWithType:WXMPhotoTransitionsTypePop];
     }

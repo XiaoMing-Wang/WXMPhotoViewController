@@ -32,7 +32,7 @@
 }
 /** 判断权限 */
 - (id)photoPermission {
-    return @([WXMPhotoManager sharedInstance].photoPermission);
+    return @([WXMPhotoManager sharedInstance].wxm_photoPermission);
 }
 
 /** 获取相册 */
@@ -46,7 +46,7 @@
 /** 获取相册路由方式 */
 - (UIViewController *)routeAchieveWXMPhotoViewController:(void (^)(id obj))results {
     WXMPhotoViewController * vc = [WXMPhotoViewController new];
-    vc.photoType = WXMPhotoDetailTypeMultiSelect;
+    vc.photoType = WXMPhotoDetailTypeTailoring;
     if (results) vc.results = results;
     UINavigationController * nav = [[UINavigationController alloc] initWithRootViewController:vc];
     return nav;

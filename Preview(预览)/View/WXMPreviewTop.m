@@ -9,8 +9,11 @@
 #import "WXMPreviewTop.h"
 @interface WXMPreviewTop ()
 @property (nonatomic, strong) UIButton *leftButton;
-@property (nonatomic, strong) UIView *increaseView;
-@property (nonatomic, strong) UILabel *numberLabel;
+@property (nonatomic, strong) UIButton *rightButton;
+@property (nonatomic, strong) UIButton *rightSubItem;
+
+//@property (nonatomic, strong) UIImageView *increaseView;
+//@property (nonatomic, strong) UILabel *numberLabel;
 @end
 @implementation WXMPreviewTop
 
@@ -32,63 +35,59 @@
     imageView.userInteractionEnabled = NO;
     [_leftButton addSubview:imageView];
     [_leftButton addTarget:self action:@selector(leftItem) forControlEvents:UIControlEventTouchUpInside];
-    [self addSubview:_leftButton];
-    
+   
     CGFloat x = WXMPhoto_Width - 74;
-    CGFloat wh = 21;
-    UIButton * rightButton = [[UIButton alloc] initWithFrame:CGRectMake(x, status, 74, 44)];
-    [rightButton addTarget:self action:@selector(rightItem) forControlEvents:UIControlEventTouchUpInside];
-    _increaseView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, wh, wh)];
-    _increaseView.center = CGPointMake(rightButton.frame.size.width/2+16,rightButton.frame.size.height/2);
-    _increaseView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0];
-    _increaseView.layer.cornerRadius = _increaseView.frame.size.width / 2;
-    _increaseView.layer.borderWidth = 1;
-    _increaseView.layer.borderColor = [UIColor whiteColor].CGColor;
-    _increaseView.userInteractionEnabled = NO;
+    CGFloat itemWH = 28;
+    CGFloat subX = 74 - itemWH - 12;
     
-    _numberLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, wh, wh)];
-    _numberLabel.textAlignment = NSTextAlignmentCenter;
-    _numberLabel.font = [UIFont systemFontOfSize:15];
-    _numberLabel.textColor = [UIColor whiteColor];
-    _numberLabel.hidden = YES;
-    _numberLabel.userInteractionEnabled = NO;
-    [_increaseView addSubview:_numberLabel];
+    _rightButton = [[UIButton alloc] initWithFrame:CGRectMake(x, status, 74, _leftButton.frame.size.height)];
+    [_rightButton addTarget:self action:@selector(rightItem) forControlEvents:UIControlEventTouchUpInside];
+    _rightSubItem = [[UIButton alloc] initWithFrame:CGRectMake(subX, 0, itemWH, itemWH)];
+    _rightSubItem.userInteractionEnabled = NO;
+    _rightSubItem.titleLabel.font = [UIFont systemFontOfSize:WXMSelectedFont];
     
-    [rightButton addSubview:_increaseView];
-    [self addSubview:rightButton];
-    /** [_leftButton addTarget:self action:@selector(buttonClick:)
-     * forControlEvents:UIControlEventTouchUpInside]; */
+    UIImage *normal = [UIImage imageNamed:@"photo_sign_default"];
+    UIImage *selected = [UIImage imageNamed:@"photo_sign_background"];
+    [_rightSubItem setBackgroundImage:normal forState:UIControlStateNormal];
+    [_rightSubItem setBackgroundImage:selected forState:UIControlStateSelected];
+    _rightSubItem.center = CGPointMake(_rightSubItem.center.x,_rightButton.frame.size.height / 2);
+    [_rightButton addSubview:_rightSubItem];
+    
+    [self addSubview:_leftButton];
+    [self addSubview:_rightButton];
 }
+
 /** 设置左按钮是否显示 */
 - (void)setShowLeft:(BOOL)showLeft {
     _showLeft = showLeft;
     _leftButton.hidden = !showLeft;
 }
+
 - (void)setSignModel:(WXMPhotoSignModel *)signModel {
     _signModel = signModel;
     if (signModel == nil) {
-        _numberLabel.hidden = YES;
-        _increaseView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0];
-        _increaseView.layer.borderColor = [UIColor whiteColor].CGColor;
+        self.rightSubItem.selected = NO;
+        [self.rightSubItem setTitle:@"" forState:UIControlStateSelected];
     } else {
-        _numberLabel.hidden = NO;
-        _numberLabel.text = @(signModel.rank).stringValue;
-        _increaseView.backgroundColor = [WXMSelectedColor colorWithAlphaComponent:0.6];
-        _increaseView.layer.borderColor = [UIColor clearColor].CGColor;
+        self.rightSubItem.selected = YES;
+        [self.rightSubItem setTitle:@(signModel.rank).stringValue forState:UIControlStateSelected];
     }
 }
+
 /** 左按钮 */
 - (void)leftItem {
     if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_touchTopLeftItem)]) {
         [self.delegate wxm_touchTopLeftItem];
     }
 }
+
 /** 右按钮 */
 - (void)rightItem {
     if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_touchTopRightItem:)]) {
         [self.delegate wxm_touchTopRightItem:self.signModel];
     }
 }
+
 /** 显示隐藏 */
 - (void)setAccordingState:(BOOL)state {
     if (state) self.hidden = NO;

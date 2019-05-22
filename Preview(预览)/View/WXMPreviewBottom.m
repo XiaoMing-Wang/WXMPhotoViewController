@@ -10,8 +10,9 @@
 #import "WXMPhotoSignModel.h"
 
 @interface WXMPreviewBottom ()
-@property (nonatomic, strong) UIScrollView *photoView;
-@property (nonatomic, strong) UIView *actionView;
+@property (nonatomic, strong) UIScrollView *photoScrollView;
+@property (nonatomic, strong) UIView *finshView;
+@property (nonatomic, strong) UIView *line;
 @property (nonatomic, assign) BOOL wxm_loadFinsh;
 @property (nonatomic, strong) NSMutableDictionary *rankDictionary;
 @end
@@ -21,6 +22,7 @@
     if (self = [super initWithFrame:frame]) [self setupInterface];
     return self;
 }
+
 /** 初始化界面 */
 - (void)setupInterface {
     CGFloat h = 125;
@@ -28,23 +30,29 @@
     self.frame = CGRectMake(0, y, WXMPhoto_Width, h);
     _rankDictionary = @{}.mutableCopy;
     
-    _photoView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, 80)];
-    _photoView.backgroundColor = WXMPhoto_RGBColor(33, 33, 33);
-    _photoView.alpha = 0;
+    /** 上半部分预览 */
+    _photoScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, 80)];
+    _photoScrollView.backgroundColor = WXMPhoto_RGBColor(33, 33, 33);
+    _photoScrollView.showsHorizontalScrollIndicator = NO;
+    _photoScrollView.showsVerticalScrollIndicator = NO;
+    _photoScrollView.alpha = 0;
     
-    _actionView = [[UIView alloc] initWithFrame:CGRectMake(0, 80, WXMPhoto_Width, h - 80)];
-    _actionView.backgroundColor = WXMPhoto_RGBColor(33, 33, 33);
+    /** 下半部分按钮 */
+    _finshView = [[UIView alloc] initWithFrame:CGRectMake(0, 80, WXMPhoto_Width, h - 80)];
+    _finshView.backgroundColor = WXMPhoto_RGBColor(33, 33, 33);
     
-    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 80 - 0.5, WXMPhoto_Width, 0.5)];
-    line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.25];
+    _line = [[UIView alloc] initWithFrame:CGRectMake(0, 80 - 0.5, WXMPhoto_Width, 0.5)];
+    _line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.25];
+    _line.alpha = 0;
     
-    [self addSubview:_photoView];
-    [self addSubview:_actionView];
-    [_photoView addSubview:line];
-    [self setUpActionView];
+    [self addSubview:_photoScrollView];
+    [self addSubview:_finshView];
+    [self addSubview:_line];
+    [self setUpFinshView];
 }
-/** ActionView */
-- (void)setUpActionView {
+
+/** FinshView */
+- (void)setUpFinshView {
     CGFloat x = WXMPhoto_Width - 60 - 10;
     UIButton * finish = [[UIButton alloc] initWithFrame:CGRectMake(x, 7.5, 60, 30)];
     finish.titleLabel.font = [UIFont systemFontOfSize:13];
@@ -53,7 +61,7 @@
     finish.backgroundColor = WXMSelectedColor;
     finish.layer.cornerRadius = 4;
     [finish addTarget:self action:@selector(finish) forControlEvents:UIControlEventTouchUpInside];
-    [_actionView addSubview:finish];
+    [_finshView addSubview:finish];
 }
 
 /** 完成按钮 */
@@ -62,6 +70,8 @@
         [self.delegate wxm_touchButtomFinsh];
     }
 }
+
+/** 赋值 */
 - (void)setSignDictionary:(NSMutableDictionary *)signDictionary {
     _signDictionary = signDictionary;
     [self setUpPhotoView:signDictionary];
@@ -73,21 +83,25 @@
 - (void)setUpPhotoView:(NSDictionary *)dic {
     if (self.wxm_loadFinsh) return;
     [dic enumerateKeysAndObjectsUsingBlock:^(NSString* key, WXMPhotoSignModel* obj, BOOL *stop) {
-        CGFloat x = (12 * obj.rank) + 53 * (obj.rank - 1);
+        CGFloat x = (12 * obj.rank) + WXMPhotoPreviewImageWH * (obj.rank - 1);
         UIImageView * imgView = [self createImageView];
-        imgView.frame = CGRectMake(x, 0, 53, 53);
-        imgView.center = CGPointMake(imgView.center.x, self.photoView.frame.size.height / 2);
+        imgView.frame = CGRectMake(x, 0, WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
+        imgView.center = CGPointMake(imgView.center.x, self.photoScrollView.frame.size.height / 2);
         imgView.tag = obj.rank;
         imgView.image = obj.image;
         [self.rankDictionary setObject:@(obj.rank).stringValue forKey:key];
     }];
     self.wxm_loadFinsh = YES;
-    self.photoView.alpha = (self.signDictionary.allKeys.count > 0);
+    self.photoScrollView.alpha = (self.signDictionary.allKeys.count > 0);
 }
 /** 排序 */
 - (void)sortingUpPhotoView {
+    CGFloat w = self.photoScrollView.bounds.size.width;
     [UIView animateWithDuration:0.75 animations:^{
-        self.photoView.alpha = (self.signDictionary.allKeys.count > 0);
+        NSInteger count = self.signDictionary.allKeys.count;
+        self.photoScrollView.contentSize = CGSizeMake(count *(WXMPhotoPreviewImageWH + 12) + 20, 0);
+        self.photoScrollView.alpha = (self.signDictionary.allKeys.count > 0);
+        self.line.alpha = self.photoScrollView.alpha;
     }];
     
     /** 增加了一个 */
@@ -95,45 +109,53 @@
         NSString * ketString = [self increaseSignModel];
         WXMPhotoSignModel* obj = [self.signDictionary objectForKey:ketString];
         NSInteger current = obj.rank;
-        CGFloat x = (12 * current) + 53 * (current - 1);
+        CGFloat x = (12 * current) + WXMPhotoPreviewImageWH * (current - 1);
         UIImageView * imgView = [self createImageView];
-        imgView.frame = CGRectMake(x, 0, 53, 53);
+        imgView.frame = CGRectMake(x, 0, WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
         imgView.alpha = 0;
         imgView.image = obj.image;
         imgView.tag = obj.rank;
         imgView.layer.borderColor = WXMSelectedColor.CGColor;
-        imgView.center = CGPointMake(imgView.center.x, self.photoView.frame.size.height / 2);
+        imgView.center = CGPointMake(imgView.center.x, self.photoScrollView.frame.size.height / 2);
         [self.rankDictionary setObject:@(obj.rank).stringValue forKey:ketString];
-        [UIView animateWithDuration:0.35 animations:^{ imgView.alpha = 1;  }];
         
-        /** 去掉了一个 */
+        /**  滚动到最后面  */
+        CGPoint offset = CGPointMake(MAX(self.photoScrollView.contentSize.width - w, 0), 0);
+        [UIView animateWithDuration:0.35 animations:^{
+            imgView.alpha = 1;
+            [self.photoScrollView setContentOffset:offset animated:NO];
+        }];
+        
+    /** 去掉了一个 */
     } else if (self.signDictionary.allKeys.count < self.rankDictionary.allKeys.count) {
         NSString * ketString = [self removeSignModel];
         NSString * rankString = [self.rankDictionary objectForKey:ketString];
         [self.rankDictionary removeObjectForKey:ketString];
         [self synchronouRank];
         NSInteger rank = rankString.integerValue;
-        for (int i = 1; i <= 4; i++) {
-            UIImageView * imgView = [self.photoView viewWithTag:i];
+        
+        for (int i = 1; i <= WXMMultiSelectMax; i++) {
+            UIImageView * imgView = [self.photoScrollView viewWithTag:i];
             if (imgView.tag == rank && imgView) [imgView removeFromSuperview];
             if (imgView.tag > rank  && imgView) {
                 [UIView animateWithDuration:0.45 animations:^{
                     imgView.tag = imgView.tag - 1;
-                    CGFloat x = (12 * imgView.tag) + 53 * (imgView.tag - 1);
-                    imgView.frame = CGRectMake(x, 27 / 2, 53, 53);
+                    CGFloat x = (12 * imgView.tag) + WXMPhotoPreviewImageWH * (imgView.tag - 1);
+                    imgView.frame = CGRectMake(x, 0, WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
+                    imgView.center = CGPointMake(imgView.center.x, self.photoScrollView.frame.size.height / 2);
                 }];
             }
         }
     }
 }
 
-/**  */
+/** 创建预览imageview */
 - (UIImageView *)createImageView {
     UIImageView * imageView = [[UIImageView alloc] initWithFrame:CGRectZero];
     imageView.clipsToBounds = YES;
     imageView.layer.borderWidth = 1;
     imageView.contentMode = UIViewContentModeScaleAspectFill;
-    [self.photoView addSubview:imageView];
+    [self.photoScrollView addSubview:imageView];
     return imageView;
 }
 
@@ -148,6 +170,7 @@
     }];
     return increaseObj;
 }
+
 /** 判断删除的是哪一个 */
 - (NSString *)removeSignModel {
     __block NSString* removeObj = nil;
@@ -166,12 +189,13 @@
         [self.rankDictionary setObject:@(obj.rank).stringValue forKey:key];
     }];
 }
+
 /** 当前选中的 */
 - (void)setSeletedIdx:(NSInteger)seletedIdx {
     _seletedIdx = seletedIdx;
     NSInteger sele = [[self.rankDictionary objectForKey:@(seletedIdx).stringValue] integerValue];
-    for (int i = 1; i <= 4; i++) {
-        UIImageView * imgView = [self.photoView viewWithTag:i];
+    for (int i = 1; i <= WXMMultiSelectMax; i++) {
+        UIImageView * imgView = [self.photoScrollView viewWithTag:i];
         if (imgView) {
             imgView.layer.borderWidth = 1;
             imgView.layer.borderColor = [UIColor clearColor].CGColor;
@@ -179,6 +203,7 @@
         }
     }
 }
+
 /** 显示隐藏 */
 - (void)setAccordingState:(BOOL)state {
     if (state) self.hidden = NO;

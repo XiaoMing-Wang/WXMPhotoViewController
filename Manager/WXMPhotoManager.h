@@ -9,6 +9,15 @@
 #import <Foundation/Foundation.h>
 #import <Photos/Photos.h>
 
+/** 图片切换的方式 */
+typedef enum {
+    WXMPHAssetMediaTypeImage,
+    WXMPHAssetMediaTypeLivePhoto,
+    WXMPHAssetMediaTypePhotoGif,
+    WXMPHAssetMediaTypeVideo,
+    WXMPHAssetMediaTypeAudio,
+} WXMPhotoMediaType;
+
 /** 相册 */
 @interface WXMPhotoList : NSObject
 @property (nonatomic, strong) NSString *title;                    /**相册的名字*/
@@ -18,54 +27,69 @@
 @property (nonatomic, strong) PHAssetCollection *assetCollection; /**通过该属性可以取该相册的所有照片*/
 @end
 
-/** 相片对象 */
+/** 相片 */
 @interface WXMPhotoAsset : NSObject
 @property (nonatomic, strong) PHAsset *asset;        /** 相片媒介 */
-@property (nonatomic, strong) UIImage *bigImage;    /** 大相片 */
-@property (nonatomic, strong) UIImage *smallImage; /** 小相片 */
-@property (nonatomic, assign) BOOL selected;      /** 选中 */
+@property (nonatomic, strong) UIImage *bigImage;     /** 大相片 */
+@property (nonatomic, strong) UIImage *smallImage;   /** 小相片 */
+@property (nonatomic, strong) UIImage *originalImage;/** 原始相片 */
+@property (nonatomic, strong) NSData *imageData;     /** gif Data */
+@property (nonatomic, assign) BOOL selected;         /** 选中 */
+@property (nonatomic, assign) CGFloat bytes;         /** 大小 */
+@property (nonatomic, assign) CGFloat aspectRatio;   /** 高/宽比例 */
+@property (nonatomic, assign) WXMPhotoMediaType mediaType; /** 相片类型 */
 @end
 
 
 @interface WXMPhotoManager : NSObject
-@property (nonatomic, strong) NSArray *photoData;
+@property (nonatomic, strong) NSArray *picturesArray;
 @property (nonatomic, strong) WXMPhotoList *firstPhotoList;
 
 + (instancetype)sharedInstance;
 
 /** 是否有权限 */
-- (BOOL)photoPermission;
+- (BOOL)wxm_photoPermission;
 
 /** 获得所有的相册对象 */
-- (void)getAllPhotoListBlock:(void (^)(NSArray<WXMPhotoList *> *))block;
+- (void)wxm_getAllPicturesListBlock:(void (^)(NSArray<WXMPhotoList *> *))block;
 
 /** 取得所有相册的照片资源 */
-- (NSArray<PHAsset *> *)getAllAssetInPhotoAblumWithAscending:(BOOL)ascending;
+- (NSArray<PHAsset *> *)wxm_getAllAssetInPhotoAblumWithAscending:(BOOL)ascending;
 
 /**  获取指定相册的所有图片 */
-- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
-                                         ascending:(BOOL)ascending;
+- (NSArray<PHAsset *> *)wxm_getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
+                                             ascending:(BOOL)ascending;
 
 /**
  *  取到对应的照片实体
- *  @param asset      索取照片实体的媒介
- *  @param original   是不是原生
- *  @param resizeMode 控制照片尺寸
- *  @param completion block返回照片实体
+ *  @param asset         索取照片实体的媒介
+ *  @param synchronous   是否同步
+ *  @param original      是否原图
+ *  @param resizeMode    控制照片尺寸
+ *  @param deliveryMode  控制照片获取质量
+ *  @param completion    block返回照片实体
  */
-- (void)getImageByAsset:(PHAsset *)asset
-         makeResizeMode:(PHImageRequestOptionsResizeMode)resizeMode
-             isOriginal:(BOOL)original
-             completion:(void (^)(UIImage *AssetImage))completion;
+- (void)getPicturesByAsset:(PHAsset *)asset
+               synchronous:(BOOL)synchronous
+                  original:(BOOL)original
+                 assetSize:(CGSize)assetSize
+                resizeMode:(PHImageRequestOptionsResizeMode)resizeMode
+              deliveryMode:(PHImageRequestOptionsDeliveryMode)deliveryMode
+                completion:(void (^)(UIImage *AssetImage))completion;
 
-/** 获取指定尺寸图片(同步) 上面是获取原生或者缩略 */
-- (void)getImageByAsset_Synchronous:(PHAsset *)asset
-                               size:(CGSize)size
-                         completion:(void (^)(UIImage *))completion;
-- (void)getImageByAsset_Asynchronous:(PHAsset *)asset
-                                size:(CGSize)size
-                          completion:(void (^)(UIImage *))completion;
+/** 获取高质量原图 */
+- (void)getPictures_original:(PHAsset *)asset
+                 synchronous:(BOOL)synchronous
+                  completion:(void (^)(UIImage *image))completion;
 
+/** 获取自定义尺寸 */
+- (void)getPictures_customSize:(PHAsset *)asset
+                   synchronous:(BOOL)synchronous
+                     assetSize:(CGSize)assetSize
+                    completion:(void (^)(UIImage *image))completion;
+
+/** 获取GIF */
+- (void)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
 /** 获取视频路径 */
 - (void)getVideoByAsset:(PHAsset *)asset completion:(void (^)(NSDictionary *))completiont;

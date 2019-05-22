@@ -17,6 +17,7 @@ typedef enum {
     
     /** 只支持下 */
     DirectionPanGestureRecognizerBottom
+    
 
 } DirectionPangestureRecognizerDirection;
 
