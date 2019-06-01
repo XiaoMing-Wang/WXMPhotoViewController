@@ -52,6 +52,7 @@
             CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
             WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
             [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+                /** NSLog(@"%f-%f",image.size.width,image.size.height); */
                 self.imageView.image = image;
                 photoAsset.smallImage = image;
             }];

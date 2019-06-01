@@ -88,41 +88,4 @@ static char wxm_Photoline;
     [rootVC presentViewController:alert animated:YES completion:nil];
 }
 
-/** 布局 */
-+ (void)setX:(CGFloat)x impView:(UIView *)impView {
-    CGRect frame = impView.frame;
-    frame.origin.x = x;
-    impView.frame = frame;
-}
-+ (void)setRight:(CGFloat)right impView:(UIView *)impView {
-    [self setX:right - impView.frame.size.width impView:impView];
-}
-+ (void)setY:(CGFloat)y impView:(UIView *)impView {
-    CGRect frame = impView.frame;
-    frame.origin.y = y;
-    impView.frame = frame;
-}
-+ (void)setBottom:(CGFloat)bottom impView:(UIView *)impView {
-    [self setY:bottom - impView.frame.size.height impView:impView];
-}
-+ (void)setWidth:(CGFloat)width impView:(UIView *)impView {
-    CGRect frame = impView.frame;
-    frame.size.width = width;
-    impView.frame = frame;
-}
-+ (void)setHeight:(CGFloat)height impView:(UIView *)impView {
-    CGRect frame = impView.frame;
-    frame.size.height = height;
-    impView.frame = frame;
-}
-+ (void)setCenterX:(CGFloat)centerX impView:(UIView *)impView {
-    CGPoint point = impView.center;
-    point.x = centerX;
-    impView.center = point;
-}
-+ (void)setCenterY:(CGFloat)centerY impView:(UIView *)impView {
-    CGPoint point = impView.center;
-    point.y = centerY;
-    impView.center = point;
-}
 @end

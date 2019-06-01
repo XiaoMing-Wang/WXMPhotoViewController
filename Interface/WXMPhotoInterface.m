@@ -43,6 +43,7 @@
     UINavigationController * nav = [[UINavigationController alloc] initWithRootViewController:vc];
     return nav;
 }
+
 /** 获取相册路由方式 */
 - (UIViewController *)routeAchieveWXMPhotoViewController:(void (^)(id obj))results {
     WXMPhotoViewController * vc = [WXMPhotoViewController new];
@@ -51,4 +52,15 @@
     UINavigationController * nav = [[UINavigationController alloc] initWithRootViewController:vc];
     return nav;
 }
+
+/** 获取相册路由方式 */
+- (UIViewController *)routeAchieveWXMPhotoType:(NSDictionary *)params {
+    NSString * typeString = [params objectForKey:@"type"];
+    NSInteger typeInt = typeString.integerValue;
+    WXMPhotoViewController * vc = [WXMPhotoViewController new];
+    vc.photoType = typeInt;
+    UINavigationController * nav = [[UINavigationController alloc] initWithRootViewController:vc];
+    return nav;
+}
+
 @end

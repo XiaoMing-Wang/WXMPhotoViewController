@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <Photos/Photos.h>
 
-/** 图片切换的方式 */
+/** 图片种类 */
 typedef enum {
     WXMPHAssetMediaTypeImage,
     WXMPHAssetMediaTypeLivePhoto,
@@ -77,16 +77,20 @@ typedef enum {
               deliveryMode:(PHImageRequestOptionsDeliveryMode)deliveryMode
                 completion:(void (^)(UIImage *AssetImage))completion;
 
+
 /** 获取高质量原图 */
 - (void)getPictures_original:(PHAsset *)asset
                  synchronous:(BOOL)synchronous
                   completion:(void (^)(UIImage *image))completion;
 
+
 /** 获取自定义尺寸 */
+/** 获取自定义尺寸 设置PHImageRequestOptionsResizeModeExact是有效 */
 - (void)getPictures_customSize:(PHAsset *)asset
                    synchronous:(BOOL)synchronous
                      assetSize:(CGSize)assetSize
                     completion:(void (^)(UIImage *image))completion;
+
 
 /** 获取GIF */
 - (void)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;

@@ -31,15 +31,4 @@
                                   cancel:(NSString *)cancleString
                              otherAction:(NSArray *)otherAction
                            completeBlock:(void (^)(NSInteger index))block;
-
-
-/** 布局 */
-+ (void)setX:(CGFloat)x impView:(UIView *)impView;
-+ (void)setRight:(CGFloat)right impView:(UIView *)impView;
-+ (void)setY:(CGFloat)y impView:(UIView *)impView;
-+ (void)setBottom:(CGFloat)bottom impView:(UIView *)impView;
-+ (void)setWidth:(CGFloat)width impView:(UIView *)impView;
-+ (void)setHeight:(CGFloat)height impView:(UIView *)impView;
-+ (void)setCenterX:(CGFloat)centerX impView:(UIView *)impView;
-+ (void)setCenterY:(CGFloat)centerY impView:(UIView *)impView;
 @end
