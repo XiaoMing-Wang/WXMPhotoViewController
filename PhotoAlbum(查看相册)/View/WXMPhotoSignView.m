@@ -21,6 +21,7 @@
     }
     return self;
 }
+
 /** 初始化界面 */
 - (void)setupInterface {
     CGFloat supWH = self.supSize.width;
@@ -66,6 +67,7 @@
     [self.contentView setTitle:@"" forState:UIControlStateNormal];
     [self.contentView setTitle:@"" forState:UIControlStateSelected];
 }
+
 /** 设置动画 */
 - (void)setAnimation {
     if (!self.selected) return;
@@ -74,12 +76,14 @@
         self.contentView.transform = CGAffineTransformIdentity;
     } completion:nil];
 }
+
 /** 赋值 */
 - (void)setSignModel:(WXMPhotoSignModel *)signModel {
     self.selected = (signModel != nil);
     [self setProperties];
     [self.contentView setTitle:@(signModel.rank).stringValue forState:UIControlStateSelected];
 }
+
 /** 提示框 */
 - (void)showAlertController {
     NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];

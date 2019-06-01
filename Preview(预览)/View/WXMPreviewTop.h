@@ -10,10 +10,12 @@
 #import "WXMPhotoSignModel.h"
 
 @interface WXMPreviewTop : UIView
-@property (nonatomic, assign) BOOL showLeft;
+@property (nonatomic, assign) BOOL showLeftButton;
+@property (nonatomic, assign) BOOL showRightButton;
 @property (nonatomic, strong) WXMPhotoSignModel *signModel;
 @property (nonatomic, assign) id<WXMPreviewToolbarProtocol> delegate;
 
 /** 显示隐藏 */
 - (void)setAccordingState:(BOOL)state;
+
 @end

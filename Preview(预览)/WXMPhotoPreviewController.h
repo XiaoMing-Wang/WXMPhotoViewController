@@ -5,10 +5,14 @@
 //  Created by edz on 2019/5/12.
 //  Copyright © 2019年 wq. All rights reserved.
 //
-
+#import "WXMPhotoConfiguration.h"
 #import <UIKit/UIKit.h>
 
 @interface WXMPhotoPreviewController : UIViewController
+
+/** 预览类型 */
+@property (nonatomic, assign) WXMPhotoPreviewType previewType;
+
 /** 选中的 */
 @property (nonatomic, strong) NSMutableDictionary *signDictionary;
 

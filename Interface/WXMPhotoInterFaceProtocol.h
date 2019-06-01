@@ -20,4 +20,6 @@
 /** 获取相册路由方式 自带导航栏*/
 - (UIViewController *)routeAchieveWXMPhotoViewController:(void (^)(id obj))results;
 
+
+- (UIViewController *)routeAchieveWXMPhotoType:(NSDictionary *)params;
 @end

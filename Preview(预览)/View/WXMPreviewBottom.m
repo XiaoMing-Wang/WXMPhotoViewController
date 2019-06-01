@@ -13,6 +13,9 @@
 @property (nonatomic, strong) UIScrollView *photoScrollView;
 @property (nonatomic, strong) UIView *finshView;
 @property (nonatomic, strong) UIView *line;
+@property (nonatomic, strong) UIImageView * iconImgView;
+@property (nonatomic, strong) UILabel * textLabel;
+
 @property (nonatomic, assign) BOOL wxm_loadFinsh;
 @property (nonatomic, strong) NSMutableDictionary *rankDictionary;
 @end
@@ -51,17 +54,43 @@
     [self setUpFinshView];
 }
 
-/** FinshView */
+/** finshView */
 - (void)setUpFinshView {
-    CGFloat x = WXMPhoto_Width - 60 - 10;
-    UIButton * finish = [[UIButton alloc] initWithFrame:CGRectMake(x, 7.5, 60, 30)];
+    CGFloat height = 30;
+    UIButton *originalbg = [[UIButton alloc] initWithFrame:CGRectMake(15, 7.5, 200, height)];
+    originalbg.tag = 11;
+    [originalbg addTarget:self action:@selector(original:) forControlEvents:UIControlEventTouchUpInside];
+    _iconImgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
+    _iconImgView.image = [UIImage imageNamed:@"photo_original_def"];
+    _iconImgView.center = CGPointMake(_iconImgView.center.x, height / 2);
+    
+    _textLabel = [[UILabel alloc] initWithFrame:CGRectMake(27, 0, 150, height)];
+    _textLabel.textColor = [UIColor whiteColor];
+    _textLabel.font = [UIFont systemFontOfSize:15];
+    _textLabel.text = @"原图(1.34M)";
+    [originalbg addSubview:_iconImgView];
+    [originalbg addSubview:_textLabel];
+    
+    CGFloat x = WXMPhoto_Width - 60 - 15;
+    UIButton * finish = [[UIButton alloc] initWithFrame:CGRectMake(x, 7.5, 60, height)];
     finish.titleLabel.font = [UIFont systemFontOfSize:13];
     [finish setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [finish setTitle:@"完成" forState:UIControlStateNormal];
     finish.backgroundColor = WXMSelectedColor;
     finish.layer.cornerRadius = 4;
     [finish addTarget:self action:@selector(finish) forControlEvents:UIControlEventTouchUpInside];
+    
+    [_finshView addSubview:originalbg];
     [_finshView addSubview:finish];
+}
+
+/** 原图选中 */
+- (void)original:(UIButton *)sender {
+    sender.selected = !sender.selected;
+    _iconImgView.image = [UIImage imageNamed:@"photo_original_def"];
+    if (sender.selected) {
+        _iconImgView.image = [UIImage imageNamed:@"photo_sign_background"];
+    }
 }
 
 /** 完成按钮 */
@@ -79,6 +108,13 @@
     if (self.wxm_loadFinsh) [self sortingUpPhotoView];
 }
 
+- (void)setRealImageByte:(NSString *)realImageByte {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _realImageByte = realImageByte;
+        _textLabel.text = [NSString stringWithFormat:@"原图（%@）",realImageByte];
+    });
+}
+
 /** 初始化相册 */
 - (void)setUpPhotoView:(NSDictionary *)dic {
     if (self.wxm_loadFinsh) return;
@@ -94,6 +130,7 @@
     self.wxm_loadFinsh = YES;
     self.photoScrollView.alpha = (self.signDictionary.allKeys.count > 0);
 }
+
 /** 排序 */
 - (void)sortingUpPhotoView {
     CGFloat w = self.photoScrollView.bounds.size.width;

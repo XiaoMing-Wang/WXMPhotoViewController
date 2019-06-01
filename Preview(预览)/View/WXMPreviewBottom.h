@@ -10,10 +10,16 @@
 
 @interface WXMPreviewBottom : UIView
 
+/** 是否选取原图 */
+@property (nonatomic, assign) BOOL isOriginalImage;
+
+/** 原图大小 */
+@property (nonatomic, assign) NSString *realImageByte;
+
 
 @property (nonatomic, assign) id<WXMPreviewToolbarProtocol> delegate;
 
-/** 选中的 */
+/** 全部选中的 */
 @property (nonatomic, strong) NSMutableDictionary *signDictionary;
 
 /** 当前选中的 */

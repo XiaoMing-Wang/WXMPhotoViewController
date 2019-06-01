@@ -58,9 +58,14 @@
 }
 
 /** 设置左按钮是否显示 */
-- (void)setShowLeft:(BOOL)showLeft {
-    _showLeft = showLeft;
-    _leftButton.hidden = !showLeft;
+- (void)setShowLeftButton:(BOOL)showLeftButton {
+    _showLeftButton = showLeftButton;
+    _leftButton.hidden = !_showLeftButton;
+}
+
+- (void)setShowRightButton:(BOOL)showRightButton  {
+    _showRightButton = showRightButton;
+    _rightButton.hidden = !_showRightButton;
 }
 
 - (void)setSignModel:(WXMPhotoSignModel *)signModel {

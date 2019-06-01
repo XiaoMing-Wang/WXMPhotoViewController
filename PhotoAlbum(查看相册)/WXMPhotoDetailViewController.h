@@ -14,6 +14,9 @@
 @property (nonatomic, strong) WXMPhotoList *phoneList;
 @property (nonatomic, assign) WXMPhotoDetailType photoType;
 
+/** 是否有预览默认YES WXMPhotoDetailTypeGetPhoto 和 WXMPhotoDetailTypeGetPhoto_256设置有效 */
+@property (nonatomic, assign) BOOL exitPreview;
+
 /** 期望获取图片大小 */
 @property (nonatomic, assign) CGSize expectSize;
 @property (nonatomic, weak) id<WXMPhotoProtocol> delegate;

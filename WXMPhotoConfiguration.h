@@ -56,11 +56,17 @@
 
 /** 类型 */
 typedef NS_ENUM(NSInteger, WXMPhotoDetailType) {
-    WXMPhotoDetailTypeGetPhoto = 0,     /* 单选 */
-    WXMPhotoDetailTypeGetPhoto_256 = 1, /* 单选扫码 */
-    WXMPhotoDetailTypeMultiSelect = 2,  /* 多选 */
-    WXMPhotoDetailTypePreview = 3,      /* 预览模式 */
-    WXMPhotoDetailTypeTailoring = 4,    /* 裁剪 */
+    WXMPhotoDetailTypeGetPhoto = 0,     /* 单选原图 */
+    WXMPhotoDetailTypeGetPhoto_256 = 1, /* 单选256*256 */
+    WXMPhotoDetailTypeMultiSelect = 2,  /* 多选 + 预览 */
+    WXMPhotoDetailTypePreview = 3,      /* 单选 + 预览 */
+    WXMPhotoDetailTypeTailoring = 4,    /* 预览 + 裁剪 */
+};
+
+/** 预览类型 */
+typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
+    WXMPhotoPreviewTypeSingle = 0,     /* 单张 */
+    WXMPhotoPreviewTypeMost,           /* 多张 */
 };
 
 /** 获取相册回调协议 */

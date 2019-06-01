@@ -22,6 +22,7 @@
     if (self = [super init]) self.pushCamera = YES;
     return self;
 }
+
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -48,28 +49,35 @@
     [self.view addSubview:self.listTableView];
     [self judgeAuthority]; /** 再次判断权限 */
 }
+
 /** 返回组行 */
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return self.jurisdictionData.count;
 }
+
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     WXMPhotoListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.phoneList = [self.jurisdictionData objectAtIndex:indexPath.row];
     return cell;
 }
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     [self pushToPhotoListViewController:indexPath];
 }
+
 /** 跳转 */
 - (void)pushToPhotoListViewController:(NSIndexPath *)indexPath {
     if (self.pushCamera == NO && indexPath == nil) return;
     WXMPhotoDetailViewController *photoDetail = [WXMPhotoDetailViewController new];
-    photoDetail.results = self.results;
-    photoDetail.resultArray = self.resultArray;
+    photoDetail.exitPreview = self.exitPreview;
     photoDetail.photoType = self.photoType;
     photoDetail.expectSize = self.expectSize;
+    
+    photoDetail.delegate = self.delegate;
+    photoDetail.results = self.results;
+    photoDetail.resultArray = self.resultArray;
     if (indexPath == nil) photoDetail.phoneList = [WXMPhotoManager sharedInstance].firstPhotoList;
     if (indexPath) photoDetail.phoneList = self.jurisdictionData[indexPath.row];
     [self.navigationController pushViewController:photoDetail animated:(indexPath != nil)];
@@ -115,7 +123,7 @@
 /** TableView */
 - (UITableView *)listTableView {
     if (!_listTableView) {
-        CGRect rect = CGRectMake(0,WXMPhoto_BarHeight,WXMPhoto_Width,WXMPhoto_Height - WXMPhoto_BarHeight);
+        CGRect rect =  (CGRect){0,WXMPhoto_BarHeight,WXMPhoto_Width,WXMPhoto_Height - WXMPhoto_BarHeight};
         _listTableView = [[UITableView alloc] initWithFrame:rect];
         _listTableView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0);
         _listTableView.tableFooterView = [UIView new];
@@ -140,6 +148,7 @@
     [self.navigationController.navigationBar setTitleTextAttributes:attributes];
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleDefault;
 }
+
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     self.navigationController.interactivePopGestureRecognizer.enabled = NO;
