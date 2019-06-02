@@ -267,6 +267,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:1.0];
     UIImage * image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
     [self.weakNavigationVC.navigationBar setBackgroundImage:image forBarMetrics:UIBarMetricsDefault];
+    NSLog(@"释放 %@",NSStringFromClass(self.class));
 }
 
 - (WXMPreviewTopBar *)topBarView {

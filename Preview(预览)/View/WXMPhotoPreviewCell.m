@@ -67,7 +67,7 @@
         CGFloat height = (CGFloat) photoAsset.asset.pixelHeight;
         
         __block CGFloat scale = (height / width) * 1.0f;
-        CGFloat screenWidth  = [UIScreen mainScreen].bounds.size.width * [UIScreen mainScreen].scale;
+        CGFloat screenWidth  = [UIScreen mainScreen].bounds.size.width;
         CGFloat imageHeight = scale * screenWidth;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         

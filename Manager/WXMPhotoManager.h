@@ -36,6 +36,8 @@ typedef enum {
 @property (nonatomic, strong) NSData *imageData;           /** gif video Data */
 @property (nonatomic, copy) NSURL *videoUrl;               /** video url */
 @property (nonatomic, copy) NSString *videoDrantion;       /** video 时间长度 */
+
+@property (nonatomic, assign) int32_t requestID;
 @property (nonatomic, assign) CGFloat bytes;               /** 大小 */
 @property (nonatomic, assign) CGFloat aspectRatio;         /** 高/宽比例 */
 @property (nonatomic, assign) WXMPhotoMediaType mediaType; /** 相片类型 */
@@ -70,39 +72,42 @@ typedef enum {
  *  @param deliveryMode  控制照片获取质量
  *  @param completion    block返回照片实体
  */
-- (void)getPicturesByAsset:(PHAsset *)asset
-               synchronous:(BOOL)synchronous
-                  original:(BOOL)original
-                 assetSize:(CGSize)assetSize
-                resizeMode:(PHImageRequestOptionsResizeMode)resizeMode
-              deliveryMode:(PHImageRequestOptionsDeliveryMode)deliveryMode
-                completion:(void (^)(UIImage *AssetImage))completion;
+- (int32_t)getPicturesByAsset:(PHAsset *)asset
+                  synchronous:(BOOL)synchronous
+                     original:(BOOL)original
+                    assetSize:(CGSize)assetSize
+                   resizeMode:(PHImageRequestOptionsResizeMode)resizeMode
+                 deliveryMode:(PHImageRequestOptionsDeliveryMode)deliveryMode
+                   completion:(void (^)(UIImage *AssetImage))completion;
 
 
 /** 获取高质量原图 */
-- (void)getPictures_original:(PHAsset *)asset
-                 synchronous:(BOOL)synchronous
-                  completion:(void (^)(UIImage *image))completion;
+- (int32_t)getPictures_original:(PHAsset *)asset
+                    synchronous:(BOOL)synchronous
+                     completion:(void (^)(UIImage *image))completion;
 
 
 /** 获取自定义尺寸 */
 /** 获取自定义尺寸 设置PHImageRequestOptionsResizeModeExact是有效 */
-- (void)getPictures_customSize:(PHAsset *)asset
-                   synchronous:(BOOL)synchronous
-                     assetSize:(CGSize)assetSize
-                    completion:(void (^)(UIImage *image))completion;
+- (int32_t)getPictures_customSize:(PHAsset *)asset
+                      synchronous:(BOOL)synchronous
+                        assetSize:(CGSize)assetSize
+                       completion:(void (^)(UIImage *image))completion;
 
 
 /** 同步获取图片 size为zero时获取原图 */
-- (void)wxm_synchronousGetPictures:(PHAsset *)asset
-                              size:(CGSize)size
-                        completion:(void (^)(UIImage *image))comple;
+- (int32_t)wxm_synchronousGetPictures:(PHAsset *)asset
+                                 size:(CGSize)size
+                           completion:(void (^)(UIImage *image))comple;
 
 
 /** 获取GIF */
-- (void)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
+- (int32_t)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
 /** 获取视频路径 */
 - (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(NSURL * , NSData *))completiont;
+
+/** 取消请求 */
+- (void)cancelRequestWithID:(int32_t)requestID;
 @end
 

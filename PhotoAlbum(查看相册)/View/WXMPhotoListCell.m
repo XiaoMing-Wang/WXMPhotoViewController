@@ -39,26 +39,27 @@
 
 /** 赋值 相册界面相片少同步获取 */
 - (void)setPhoneList:(WXMPhotoList *)phoneList {
-    
-    _phoneList = phoneList;
-    NSRange range = NSMakeRange(0, _phoneList.title.length);
-    
-    NSString *infoHelp = [NSString stringWithFormat:@"  (%zd)", _phoneList.photoNum];
-    NSString *info = [_phoneList.title stringByAppendingString:infoHelp];
-    NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:info];
-    [attributedString addAttribute:NSForegroundColorAttributeName value:[UIColor blackColor] range:range];
-    self.titleLable.attributedText = attributedString;
-    
-    if (phoneList.firstImage) self.posterImageView.image = phoneList.firstImage;
-    if (phoneList.firstImage == nil) {
-        CGFloat w = ([UIScreen mainScreen].bounds.size.width > 400) ? 210 : 140;
-        CGSize size = CGSizeMake(w, w);
-        PHAsset *asset = self.phoneList.firstAsset;
-        WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
-        [manager getPictures_customSize:asset synchronous:YES assetSize:size completion:^(UIImage *image) {
-            self.posterImageView.image = image;
-            phoneList.firstImage = image;
-        }];
+    @autoreleasepool {
+        _phoneList = phoneList;
+        NSRange range = NSMakeRange(0, _phoneList.title.length);
+        
+        NSString *infoHelp = [NSString stringWithFormat:@"  (%zd)", _phoneList.photoNum];
+        NSString *info = [_phoneList.title stringByAppendingString:infoHelp];
+        NSMutableAttributedString *atts = [[NSMutableAttributedString alloc] initWithString:info];
+        [atts addAttribute:NSForegroundColorAttributeName value:[UIColor blackColor] range:range];
+        self.titleLable.attributedText = atts;
+        
+        if (phoneList.firstImage) self.posterImageView.image = phoneList.firstImage;
+        if (phoneList.firstImage == nil) {
+            CGFloat w = ([UIScreen mainScreen].bounds.size.width > 400) ? 210 : 140;
+            CGSize size = CGSizeMake(w, w);
+            PHAsset *asset = self.phoneList.firstAsset;
+            WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
+            [man getPictures_customSize:asset synchronous:YES assetSize:size completion:^(UIImage *image) {
+                self.posterImageView.image = image;
+                phoneList.firstImage = image;
+            }];
+        }
     }
 }
 @end

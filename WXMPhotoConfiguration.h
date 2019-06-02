@@ -32,7 +32,7 @@
 #define WXMSelectedColor [WXMPhoto_RGBColor(31, 185, 34) colorWithAlphaComponent:0.9]
 
 /** 查看界面cell图片大小 */
-#define WXMItemWidth ((WXMPhoto_Width - 7.5) / 4) * 2
+#define WXMItemWidth ((WXMPhoto_Width - 7.5) / 4) * 2.0
 
 /** WXMPhotoDetailViewController界面 选中图标大小  */
 #define WXMSelectedWH 25

@@ -97,20 +97,38 @@
 
 /** 获得所有的相册对象*/
 - (void)wxm_getAllPicturesListBlock:(void(^)(NSArray<WXMPhotoList *> *))block {
-    NSMutableArray<WXMPhotoList *> *photoList = @[].mutableCopy;
-    
-    /** 获取系统相册 */
-    PHFetchResult * smartAlbum = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
-    
-    [smartAlbum enumerateObjectsUsingBlock:^(PHAssetCollection * collection, NSUInteger idx, BOOL * stop) {
+    @autoreleasepool {
+        NSMutableArray<WXMPhotoList *> *photoList = @[].mutableCopy;
         
-        /** 去掉视频和最近删除的 */
-        if (!([collection.localizedTitle isEqualToString:@"Recently Deleted"] ||
-              [collection.localizedTitle isEqualToString:@"Videos"]||
-              [collection.localizedTitle isEqualToString:@"Hidden"]||
-              [collection.localizedTitle isEqualToString:@"最近删除"]||
-              [collection.localizedTitle isEqualToString:@"视频"])){
+        /** 获取系统相册 */
+        PHFetchResult * smartAlbum = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
+        
+        [smartAlbum enumerateObjectsUsingBlock:^(PHAssetCollection * collection, NSUInteger idx, BOOL * stop) {
             
+            /** 去掉视频和最近删除的 */
+            if (!([collection.localizedTitle isEqualToString:@"Recently Deleted"] ||
+                  /**   [collection.localizedTitle isEqualToString:@"Videos"]|| */
+                  /**   [collection.localizedTitle isEqualToString:@"视频"] || */
+                  [collection.localizedTitle isEqualToString:@"Hidden"]||
+                  [collection.localizedTitle isEqualToString:@"最近删除"])){
+                
+                PHFetchResult *result = [self fetchAssetsInAssetCollection:collection ascending:NO];
+                if (result.count > 0) {
+                    WXMPhotoList *list = [[WXMPhotoList alloc] init];
+                    list.title = [self wxm_transformAblumTitle:collection.localizedTitle];
+                    list.photoNum = result.count;
+                    list.firstAsset = result.firstObject;
+                    list.assetCollection = collection;
+                    [photoList addObject:list];
+                    if (idx == 0) self.firstPhotoList = list;
+                    if ([list.title isEqualToString:@"相机胶卷"]) self.firstPhotoList = list;
+                }
+            }
+        }];
+        
+        /** 用户创建的相册 */
+        PHFetchResult * userAlbum = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil];
+        [userAlbum enumerateObjectsUsingBlock:^(PHAssetCollection *collection, NSUInteger idx, BOOL *stop) {
             PHFetchResult *result = [self fetchAssetsInAssetCollection:collection ascending:NO];
             if (result.count > 0) {
                 WXMPhotoList *list = [[WXMPhotoList alloc] init];
@@ -119,30 +137,14 @@
                 list.firstAsset = result.firstObject;
                 list.assetCollection = collection;
                 [photoList addObject:list];
-                if (idx == 0) self.firstPhotoList = list;
-                if ([list.title isEqualToString:@"相机胶卷"]) self.firstPhotoList = list;
             }
-        }
-    }];
-    
-    /** 用户创建的相册 */
-    PHFetchResult * userAlbum = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil];
-    [userAlbum enumerateObjectsUsingBlock:^(PHAssetCollection *collection, NSUInteger idx, BOOL *stop) {
-        PHFetchResult *result = [self fetchAssetsInAssetCollection:collection ascending:NO];
-        if (result.count > 0) {
-            WXMPhotoList *list = [[WXMPhotoList alloc] init];
-            list.title = [self wxm_transformAblumTitle:collection.localizedTitle];
-            list.photoNum = result.count;
-            list.firstAsset = result.firstObject;
-            list.assetCollection = collection;
-            [photoList addObject:list];
-        }
-    }];
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        self.picturesArray = photoList.mutableCopy;
-        if (block) block(photoList);
-    });
+        }];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.picturesArray = photoList.mutableCopy;
+            if (block) block(photoList);
+        });
+    }
 }
 
 /** 获取相册结果集 */
@@ -157,13 +159,13 @@
 #pragma mark ________________________________________________________ 获取asset相对应的照片
 
 /** 获取原生和非原生图片 */
-- (void)getPicturesByAsset:(PHAsset *)asset
-               synchronous:(BOOL)synchronous
-                  original:(BOOL)original
-                 assetSize:(CGSize)assetSize
-                resizeMode:(PHImageRequestOptionsResizeMode)resizeMode
-              deliveryMode:(PHImageRequestOptionsDeliveryMode)deliveryMode
-                completion:(void (^)(UIImage *AssetImage))completion {
+- (int32_t)getPicturesByAsset:(PHAsset *)asset
+                  synchronous:(BOOL)synchronous
+                     original:(BOOL)original
+                    assetSize:(CGSize)assetSize
+                   resizeMode:(PHImageRequestOptionsResizeMode)resizeMode
+                 deliveryMode:(PHImageRequestOptionsDeliveryMode)deliveryMode
+                   completion:(void (^)(UIImage *AssetImage))completion {
     
     PHImageRequestOptions *option = [[PHImageRequestOptions alloc] init];
     /**
@@ -181,13 +183,13 @@
     
     /** 控制照片尺寸 */
     option.resizeMode = resizeMode;
-    
+
     /** 控制照片质量 */
     option.deliveryMode = deliveryMode;
-    
+
     /** 是否同步获取 */
-    option.synchronous = synchronous;
-    
+    if (synchronous == YES) option.synchronous = YES;
+
     CGSize size = CGSizeZero;
     if (original) size = PHImageManagerMaximumSize;
     else size = assetSize;
@@ -195,72 +197,67 @@
     //下载图片
     /** option.networkAccessAllowed = YES; */
     /**  targetSize 即你想要的图片尺寸，若想要原尺寸则可输入PHImageManagerMaximumSize */
-    [[PHCachingImageManager defaultManager] requestImageForAsset:asset
-                                                      targetSize:size
-                                                     contentMode:PHImageContentModeAspectFill
-                                                         options:option
-                                                   resultHandler:^(UIImage *_Nullable image, NSDictionary *_Nullable info) {
-                                                       dispatch_async(dispatch_get_main_queue(), ^{
-                                                           if (completion) completion(image);
-                                                       });
-                                                   }];
+    int32_t requestID =  [[PHCachingImageManager defaultManager] requestImageForAsset:asset targetSize:size contentMode:PHImageContentModeAspectFill options:option resultHandler:^(UIImage *image,NSDictionary *info) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completion) completion(image);
+        });
+    }];
+    return requestID;
 }
 
 /** 获取高质量原图 */
-- (void)getPictures_original:(PHAsset *)asset
-                 synchronous:(BOOL)synchronous
-                  completion:(void (^)(UIImage *AssetImage))completion {
+- (int32_t)getPictures_original:(PHAsset *)asset
+                    synchronous:(BOOL)synchronous
+                     completion:(void (^)(UIImage *AssetImage))completion {
     
     //PHImageRequestOptionsResizeModeExact精准大小
-    [self getPicturesByAsset:asset
-                 synchronous:synchronous
-                    original:YES
-                   assetSize:CGSizeZero
-                  resizeMode:PHImageRequestOptionsResizeModeNone
-                deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
-                  completion:completion];
+    return [self getPicturesByAsset:asset
+                        synchronous:synchronous
+                           original:YES
+                          assetSize:CGSizeZero
+                         resizeMode:PHImageRequestOptionsResizeModeNone
+                       deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
+                         completion:completion];
 }
 
 /** 获取自定义尺寸 设置PHImageRequestOptionsResizeModeExact是有效 */
-- (void)getPictures_customSize:(PHAsset *)asset
-                   synchronous:(BOOL)synchronous
-                     assetSize:(CGSize)assetSize
-                    completion:(void (^)(UIImage *image))completion {
+- (int32_t)getPictures_customSize:(PHAsset *)asset
+                      synchronous:(BOOL)synchronous
+                        assetSize:(CGSize)assetSize
+                       completion:(void (^)(UIImage *image))completion {
     
-    [self getPicturesByAsset:asset
-                 synchronous:synchronous
-                    original:NO
-                   assetSize:assetSize
-                  resizeMode:PHImageRequestOptionsResizeModeNone
-                deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
-                  completion:completion];
+    return [self getPicturesByAsset:asset
+                        synchronous:synchronous
+                           original:NO
+                          assetSize:assetSize
+                         resizeMode:PHImageRequestOptionsResizeModeFast
+                       deliveryMode:PHImageRequestOptionsDeliveryModeOpportunistic
+                         completion:completion];
 }
 
 /** 同步获取图片 */
-- (void)wxm_synchronousGetPictures:(PHAsset *)asset
-                              size:(CGSize)size
-                        completion:(void (^)(UIImage *image))comple {
+- (int32_t)wxm_synchronousGetPictures:(PHAsset *)asset
+                                 size:(CGSize)size
+                           completion:(void (^)(UIImage *image))comple {
     if (CGSizeEqualToSize(size, CGSizeZero)) {
-        [self getPictures_original:asset synchronous:YES completion:comple];
+        return [self getPictures_original:asset synchronous:YES completion:comple];
     } else {
-        [self getPictures_customSize:asset synchronous:YES assetSize:size completion:comple];
+        return [self getPictures_customSize:asset synchronous:YES assetSize:size completion:comple];
     }
 }
 
 
 /** GIF */
-- (void)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion {
+- (int32_t)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion {
     PHImageRequestOptions *option = [[PHImageRequestOptions alloc] init];
     option.resizeMode = PHImageRequestOptionsResizeModeNone;//控制照片尺寸
     option.synchronous = NO;
     option.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
-    [[PHCachingImageManager defaultManager]  requestImageDataForAsset:asset
-                                                              options:option
-                                                        resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
-                                                            dispatch_async(dispatch_get_main_queue(), ^{
-                                                                completion(imageData);
-                                                            });
-                                                        }];
+    return [[PHCachingImageManager defaultManager]  requestImageDataForAsset:asset options:option resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(imageData);
+        });
+    }];
 }
 
 /** 取到所有相册 的所有PHAsset资源 */
@@ -303,5 +300,9 @@
             completiont(url,data);
         });
     }];
+}
+
+- (void)cancelRequestWithID:(int32_t)requestID {
+    [[PHCachingImageManager defaultManager] cancelImageRequest:requestID];
 }
 @end

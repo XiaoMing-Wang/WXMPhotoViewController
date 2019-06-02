@@ -14,6 +14,7 @@
 @interface WXMPhotoViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (nonatomic, strong) UITableView *listTableView;
 @property (nonatomic, strong) NSMutableArray<WXMPhotoList *> *jurisdictionData;
+@property (nonatomic, assign) UIRectEdge lastEdgesForExtendedLayout;
 @end
 
 @implementation WXMPhotoViewController
@@ -26,6 +27,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
+    self.lastEdgesForExtendedLayout = self.edgesForExtendedLayout;
+    self.edgesForExtendedLayout = UIRectEdgeAll;
     self.jurisdictionData = @[].mutableCopy;
     self.view.backgroundColor = [UIColor whiteColor];
     self.navigationItem.leftBarButtonItem = nil;
@@ -156,5 +159,10 @@
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleDefault;
     UIImage * imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:WXMBarColor];
     [self.navigationController.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
+}
+
+- (void)dealloc {
+    self.edgesForExtendedLayout = self.lastEdgesForExtendedLayout;
+    NSLog(@"释放 %@",NSStringFromClass(self.class));
 }
 @end

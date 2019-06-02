@@ -20,6 +20,8 @@
 
 /** 勾选框 */
 @property(nonatomic, strong) WXMPhotoSignView *sign;
+
+@property (nonatomic, assign) int32_t currentRequestID;
 @end
 
 @implementation WXMPhotoCollectionCell
@@ -56,18 +58,25 @@
     @autoreleasepool {
         _photoAsset = photoAsset;
         [self wxm_setTypeSignInterface];
+        WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         
-        if (photoAsset.smallImage) _imageView.image = photoAsset.smallImage;
-        if (!photoAsset.smallImage) {
-            PHAsset *asset = photoAsset.asset;
-            CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
-            WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-            [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                _photoAsset.aspectRatio = image.size.height / image.size.width * 1.0;
-                self.imageView.image = image;
-                photoAsset.smallImage = image;
-            }];
+        if (photoAsset.smallImage) {
+            self.imageView.image = photoAsset.smallImage;
+            if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
+            return;
         }
+
+        PHAsset *asset = photoAsset.asset;
+        CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
+        if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
+        int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+            self.photoAsset.aspectRatio = image.size.height / image.size.width * 1.0;
+            self.imageView.image = image;
+            photoAsset.smallImage = image;
+        }];
+        
+        self.currentRequestID = ids;
+        self.photoAsset.requestID = ids;
     }
 }
 

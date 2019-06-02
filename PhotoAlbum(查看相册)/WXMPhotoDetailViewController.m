@@ -112,7 +112,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     CGSize size = CGSizeZero;
     WXMPhotoAsset *phsset = self.dataSource[indexPath.row];
     PHAsset *asset = phsset.asset;
-    CGFloat scale = [UIScreen mainScreen].scale;
+    /** CGFloat scale = [UIScreen mainScreen].scale; */
     NSString *indexString = @(indexPath.row).stringValue;
     BOOL respond = (self.signDictionary.allKeys.count < WXMMultiSelectMax);
     WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)[collectionView cellForItemAtIndexPath:indexPath];
@@ -122,7 +122,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (_photoType == WXMPhotoDetailTypeGetPhoto || _photoType == WXMPhotoDetailTypeGetPhoto_256) {
         
         if (self.exitPreview) {
-            size = CGSizeMake(WXMPhoto_Width * scale, WXMPhoto_Width * phsset.aspectRatio * scale);
+            size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Width * phsset.aspectRatio);
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto_256 && !self.exitPreview) {
             size = CGSizeMake(256, 256);
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto && !self.exitPreview) {
@@ -201,16 +201,18 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 /** 预览控制器 */
 - (WXMPhotoPreviewController *)wxm_getPreviewController:(NSIndexPath *)index {
-    WXMPhotoPreviewController * preview = [WXMPhotoPreviewController new];
-    preview.dataSource = self.dataSource;
-    preview.photoType = self.photoType;
-    preview.delegate = self.delegate;
-    preview.results = self.results;
-    preview.resultArray = self.resultArray;
-    preview.indexPath = index;
-    preview.signDictionary = self.signDictionary;
-    preview.windowImage = [WXMPhotoAssistant wxmPhoto_makeViewImage:self.navigationController.view];
-    return preview;
+    @autoreleasepool {
+        WXMPhotoPreviewController * preview = [WXMPhotoPreviewController new];
+        preview.dataSource = self.dataSource;
+        preview.photoType = self.photoType;
+        preview.delegate = self.delegate;
+        preview.results = self.results;
+        preview.resultArray = self.resultArray;
+        preview.indexPath = index;
+        preview.signDictionary = self.signDictionary;
+        preview.windowImage = [WXMPhotoAssistant wxmPhoto_makeViewImage:self.navigationController.view];
+        return preview;
+    }
 }
 
 /** 预览模式回调(不能立即刷新 刷新会导致转场动画时获取不到cell以及cell的位置) */
@@ -305,5 +307,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         if (self.refresh) [self.collectionView reloadData];
         self.refresh = NO;
     });
+}
+
+- (void)dealloc {
+    NSLog(@"释放 %@",NSStringFromClass(self.class));
 }
 @end

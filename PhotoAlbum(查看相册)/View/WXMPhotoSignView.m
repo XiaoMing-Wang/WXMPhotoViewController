@@ -87,6 +87,7 @@
 /** 提示框 */
 - (void)showAlertController {
     NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
-    [WXMPhotoAssistant showAlertViewControllerWithTitle:title message:@"" cancel:@"知道了" otherAction:nil completeBlock:nil];
+    [WXMPhotoAssistant showAlertViewControllerWithTitle:title message:@"" cancel:@"知道了"
+                                            otherAction:nil completeBlock:nil];
 }
 @end
