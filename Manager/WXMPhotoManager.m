@@ -41,6 +41,7 @@
     });
     return manager;
 }
+
 /** 是否有权限 */
 - (BOOL)wxm_photoPermission {
     if (PHPhotoLibrary.authorizationStatus == AVAuthorizationStatusNotDetermined ||
@@ -61,8 +62,9 @@
     [root presentViewController:alert animated:YES completion:nil];
     return NO;
 }
+
 /** 相册名称转换 */
-- (NSString *)transformAblumTitle:(NSString *)title {
+- (NSString *)wxm_transformAblumTitle:(NSString *)title {
     if ([title isEqualToString:@"Slo-mo"]) return @"慢动作";
     else if ([title isEqualToString:@"Recently Added"])  return @"最近添加";
     else if ([title isEqualToString:@"Favorites"]) return @"个人收藏";
@@ -97,7 +99,7 @@
             PHFetchResult *result = [self fetchAssetsInAssetCollection:collection ascending:NO];
             if (result.count > 0) {
                 WXMPhotoList *list = [[WXMPhotoList alloc] init];
-                list.title = [self transformAblumTitle:collection.localizedTitle];
+                list.title = [self wxm_transformAblumTitle:collection.localizedTitle];
                 list.photoNum = result.count;
                 list.firstAsset = result.firstObject;
                 list.assetCollection = collection;
@@ -114,7 +116,7 @@
         PHFetchResult *result = [self fetchAssetsInAssetCollection:collection ascending:NO];
         if (result.count > 0) {
             WXMPhotoList *list = [[WXMPhotoList alloc] init];
-            list.title = [self transformAblumTitle:collection.localizedTitle];
+            list.title = [self wxm_transformAblumTitle:collection.localizedTitle];
             list.photoNum = result.count;
             list.firstAsset = result.firstObject;
             list.assetCollection = collection;
@@ -216,6 +218,17 @@
                   resizeMode:PHImageRequestOptionsResizeModeNone
                 deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
                   completion:completion];
+}
+
+/** 同步获取图片 */
+- (void)wxm_synchronousGetPictures:(PHAsset *)asset
+                              size:(CGSize)size
+                        completion:(void (^)(UIImage *image))comple {
+    if (CGSizeEqualToSize(size, CGSizeZero)) {
+        [self getPictures_original:asset synchronous:YES completion:comple];
+    } else {
+        [self getPictures_customSize:asset synchronous:YES assetSize:size completion:comple];
+    }
 }
 
 

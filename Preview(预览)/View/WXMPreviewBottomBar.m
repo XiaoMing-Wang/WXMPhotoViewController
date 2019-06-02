@@ -6,10 +6,11 @@
 //  Copyright © 2019年 wq. All rights reserved.
 //
 #import "WXMPhotoConfiguration.h"
-#import "WXMPreviewBottom.h"
+#import "WXMPreviewBottomBar.h"
 #import "WXMPhotoSignModel.h"
 
-@interface WXMPreviewBottom ()
+@interface WXMPreviewBottomBar ()
+@property (nonatomic, strong) UICollectionView *photoCollectionView;
 @property (nonatomic, strong) UIScrollView *photoScrollView;
 @property (nonatomic, strong) UIView *finshView;
 @property (nonatomic, strong) UIView *line;
@@ -19,7 +20,7 @@
 @property (nonatomic, assign) BOOL wxm_loadFinsh;
 @property (nonatomic, strong) NSMutableDictionary *rankDictionary;
 @end
-@implementation WXMPreviewBottom
+@implementation WXMPreviewBottomBar
 
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) [self setupInterface];
@@ -51,50 +52,44 @@
     [self addSubview:_photoScrollView];
     [self addSubview:_finshView];
     [self addSubview:_line];
-    [self setUpFinshView];
+    [self wxm_setUpFinshView];
 }
 
 /** finshView */
-- (void)setUpFinshView {
+- (void)wxm_setUpFinshView {
     CGFloat height = 30;
-    UIButton *originalbg = [[UIButton alloc] initWithFrame:CGRectMake(15, 7.5, 200, height)];
-    originalbg.tag = 11;
-    [originalbg addTarget:self action:@selector(original:) forControlEvents:UIControlEventTouchUpInside];
-    _iconImgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
-    _iconImgView.image = [UIImage imageNamed:@"photo_original_def"];
-    _iconImgView.center = CGPointMake(_iconImgView.center.x, height / 2);
+    UIButton *originalbg = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 200, height)];
+    originalbg.tag = 100;
+    [originalbg setImage:[UIImage imageNamed:@"photo_original_def"] forState:UIControlStateNormal];
+    [originalbg setImage:[UIImage imageNamed:@"photo_sign_background2"] forState:UIControlStateSelected];
+    [originalbg setTitle:@"  原图(0.00M)" forState:UIControlStateNormal];
+    originalbg.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    originalbg.titleLabel.font = [UIFont systemFontOfSize:15];
+    originalbg.left = 15;
+    originalbg.centerY = _finshView.height / 2;
+    [originalbg wxm_addTarget:self action:@selector(originalTouchEvents:)];
     
-    _textLabel = [[UILabel alloc] initWithFrame:CGRectMake(27, 0, 150, height)];
-    _textLabel.textColor = [UIColor whiteColor];
-    _textLabel.font = [UIFont systemFontOfSize:15];
-    _textLabel.text = @"原图(1.34M)";
-    [originalbg addSubview:_iconImgView];
-    [originalbg addSubview:_textLabel];
-    
-    CGFloat x = WXMPhoto_Width - 60 - 15;
-    UIButton * finish = [[UIButton alloc] initWithFrame:CGRectMake(x, 7.5, 60, height)];
-    finish.titleLabel.font = [UIFont systemFontOfSize:13];
-    [finish setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [finish setTitle:@"完成" forState:UIControlStateNormal];
-    finish.backgroundColor = WXMSelectedColor;
-    finish.layer.cornerRadius = 4;
-    [finish addTarget:self action:@selector(finish) forControlEvents:UIControlEventTouchUpInside];
+    UIButton * finishButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 60, height)];
+    finishButton.layoutRight = 15;
+    finishButton.centerY = _finshView.height / 2;
+    finishButton.titleLabel.font = [UIFont systemFontOfSize:15];
+    [finishButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [finishButton setTitle:@"完成" forState:UIControlStateNormal];
+    finishButton.backgroundColor = WXMSelectedColor;
+    finishButton.layer.cornerRadius = 4;
+    [finishButton wxm_addTarget:self action:@selector(finishTouchEvents)];
     
     [_finshView addSubview:originalbg];
-    [_finshView addSubview:finish];
+    [_finshView addSubview:finishButton];
 }
 
 /** 原图选中 */
-- (void)original:(UIButton *)sender {
+- (void)originalTouchEvents:(UIButton *)sender {
     sender.selected = !sender.selected;
-    _iconImgView.image = [UIImage imageNamed:@"photo_original_def"];
-    if (sender.selected) {
-        _iconImgView.image = [UIImage imageNamed:@"photo_sign_background"];
-    }
 }
 
 /** 完成按钮 */
-- (void)finish {
+- (void)finishTouchEvents {
     if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_touchButtomFinsh)]) {
         [self.delegate wxm_touchButtomFinsh];
     }
@@ -108,10 +103,13 @@
     if (self.wxm_loadFinsh) [self sortingUpPhotoView];
 }
 
+/**  */
 - (void)setRealImageByte:(NSString *)realImageByte {
     dispatch_async(dispatch_get_main_queue(), ^{
+        UIButton *originalbg = [_finshView viewWithTag:100];
+        NSString *text = [NSString stringWithFormat:@"  原图（%@）",realImageByte];
+        [originalbg setTitle:text forState:UIControlStateNormal];
         _realImageByte = realImageByte;
-        _textLabel.text = [NSString stringWithFormat:@"原图（%@）",realImageByte];
     });
 }
 

@@ -12,15 +12,15 @@
 @interface WXMPhotoSignModel : NSObject
 
 /** 相册名字 */
-@property (nonatomic, copy) NSString *albumName;
+@property(nonatomic, copy) NSString *albumName;
 
 /** 位置 */
-@property (nonatomic, strong) NSIndexPath *indexPath;
+@property(nonatomic, strong) NSIndexPath *indexPath;
 
 /** 相片 */
-@property (nonatomic, strong) UIImage *image;
+@property(nonatomic, strong) UIImage *image;
 
 /** 排名 */
-@property (nonatomic, assign) NSInteger rank;
+@property(nonatomic, assign) NSInteger rank;
 
 @end

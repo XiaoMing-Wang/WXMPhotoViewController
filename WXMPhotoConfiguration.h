@@ -10,12 +10,14 @@
 #define WXMPhoto_IPHONEX ((WXMPhoto_Height == 812.0f) ? YES : NO)
 #define WXMPhoto_BarHeight ((WXMPhoto_IPHONEX) ? 88.0f : 64.0f)
 #define WXMPhoto_KWindow [[[UIApplication sharedApplication] delegate] window]
-#define WXMPhoto_RGBColor(r, g, b) [UIColor colorWithRed:(r)/255.0f green:(g)/255.0f blue:(b)/255.0f alpha:1]
+#define WXMPhoto_RGBColor(r, g, b)\
+[UIColor colorWithRed:(r)/255.0f green:(g)/255.0f blue:(b)/255.0f alpha:1]
 
 #ifndef WXMPhotoConfiguration_h
 #define WXMPhotoConfiguration_h
 #import <UIKit/UIKit.h>
 #import "WXMPhotoAssistant.h"
+#import "UIView+WXMPhoto.h"
 
 /** 导航栏颜色 */
 #define WXMBarColor [[UIColor whiteColor] colorWithAlphaComponent:1]

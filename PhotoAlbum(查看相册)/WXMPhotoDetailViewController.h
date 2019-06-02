@@ -19,9 +19,9 @@
 
 /** 期望获取图片大小 */
 @property (nonatomic, assign) CGSize expectSize;
-@property (nonatomic, weak) id<WXMPhotoProtocol> delegate;
 
 /** 回调 */
+@property (nonatomic, weak) id<WXMPhotoProtocol> delegate;
 @property (nonatomic, strong) void (^results)(UIImage *image);
 @property (nonatomic, strong) void (^resultArray)(NSArray<UIImage *> *images);
 

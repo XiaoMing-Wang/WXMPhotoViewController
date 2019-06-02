@@ -25,6 +25,7 @@
 @property (nonatomic, assign) CGFloat wxm_x;
 @property (nonatomic, assign) CGFloat wxm_y;
 @end
+
 @implementation WXMPhotoPreviewCell
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) [self setupInterface];
@@ -56,6 +57,8 @@
     [_contentScrollView setMaximumZoomScale:2.5f];
     [self addTapGestureRecognizer];
 }
+
+/** 设置图片 GIF */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     @autoreleasepool {
         _photoAsset = photoAsset;
@@ -63,9 +66,9 @@
         CGFloat height = (CGFloat) photoAsset.asset.pixelHeight;
         
         __block CGFloat scale = (height / width) * 1.0f;
-        CGFloat w = [UIScreen mainScreen].bounds.size.width * [UIScreen mainScreen].scale;
-        CGFloat h = scale * w;
-        
+        CGFloat screenWidth  = [UIScreen mainScreen].bounds.size.width * [UIScreen mainScreen].scale;
+        CGFloat imageHeight = scale * screenWidth;
+        WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         
         /** GIF */
         if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
@@ -73,7 +76,7 @@
                 [self setLocation:scale];
                 self.imageView.image = [WXMPhotoGIFImage imageWithData:photoAsset.imageData];
             } else {
-                [[WXMPhotoManager sharedInstance] getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
+                [man getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
                     [self setLocation:scale];
                     photoAsset.imageData = data;
                     self.imageView.image = [WXMPhotoGIFImage imageWithData:photoAsset.imageData];
@@ -85,25 +88,23 @@
         
         /** image */
         if (photoAsset.bigImage) {
-            _imageView.image = photoAsset.bigImage;
+            self.imageView.image = photoAsset.bigImage;
             scale = photoAsset.bigImage.size.height / photoAsset.bigImage.size.width;
             [self setLocation:scale];
         } else {
             PHAsset *asset = photoAsset.asset;
-            CGSize size = CGSizeMake(w, h);
-            WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
-            [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                
+            CGSize size = CGSizeMake(screenWidth, imageHeight);
+            [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
                 scale = image.size.height / image.size.width;
                 photoAsset.bigImage = image;
                 photoAsset.aspectRatio = scale;
                 [self setLocation:scale];
                 self.imageView.image = image;
-                
             }];
         }
     }
 }
+
 /** 设置image位置 */
 - (void)setLocation:(CGFloat)scale {
     CGFloat cw = self.contentScrollView.frame.size.width;
@@ -111,6 +112,7 @@
     self.imageView.frame = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Width * scale);
     self.imageView.center = CGPointMake(cw / 2, ch / 2);
 }
+
 /** 设置frame*/
 - (void)setFrame:(CGRect)frame {
     frame.origin.x = -WXMPhotoPreviewSpace / 2;
@@ -175,6 +177,7 @@
     if (scrollView.zoomScale == scrollView.maximumZoomScale) [scrollView setZoomScale:1 animated:YES];
     else [scrollView zoomToRect:CGRectMake(point.x, point.y, 1, 1) animated:YES];
 }
+
 /** 设置手势顺序 */
 - (void)setColleRecognizer:(UIPanGestureRecognizer *)colleRecognizer {
     _colleRecognizer = colleRecognizer;
@@ -248,6 +251,7 @@
         }
     }
 }
+
 - (UIView *)blackView {
     if (!_blackView)  {
         _blackView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Height)];

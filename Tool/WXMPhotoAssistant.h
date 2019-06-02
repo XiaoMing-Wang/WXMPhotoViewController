@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+@class PHAsset;
 
 @interface WXMPhotoAssistant : NSObject
 
@@ -24,6 +25,9 @@
 + (UIBarButtonItem *)wxm_createButtonItem:(NSString *)title
                                    target:(id)target
                                    action:(SEL)action;
+
+/** 获取原始图大小 */
++ (CGFloat)wxm_getOriginalSize:(PHAsset *)asset;
 
 /** 警告框 Alert*/
 + (void)showAlertViewControllerWithTitle:(NSString *)title

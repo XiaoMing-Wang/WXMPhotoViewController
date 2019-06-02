@@ -20,8 +20,9 @@
 #import "WXMPhotoPreviewController.h"
 #import "WXMPhotoShapeController.h"
 
-@interface WXMPhotoDetailViewController () <
-UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
+@interface WXMPhotoDetailViewController ()
+<UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
+
 @property (nonatomic, strong) UICollectionView *collectionView;
 
 /** 数据源 */
@@ -38,8 +39,8 @@ UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
     self.exitPreview = YES;
+    
     self.dataSource = @[].mutableCopy;
     self.signDictionary = @{}.mutableCopy;
     self.view.backgroundColor = [UIColor whiteColor];
@@ -50,8 +51,9 @@ UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
     if (@available(iOS 11.0, *)) {
         self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
     }
+    
     [self.view addSubview:self.collectionView];
-    [self getDisplayImages];  /** 获取图片 */
+    [self wxm_getDisplayImages];  /** 获取图片 */
     
     SEL sel = @selector(dismissViewController);
     UIBarButtonItem *item = [WXMPhotoAssistant wxm_createButtonItem:@"完成" target:self action:sel];
@@ -59,7 +61,7 @@ UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
 }
 
 /** 获取2倍像素的图片 */
-- (void)getDisplayImages {
+- (void)wxm_getDisplayImages {
     PHAssetCollection *asset = _phoneList.assetCollection;
     WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
     NSArray *arrayAll = [manager wxm_getAssetsInAssetCollection:asset ascending:YES];
@@ -69,6 +71,7 @@ UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
         [self.dataSource addObject:asset];
     }];
     
+    /** 滚动到最后 */
     [self.collectionView reloadData];
     if (_dataSource.count <= 1) return;
     UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredVertically;
@@ -91,6 +94,7 @@ UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
     cell.photoType = self.photoType;
     cell.photoAsset = self.dataSource[indexPath.row];
     
+    /** 多选模式 */
     if (self.photoType == WXMPhotoDetailTypeMultiSelect) {
         NSString *indexString = @(indexPath.row).stringValue;
         BOOL respond = (self.signDictionary.allKeys.count < WXMMultiSelectMax);
@@ -101,48 +105,48 @@ UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
 }
 
 /** 点击事件 */
-- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+- (void)collectionView:(UICollectionView *)collectionView
+didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    
     WXMPhotoManager * manager = [WXMPhotoManager sharedInstance];
     CGSize size = CGSizeZero;
     WXMPhotoAsset *phsset = self.dataSource[indexPath.row];
     PHAsset *asset = phsset.asset;
+    CGFloat scale = [UIScreen mainScreen].scale;
     NSString *indexString = @(indexPath.row).stringValue;
     BOOL respond = (self.signDictionary.allKeys.count < WXMMultiSelectMax);
     WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)[collectionView cellForItemAtIndexPath:indexPath];
     
-    /** 获取图片 */
-    if (_photoType == WXMPhotoDetailTypeGetPhoto) {
-        [manager getPictures_original:asset synchronous:YES completion:^(UIImage *image) {
+    
+    /** 单选原图 + 单选256 */
+    if (_photoType == WXMPhotoDetailTypeGetPhoto || _photoType == WXMPhotoDetailTypeGetPhoto_256) {
+        
+        if (self.exitPreview) {
+            size = CGSizeMake(WXMPhoto_Width * scale, WXMPhoto_Width * phsset.aspectRatio * scale);
+        } else if (_photoType == WXMPhotoDetailTypeGetPhoto_256 && !self.exitPreview) {
+            size = CGSizeMake(256, 256);
+        } else if (_photoType == WXMPhotoDetailTypeGetPhoto && !self.exitPreview) {
+            size = CGSizeZero;
+        }
+        
+        [manager wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
             if (self.exitPreview) {
                 phsset.bigImage = image;
-                WXMPhotoPreviewController * preview = [WXMPhotoPreviewController new];
-                preview.dataSource = self.dataSource;
+                WXMPhotoPreviewController *preview = [self wxm_getPreviewController:indexPath];
                 preview.previewType = WXMPhotoPreviewTypeSingle;
-                preview.signDictionary = self.signDictionary;
-                preview.indexPath = indexPath;
-                preview.windowImage = [WXMPhotoAssistant wxmPhoto_makeViewImage:self.navigationController.view];
                 [self.navigationController pushViewController:preview animated:YES];
-                /**  preview.callback = ^NSDictionary *(NSInteger index,NSInteger rank) {
-                    return [self previewCallBack:index rank:rank];
-                }; */
-                
-            } else {
-                [self sendImage:image];
-                [self dismissViewController];
+                return;
             }
-        }];
-        
-    }
-    
-    
-    /** 获取256图片  */
-    if (_photoType == WXMPhotoDetailTypeGetPhoto_256) {
-        size = CGSizeMake(256, 256);
-        [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
             [self sendImage:image];
             [self dismissViewController];
         }];
     }
+    
+    
+    /** 获取256图片  */
+     /** if (_photoType == WXMPhotoDetailTypeGetPhoto_256) {
+      
+    } */
     
     
     /** 多选 (点图标) */
@@ -193,6 +197,20 @@ UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
         }];
     }
     
+}
+
+/** 预览控制器 */
+- (WXMPhotoPreviewController *)wxm_getPreviewController:(NSIndexPath *)index {
+    WXMPhotoPreviewController * preview = [WXMPhotoPreviewController new];
+    preview.dataSource = self.dataSource;
+    preview.photoType = self.photoType;
+    preview.delegate = self.delegate;
+    preview.results = self.results;
+    preview.resultArray = self.resultArray;
+    preview.indexPath = index;
+    preview.signDictionary = self.signDictionary;
+    preview.windowImage = [WXMPhotoAssistant wxmPhoto_makeViewImage:self.navigationController.view];
+    return preview;
 }
 
 /** 预览模式回调(不能立即刷新 刷新会导致转场动画时获取不到cell以及cell的位置) */
@@ -247,7 +265,6 @@ UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
 - (void)sendImage:(UIImage *)image {
     SEL singleSEL = @selector(wxm_singlePhotoAlbumWithImage:);
     if (self.results) self.results(image);
-    if (self.resultArray) self.resultArray(@[image]);
     if (self.delegate && [self.delegate respondsToSelector:singleSEL]) {
         [self.delegate wxm_singlePhotoAlbumWithImage:image];
     }

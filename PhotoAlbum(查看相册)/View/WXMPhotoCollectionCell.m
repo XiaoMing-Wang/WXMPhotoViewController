@@ -15,6 +15,7 @@
 @end
 
 @implementation WXMPhotoCollectionCell
+
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) [self setupInterface];
     return self;
@@ -52,7 +53,8 @@
             CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
             WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
             [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                /** NSLog(@"%f-%f",image.size.width,image.size.height); */
+                /**  NSLog(@"%f-%f",image.size.width,image.size.height); */
+                _photoAsset.aspectRatio = image.size.height / image.size.width * 1.0;
                 self.imageView.image = image;
                 photoAsset.smallImage = image;
             }];

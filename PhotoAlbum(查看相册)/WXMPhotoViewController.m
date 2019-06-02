@@ -42,7 +42,7 @@
     [self.navigationController.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
     [WXMPhotoAssistant wxm_navigationLine:self.navigationController show:YES];
     
-    SEL sel = @selector(backLastViewController);
+    SEL sel = @selector(wxm_backLastViewController);
     UIBarButtonItem *item = [WXMPhotoAssistant wxm_createButtonItem:@"取消" target:self action:sel];
     self.navigationItem.rightBarButtonItem = item;
     
@@ -64,11 +64,11 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    [self pushToPhotoListViewController:indexPath];
+    [self wxm_pushToPhotoListViewController:indexPath];
 }
 
 /** 跳转 */
-- (void)pushToPhotoListViewController:(NSIndexPath *)indexPath {
+- (void)wxm_pushToPhotoListViewController:(NSIndexPath *)indexPath {
     if (self.pushCamera == NO && indexPath == nil) return;
     WXMPhotoDetailViewController *photoDetail = [WXMPhotoDetailViewController new];
     photoDetail.exitPreview = self.exitPreview;
@@ -85,7 +85,7 @@
 }
 
 /** 返回 */
-- (void)backLastViewController {
+- (void)wxm_backLastViewController {
     [self.navigationController popViewControllerAnimated:YES];
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
@@ -97,13 +97,13 @@
     void(^resultsBlock)(void) = ^(void) {
         if ([WXMPhotoManager sharedInstance].picturesArray) {
             [self.jurisdictionData addObjectsFromArray:[WXMPhotoManager sharedInstance].picturesArray];
-            [self pushToPhotoListViewController:nil];
+            [self wxm_pushToPhotoListViewController:nil];
             [self.listTableView reloadData];
         } else {
-            [[WXMPhotoManager sharedInstance] wxm_getAllPicturesListBlock:^(NSArray<WXMPhotoList *> *array) {
+            [[WXMPhotoManager sharedInstance] wxm_getAllPicturesListBlock:^(NSArray *array) {
                 [self.jurisdictionData addObjectsFromArray:array];
                 [self.listTableView reloadData];
-                [self pushToPhotoListViewController:nil];
+                [self wxm_pushToPhotoListViewController:nil];
             }];
         }
      };
@@ -112,7 +112,7 @@
     if (PHPhotoLibrary.authorizationStatus == AVAuthorizationStatusNotDetermined) {
         [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
             if (status == AVAuthorizationStatusAuthorized) resultsBlock();
-            else [self backLastViewController];
+            else [self wxm_backLastViewController];
         }];
     }
 
@@ -153,5 +153,7 @@
     [super viewDidAppear:animated];
     self.navigationController.interactivePopGestureRecognizer.enabled = NO;
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleDefault;
+    UIImage * imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:WXMBarColor];
+    [self.navigationController.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
 }
 @end

@@ -10,6 +10,9 @@
 
 @interface WXMPhotoPreviewController : UIViewController
 
+/** 相册模式 */
+@property (nonatomic, assign) WXMPhotoDetailType photoType;
+
 /** 预览类型 */
 @property (nonatomic, assign) WXMPhotoPreviewType previewType;
 
@@ -27,6 +30,11 @@
 
 /**  */
 @property (nonatomic, strong) UIImage *windowImage;
+
+/** 回调 */
+@property (nonatomic, weak) id<WXMPhotoProtocol> delegate;
+@property (nonatomic, strong) void (^results)(UIImage *image);
+@property (nonatomic, strong) void (^resultArray)(NSArray<UIImage *> *images);
 
 /** 动画 */
 @property (nonatomic, strong) UIImage * (^transitions)(NSInteger index);

@@ -8,22 +8,22 @@
 
 #import <UIKit/UIKit.h>
 
-@interface WXMPreviewBottom : UIView
+@interface WXMPreviewBottomBar : UIView
 
 /** 是否选取原图 */
-@property (nonatomic, assign) BOOL isOriginalImage;
+@property (nonatomic, assign, readonly) BOOL isOriginalImage;
 
-/** 原图大小 */
+/** 当前显示图片大小 */
 @property (nonatomic, assign) NSString *realImageByte;
 
 
 @property (nonatomic, assign) id<WXMPreviewToolbarProtocol> delegate;
 
-/** 全部选中的 */
-@property (nonatomic, strong) NSMutableDictionary *signDictionary;
-
 /** 当前选中的 */
 @property (nonatomic, assign) NSInteger seletedIdx;
+
+/** 全部选中的 */
+@property (nonatomic, strong) NSMutableDictionary *signDictionary;
 
 /** 显示隐藏 */
 - (void)setAccordingState:(BOOL)state;

@@ -8,8 +8,8 @@
 #import "WXMPhotoPreviewController.h"
 #import "WXMPhotoPreviewCell.h"
 #import "WXMPhotoConfiguration.h"
-#import "WXMPreviewTop.h"
-#import "WXMPreviewBottom.h"
+#import "WXMPreviewTopBar.h"
+#import "WXMPreviewBottomBar.h"
 #import "WXMPhotoTransitions.h"
 
 
@@ -20,8 +20,8 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, weak) UINavigationController *weakNavigationVC;
 @property (nonatomic, strong) UIScrollView *transitionScrollView;
-@property (nonatomic, strong) WXMPreviewTop *topView;
-@property (nonatomic, strong) WXMPreviewBottom *bottomView;
+@property (nonatomic, strong) WXMPreviewTopBar *topBarView;
+@property (nonatomic, strong) WXMPreviewBottomBar *bottomBarView;
 
 @property (readwrite, nonatomic) UIStatusBarStyle lastStatusBarStyle;
 @property (nonatomic, assign) BOOL statusBarHidden;
@@ -62,13 +62,14 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     } @catch (NSException *exception) {} @finally {};
     
     /** 导航栏 */
-    [self.view addSubview:self.topView];
-    [self.view addSubview:self.bottomView];
+    [self.view addSubview:self.topBarView];
+    [self.view addSubview:self.bottomBarView];
     
     /** 滚动到选中 */
     if (_dataSource.count <= 1) self.collectionView.alwaysBounceHorizontal = YES;
     if (_dataSource.count <= _indexPath.row) return;
     self.selectedIndex = self.indexPath.row;
+    [self wxm_setBottomBarViewrealByte];
     NSIndexPath * index = [NSIndexPath indexPathForRow:self.indexPath.row inSection:0];
     UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
     [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:NO];
@@ -107,6 +108,20 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     CGFloat offY = scrollView.contentOffset.x;
     self.selectedIndex = offY / scrollView.frame.size.width;
     [self wxm_setUpTopView:self.selectedIndex];
+    [self wxm_setBottomBarViewrealByte];
+}
+
+/** 设置真实大小 */
+- (void)wxm_setBottomBarViewrealByte {
+    /** 获取当前图片的原始大小 */
+    WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
+    CGFloat bytes = asset.bytes;
+    if (bytes < 100) {
+        bytes = [WXMPhotoAssistant wxm_getOriginalSize:asset.asset];
+        asset.bytes = bytes;
+    }
+    NSString * realByte =  [NSString stringWithFormat:@"%.2fM", bytes / (1024 * 1024)];
+    [self.bottomBarView setRealImageByte:realByte];
 }
 
 #pragma mark _____________________________________________ cell回调代理
@@ -114,17 +129,17 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 /** cell回调代理 */
 - (void)wxm_respondsToTapSingle {
     self.showToolbar = !self.showToolbar;
-    self.topView.hidden = self.bottomView.hidden = self.showToolbar;
-    [UIApplication sharedApplication].statusBarHidden = self.topView.hidden;
-    if (self.topView.hidden == NO) self.topView.alpha = 1;
-    if (self.bottomView.hidden == NO) self.bottomView.alpha = 1;
+    self.topBarView.hidden = self.bottomBarView.hidden = self.showToolbar;
+    [UIApplication sharedApplication].statusBarHidden = self.topBarView.hidden;
+    if (self.topBarView.hidden == NO) self.topBarView.alpha = 1;
+    if (self.bottomBarView.hidden == NO) self.bottomBarView.alpha = 1;
 }
 
 /**  */
 - (void)wxm_respondsBeginDragCell {
     self.collectionView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0];
-    [self.topView setAccordingState:NO];
-    [self.bottomView setAccordingState:NO];
+    [self.topBarView setAccordingState:NO];
+    [self.bottomBarView setAccordingState:NO];
     [UIApplication sharedApplication].statusBarStyle = self.lastStatusBarStyle;
     self.collectionView.scrollEnabled = NO;
 }
@@ -132,8 +147,8 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 - (void)wxm_respondsEndDragCell:(UIScrollView *)jump {
     if (jump == nil) {
         self.collectionView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:1];
-        [self.topView setAccordingState:YES];
-        [self.bottomView setAccordingState:YES];
+        [self.topBarView setAccordingState:YES];
+        [self.bottomBarView setAccordingState:YES];
         [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
         self.collectionView.scrollEnabled = YES;
         [UIApplication sharedApplication].statusBarHidden = NO;
@@ -143,16 +158,12 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     }
     
 }
+#pragma mark 回调
 
 /** 工具栏回调 */
 - (void)wxm_touchTopLeftItem {
     self.navigationController.delegate = nil;
     [self.navigationController popViewControllerAnimated:YES];
-}
-
-/** 完成按钮 */
-- (void)wxm_touchButtomFinsh {
-    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)wxm_touchTopRightItem:(WXMPhotoSignModel *)obj {
@@ -164,29 +175,50 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     if (self.callback)  {
         self.signDictionary = self.callback(self.selectedIndex,obj.rank).mutableCopy;
         [self wxm_setUpTopView:self.selectedIndex];
-        self.bottomView.signDictionary = self.signDictionary;
+        self.bottomBarView.signDictionary = self.signDictionary;
     }
 }
 
-/** */
-- (void)wxm_setUpTopView:(NSInteger)location {
-    self.selectedIndex = location;
-    NSString * indexString = @(location).stringValue;
-    self.topView.signModel = [self.signDictionary objectForKey:indexString];
-    self.bottomView.seletedIdx = location;
-    
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),  ^{
-        WXMPhotoAsset *asset = self.dataSource[location];
-        PHAssetResource *resource = [[PHAssetResource assetResourcesForAsset:asset.asset] firstObject];
-        long long size = [[resource valueForKey:@"fileSize"] longLongValue];
-        NSString *realByte = [NSString stringWithFormat:@"%.2fM",(CGFloat)size/(1024*1024)];
-        [self.bottomView setRealImageByte:realByte];
-    });
+/** 完成按钮 */
+- (void)wxm_touchButtomFinsh {
+    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+    if (_previewType == WXMPhotoPreviewTypeSingle) {
+        [self wxm_singlePhotoSendImage];
+    } else if (_previewType == WXMPhotoPreviewTypeMost) {
+        [self wxm_morePhotoSendImage];
+    }
 }
+
+/** 翻页 */
+- (void)wxm_setUpTopView:(NSInteger)location {
+    NSString * indexString = @(location).stringValue;
+    self.topBarView.signModel = [self.signDictionary objectForKey:indexString];
+    self.bottomBarView.seletedIdx = location;
+}
+
+/** 回调单张图片 */
+- (void)wxm_singlePhotoSendImage {
+    WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
+    WXMPhotoManager * man = [WXMPhotoManager sharedInstance];
+    CGSize size = CGSizeZero;
+    if (_photoType == WXMPhotoDetailTypeGetPhoto_256) size = CGSizeMake(256, 256);
+    [man wxm_synchronousGetPictures:asset.asset size:size completion:^(UIImage *image) {
+        SEL singleSEL = @selector(wxm_singlePhotoAlbumWithImage:);
+        if (self.results) self.results(image);
+        if (self.delegate && [self.delegate respondsToSelector:singleSEL]) {
+            [self.delegate wxm_singlePhotoAlbumWithImage:image];
+        }
+    }];
+}
+
+/** 回调多张图片 */
+- (void)wxm_morePhotoSendImage {
+    
+}
+#pragma mark 设置
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    
     self.lastStatusBarStyle = [UIApplication sharedApplication].statusBarStyle;
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
@@ -203,37 +235,36 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [UIApplication sharedApplication].statusBarHidden = NO;
-    self.topView.showLeftButton = NO;
+    self.topBarView.showLeftButton = NO;
     [UIApplication sharedApplication].statusBarStyle = self.lastStatusBarStyle;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    
-    self.topView.showLeftButton = YES;
+    self.topBarView.showLeftButton = YES;
     dispatch_queue_t queue = dispatch_get_main_queue();
-    [UIApplication sharedApplication].statusBarHidden = self.topView.hidden;
+    [UIApplication sharedApplication].statusBarHidden = self.topBarView.hidden;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.05 * NSEC_PER_SEC)),queue, ^{
         self.navigationController.navigationBar.userInteractionEnabled = NO;
     });
 }
 
-- (WXMPreviewTop *)topView {
-    if (!_topView)  {
-        _topView = [[WXMPreviewTop alloc] initWithFrame:CGRectZero];
-        _topView.delegate = self;
-        if (_previewType == WXMPhotoPreviewTypeSingle) _topView.showRightButton = NO;
+- (WXMPreviewTopBar *)topBarView {
+    if (!_topBarView)  {
+        _topBarView = [[WXMPreviewTopBar alloc] initWithFrame:CGRectZero];
+        _topBarView.delegate = self;
+        if (_previewType == WXMPhotoPreviewTypeSingle) _topBarView.showRightButton = NO;
     }
-    return _topView;
+    return _topBarView;
 }
 
-- (WXMPreviewBottom *)bottomView {
-    if (!_bottomView) {
-        _bottomView = [[WXMPreviewBottom alloc] initWithFrame:CGRectZero];
-        _bottomView.signDictionary = self.signDictionary;
-        _bottomView.delegate = self;
+- (WXMPreviewBottomBar *)bottomBarView {
+    if (!_bottomBarView) {
+        _bottomBarView = [[WXMPreviewBottomBar alloc] initWithFrame:CGRectZero];
+        _bottomBarView.signDictionary = self.signDictionary;
+        _bottomBarView.delegate = self;
     }
-    return _bottomView;
+    return _bottomBarView;
 }
 
 - (UICollectionView *)collectionView {
@@ -262,8 +293,11 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 /** 提示框 */
 - (void)showAlertController {
     NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
-    [WXMPhotoAssistant showAlertViewControllerWithTitle:title message:@"" cancel:@"知道了"
-                                            otherAction:nil completeBlock:nil];
+    [WXMPhotoAssistant showAlertViewControllerWithTitle:title
+                                                message:@""
+                                                 cancel:@"知道了"
+                                            otherAction:nil
+                                          completeBlock:nil];
 }
 
 - (UIScrollView *)transitionScrollerView {

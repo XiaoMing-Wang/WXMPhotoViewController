@@ -15,5 +15,6 @@
 @property (nonatomic, weak) id<WXMPhotoSignProtocol> delegate;
 @property (nonatomic, strong) WXMPhotoSignModel *signModel;
 @property (nonatomic, assign) BOOL userInteraction;
+
 - (instancetype)initWithSupViewSize:(CGSize)size;
 @end

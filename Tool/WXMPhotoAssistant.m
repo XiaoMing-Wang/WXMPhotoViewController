@@ -9,6 +9,7 @@
 #import "WXMPhotoAssistant.h"
 #import "WXMPhotoConfiguration.h"
 #import <objc/runtime.h>
+#import "WXMPhotoManager.h"
 
 @implementation WXMPhotoAssistant
 static char wxm_Photoline;
@@ -59,7 +60,14 @@ static char wxm_Photoline;
     return buttonItem;
 }
 
-
+/** 获取原始图大小 */
++ (CGFloat)wxm_getOriginalSize:(PHAsset *)asset {
+    PHAssetResource *resource = [[PHAssetResource assetResourcesForAsset:asset] firstObject];
+    long long size = [[resource valueForKey:@"fileSize"] longLongValue];
+    return (CGFloat)size;
+    
+    /** return [NSString stringWithFormat:@"%.2fM", (CGFloat)size / (1024 * 1024)]; */
+}
 
 /** 警告框 AlertViewController */
 + (void)showAlertViewControllerWithTitle:(NSString *)title

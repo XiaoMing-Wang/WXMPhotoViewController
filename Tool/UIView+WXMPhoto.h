@@ -10,6 +10,7 @@
 
 @interface UIView (WXMPhoto)
 
+/** 绝对定位 */
 @property (nonatomic, assign) CGFloat x;
 @property (nonatomic, assign) CGFloat y;
 @property (nonatomic, assign) CGFloat width;
@@ -19,11 +20,17 @@
 @property (nonatomic, assign) CGFloat centerY;
 
 @property (nonatomic, assign) CGPoint origin;
-@property (nonatomic, assign) CGSize  size;
+@property (nonatomic, assign) CGSize size;
+
 @property (nonatomic, assign) CGFloat left;
 @property (nonatomic, assign) CGFloat right;
 @property (nonatomic, assign) CGFloat top;
 @property (nonatomic, assign) CGFloat bottom;
+
+/** 相对定位 */
+@property (nonatomic, assign) BOOL layoutCenterSupView;
+@property (nonatomic, assign) CGFloat layoutRight;
+@property (nonatomic, assign) CGFloat layoutBottom;
 
 @end
 
@@ -36,4 +43,18 @@
 @property (nonatomic, assign) CGFloat contentInsetLeft;
 @property (nonatomic, assign) CGFloat contentInsetBottom;
 @property (nonatomic, assign) CGFloat contentInsetRight;
+@end
+
+@interface UIButton (WXMPhoto)
+
+/** 点击 block */
+- (void)wxm_blockWithControlEventTouchUpInside:(void (^)(void))block;
+- (void)wxm_addTarget:(id)target action:(SEL)action;
+- (void)wxm_setBackgroundImage:(NSString *)imageName;
+
+/** 扩大Button的点击范围 */
+- (void)wxm_setEnlargeEdgeWithTop:(CGFloat)top
+                             left:(CGFloat)left
+                            right:(CGFloat)right
+                           bottom:(CGFloat)bottom;
 @end

@@ -92,6 +92,12 @@ typedef enum {
                     completion:(void (^)(UIImage *image))completion;
 
 
+/** 同步获取图片 size为zero时获取原图 */
+- (void)wxm_synchronousGetPictures:(PHAsset *)asset
+                              size:(CGSize)size
+                        completion:(void (^)(UIImage *image))comple;
+
+
 /** 获取GIF */
 - (void)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
