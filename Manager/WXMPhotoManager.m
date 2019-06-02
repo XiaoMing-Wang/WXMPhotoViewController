@@ -48,8 +48,9 @@
 
 @implementation WXMPhotoManager
 
+static WXMPhotoManager *manager = nil;
 + (instancetype)sharedInstance {
-    static WXMPhotoManager *manager = nil;
+   
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         manager = [[self alloc] init];
@@ -141,7 +142,7 @@
         }];
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.picturesArray = photoList.mutableCopy;
+            self.picturesArray = photoList;
             if (block) block(photoList);
         });
     }
@@ -231,7 +232,7 @@
                            original:NO
                           assetSize:assetSize
                          resizeMode:PHImageRequestOptionsResizeModeFast
-                       deliveryMode:PHImageRequestOptionsDeliveryModeOpportunistic
+                       deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
                          completion:completion];
 }
 

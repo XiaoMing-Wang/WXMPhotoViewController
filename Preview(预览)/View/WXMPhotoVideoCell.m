@@ -101,26 +101,23 @@
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     @autoreleasepool {
         _photoAsset = photoAsset;
-        CGFloat width = (CGFloat) photoAsset.asset.pixelWidth;
-        CGFloat height = (CGFloat) photoAsset.asset.pixelHeight;
-        
-        __block CGFloat scale = (height / width) * 1.0f;
-        CGFloat screenWidth  = [UIScreen mainScreen].bounds.size.width * [UIScreen mainScreen].scale;
-        CGFloat imageHeight = scale * screenWidth;
+        CGFloat screenWidth  = WXMPhoto_Width * 2.0;
+        CGFloat imageHeight = self.photoAsset.aspectRatio * screenWidth;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
+        if (self.photoAsset.aspectRatio <= 0) {
+            _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / (CGFloat)photoAsset.asset.pixelWidth * 1.0;
+            imageHeight = self.photoAsset.aspectRatio * screenWidth;
+        }
         
         if (photoAsset.bigImage) {
             self.imageView.image = photoAsset.bigImage;
-            scale = photoAsset.bigImage.size.height / photoAsset.bigImage.size.width;
-            [self setLocation:scale];
+            [self setLocation:self.photoAsset.aspectRatio];
         } else {
             PHAsset *asset = photoAsset.asset;
             CGSize size = CGSizeMake(screenWidth, imageHeight);
             [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                scale = image.size.height / image.size.width;
                 photoAsset.bigImage = image;
-                photoAsset.aspectRatio = scale;
-                [self setLocation:scale];
+                [self setLocation:self.photoAsset.aspectRatio];
                 self.imageView.image = image;
             }];
         }
@@ -163,12 +160,11 @@
           [self.wxm_avPlayer play];
       };
       
-      if (_photoAsset.videoUrl) playBlock(_photoAsset.videoUrl);
-      if (!_photoAsset.videoUrl) {
+      if (self.photoAsset.videoUrl) playBlock(_photoAsset.videoUrl);
+      if (!self.photoAsset.videoUrl) {
           WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
           [man getVideoByAsset:_photoAsset.asset completion:^(NSURL *url, NSData * data) {
-              _photoAsset.videoUrl = url;
-              _photoAsset.imageData = data;
+              self.photoAsset.videoUrl = url;
               playBlock(_photoAsset.videoUrl);
           }];
       }

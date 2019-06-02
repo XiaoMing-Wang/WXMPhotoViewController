@@ -122,12 +122,13 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (_photoType == WXMPhotoDetailTypeGetPhoto || _photoType == WXMPhotoDetailTypeGetPhoto_256) {
         
         if (self.exitPreview) {
-            size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Width * phsset.aspectRatio);
+            size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto_256 && !self.exitPreview) {
             size = CGSizeMake(256, 256);
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto && !self.exitPreview) {
             size = CGSizeZero;
         }
+        
         
         [manager wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
             if (self.exitPreview) {
@@ -210,7 +211,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         preview.resultArray = self.resultArray;
         preview.indexPath = index;
         preview.signDictionary = self.signDictionary;
-        preview.windowImage = [WXMPhotoAssistant wxmPhoto_makeViewImage:self.navigationController.view];
+        preview.windowView = [WXMPhotoAssistant wxmPhoto_snapViewImage:self.navigationController.view];
+    /** preview.windowImage = [WXMPhotoAssistant wxmPhoto_makeViewImage:self.navigationController.view]; */
         return preview;
     }
 }

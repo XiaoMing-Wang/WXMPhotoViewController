@@ -18,12 +18,14 @@
 @property (nonatomic, strong) UIScrollView *contentScrollView;
 @property (nonatomic, strong) WXMPhotoImageView *imageView;
 @property (nonatomic, strong) WXMDirectionPanGestureRecognizer *recognizer;
-@property (nonatomic, assign) CGFloat wxm_zoomScale;
-@property (nonatomic, assign) CGPoint wxm_lastPoint;
+
+@property (nonatomic, assign) int32_t currentRequestID;
 
 /** 距离原点的比例 */
 @property (nonatomic, assign) CGFloat wxm_x;
 @property (nonatomic, assign) CGFloat wxm_y;
+@property (nonatomic, assign) CGFloat wxm_zoomScale;
+@property (nonatomic, assign) CGPoint wxm_lastPoint;
 @end
 
 @implementation WXMPhotoPreviewCell
@@ -63,46 +65,65 @@
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     @autoreleasepool {
         _photoAsset = photoAsset;
-        CGFloat width = (CGFloat) photoAsset.asset.pixelWidth;
-        CGFloat height = (CGFloat) photoAsset.asset.pixelHeight;
-        
-        __block CGFloat scale = (height / width) * 1.0f;
-        CGFloat screenWidth  = [UIScreen mainScreen].bounds.size.width;
-        CGFloat imageHeight = scale * screenWidth;
+        CGFloat screenWidth  = WXMPhoto_Width * 2.0;
+        CGFloat imageHeight = self.photoAsset.aspectRatio * screenWidth;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
+        if (self.photoAsset.aspectRatio <= 0) {
+            _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / (CGFloat)photoAsset.asset.pixelWidth * 1.0;
+            imageHeight = self.photoAsset.aspectRatio * screenWidth;
+        }
+        
         
         /** GIF */
         if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
-            if (photoAsset.imageData)  {
-                [self setLocation:scale];
-                self.imageView.image = [WXMPhotoGIFImage imageWithData:photoAsset.imageData];
-            } else {
-                [man getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
-                    [self setLocation:scale];
-                    photoAsset.imageData = data;
-                    self.imageView.image = [WXMPhotoGIFImage imageWithData:photoAsset.imageData];
-                }];
+            [man getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
+                [self setLocation:self.photoAsset.aspectRatio];
+                self.imageView.image = [WXMPhotoGIFImage imageWithData:data];
+            }];
+           
+        } else {
+            
+            /** 点进来那张会加载 */
+            if (photoAsset.bigImage) {
+                self.imageView.image = photoAsset.bigImage;
+                [self setLocation:self.photoAsset.aspectRatio];
+                return;
             }
-            return;
+            
+            PHAsset *asset = photoAsset.asset;
+            CGSize size = CGSizeMake(screenWidth, imageHeight);
+            NSLog(@"%@",NSStringFromCGSize(size));
+            if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
+            int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+                photoAsset.bigImage = image;
+                self.imageView.image = image;
+                [self setLocation:self.photoAsset.aspectRatio];
+    /** NSLog(@"%@",NSStringFromCGSize(image.size)); */
+            }];
+            self.currentRequestID = ids;
+            self.photoAsset.requestID = ids;
         }
+        
         
         
         /** image */
-        if (photoAsset.bigImage) {
-            self.imageView.image = photoAsset.bigImage;
-            scale = photoAsset.bigImage.size.height / photoAsset.bigImage.size.width;
-            [self setLocation:scale];
-        } else {
-            PHAsset *asset = photoAsset.asset;
-            CGSize size = CGSizeMake(screenWidth, imageHeight);
-            [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                scale = image.size.height / image.size.width;
-                photoAsset.bigImage = image;
-                photoAsset.aspectRatio = scale;
-                [self setLocation:scale];
-                self.imageView.image = image;
-            }];
-        }
+//        if (photoAsset.bigImage) {
+//            self.imageView.image = photoAsset.bigImage;
+//            [self setLocation:self.photoAsset.aspectRatio];
+//            if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
+//        } else {
+//            PHAsset *asset = photoAsset.asset;
+//            CGSize size = CGSizeMake(screenWidth, imageHeight);
+//            if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
+//            int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+//                /** NSLog(@"%@",NSStringFromCGSize(image.size)); */
+//                photoAsset.bigImage = image;
+//                self.imageView.image = image;
+//                [self setLocation:self.photoAsset.aspectRatio];
+//            }];
+//            self.currentRequestID = ids;
+//            self.photoAsset.requestID = ids;
+//        }
     }
 }
 

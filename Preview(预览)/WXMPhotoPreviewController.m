@@ -40,6 +40,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     self.weakNavigationVC = self.navigationController;
     self.view.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:1.0];
     if (self.windowImage) self.view.layer.contents = (id)self.windowImage.CGImage;
+    if (self.windowView) [self.view addSubview:self.windowView];
     [self.view addSubview:self.collectionView];
     
     self.navigationController.navigationBar.translucent = YES;
@@ -267,6 +268,8 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:1.0];
     UIImage * image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
     [self.weakNavigationVC.navigationBar setBackgroundImage:image forBarMetrics:UIBarMetricsDefault];
+    [self.windowView removeFromSuperview];
+    self.windowView = nil;
     NSLog(@"释放 %@",NSStringFromClass(self.class));
 }
 

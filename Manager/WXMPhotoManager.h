@@ -33,7 +33,7 @@ typedef enum {
 @property (nonatomic, strong) UIImage *smallImage;         /** 小相片 */
 @property (nonatomic, strong) UIImage *bigImage;           /** 大相片 */
 @property (nonatomic, strong) UIImage *originalImage;      /** 原始相片 */
-@property (nonatomic, strong) NSData *imageData;           /** gif video Data */
+//@property (nonatomic, strong) NSData *imageData;           /** gif video Data */
 @property (nonatomic, copy) NSURL *videoUrl;               /** video url */
 @property (nonatomic, copy) NSString *videoDrantion;       /** video 时间长度 */
 

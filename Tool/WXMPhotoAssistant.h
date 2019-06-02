@@ -16,6 +16,8 @@
 + (UIImage *)wxmPhoto_imageWithColor:(UIColor *)color;
 
 /** 截图 */
++ (UIView *)wxmPhoto_snapViewImage:(UIView *)screenshots;
+/** 内存暴涨 */
 + (UIImage *)wxmPhoto_makeViewImage:(UIView *)screenshots;
 
 /** 显示导航1px线条 */

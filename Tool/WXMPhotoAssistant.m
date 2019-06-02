@@ -26,14 +26,24 @@ static char wxm_Photoline;
     return image;
 }
 
+/** */
++ (UIView *)wxmPhoto_snapViewImage:(UIView *)screenshots {
+    @autoreleasepool {
+        UIView *snapView = [screenshots snapshotViewAfterScreenUpdates:YES];
+        return snapView;
+    }
+}
+
 /** 截图 */
 + (UIImage *)wxmPhoto_makeViewImage:(UIView *)screenshots {
-    CGSize size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height);
-    UIGraphicsBeginImageContextWithOptions(size, NO, [UIScreen mainScreen].scale);
-    [screenshots.layer renderInContext:UIGraphicsGetCurrentContext()];
-    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    return image;
+    @autoreleasepool {
+        CGSize size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height);
+        UIGraphicsBeginImageContextWithOptions(size, NO, [UIScreen mainScreen].scale);
+        [screenshots.layer renderInContext:UIGraphicsGetCurrentContext()];
+        UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        return image;
+    }
 }
 
 /** 显示导航1px线条 */
@@ -50,25 +60,6 @@ static char wxm_Photoline;
         objc_setAssociatedObject(nav, &wxm_Photoline, line, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     line.hidden = NO;
-}
-
-/** 获取视频时长 */
-- (NSString *)getNewTimeFromDurationSecond:(NSInteger)duration {
-    NSString *newTime;
-    if (duration < 10) {
-        newTime = [NSString stringWithFormat:@"0:0%zd",duration];
-    } else if (duration < 60) {
-        newTime = [NSString stringWithFormat:@"0:%zd",duration];
-    } else {
-        NSInteger min = duration / 60;
-        NSInteger sec = duration - (min * 60);
-        if (sec < 10) {
-            newTime = [NSString stringWithFormat:@"%zd:0%zd",min,sec];
-        } else {
-            newTime = [NSString stringWithFormat:@"%zd:%zd",min,sec];
-        }
-    }
-    return newTime;
 }
 
 /** 获取 UIBarButtonItem*/

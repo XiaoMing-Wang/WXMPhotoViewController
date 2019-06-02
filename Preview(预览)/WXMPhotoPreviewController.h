@@ -30,6 +30,7 @@
 
 /**  */
 @property (nonatomic, strong) UIImage *windowImage;
+@property (nonatomic, strong) UIView *windowView;
 
 /** 回调 */
 @property (nonatomic, weak) id<WXMPhotoProtocol> delegate;
