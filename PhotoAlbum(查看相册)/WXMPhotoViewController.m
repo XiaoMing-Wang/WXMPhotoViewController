@@ -46,8 +46,9 @@
     UIBarButtonItem *item = [WXMPhotoAssistant wxm_createButtonItem:@"取消" target:self action:sel];
     self.navigationItem.rightBarButtonItem = item;
     
+    /** 再次判断权限 */
+    [self judgeAuthority];
     [self.view addSubview:self.listTableView];
-    [self judgeAuthority]; /** 再次判断权限 */
 }
 
 /** 返回组行 */

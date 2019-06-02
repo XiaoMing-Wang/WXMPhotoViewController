@@ -1,32 +1,39 @@
 //
-//  WXMPhotoPreviewCell.m
-//  ModuleDebugging
+//  WXMPhotoVideoCell.m
+//  Multi-project-coordination
 //
-//  Created by edz on 2019/5/12.
-//  Copyright © 2019年 wq. All rights reserved.
+//  Created by wq on 2019/6/2.
+//  Copyright © 2019年 wxm. All rights reserved.
 //
-
-#import "WXMPhotoPreviewCell.h"
+#define KNotificationCenter [NSNotificationCenter defaultCenter]
 #import "WXMDirectionPanGestureRecognizer.h"
 #import "WXMPhotoConfiguration.h"
 #import <objc/runtime.h>
 #import "WXMPhotoImageView.h"
 #import "WXMPhotoGIFImage.h"
-
-@interface WXMPhotoPreviewCell () <UIScrollViewDelegate,UIGestureRecognizerDelegate>
-@property (nonatomic, strong) UIView *blackView;
+#import "WXMPhotoVideoCell.h"
+@interface WXMPhotoVideoCell ()
 @property (nonatomic, strong) UIScrollView *contentScrollView;
 @property (nonatomic, strong) WXMPhotoImageView *imageView;
+@property (nonatomic, strong) UIImageView *playIcon;
+@property (nonatomic, strong) UIView *wxm_blackView;
 @property (nonatomic, strong) WXMDirectionPanGestureRecognizer *recognizer;
-@property (nonatomic, assign) CGFloat wxm_zoomScale;
-@property (nonatomic, assign) CGPoint wxm_lastPoint;
+
+/** 播放器 */
+@property (strong, nonatomic) AVPlayer *wxm_avPlayer;
+@property (strong, nonatomic) AVPlayerItem *wxm_item;
+@property (strong, nonatomic) AVPlayerLayer *wxm_playerLayer;
+/** @property (nonatomic, assign) BOOL wxm_isPlaying;; */
 
 /** 距离原点的比例 */
 @property (nonatomic, assign) CGFloat wxm_x;
 @property (nonatomic, assign) CGFloat wxm_y;
+@property (nonatomic, assign) CGFloat wxm_zoomScale;
+@property (nonatomic, assign) CGPoint wxm_lastPoint;
 @end
 
-@implementation WXMPhotoPreviewCell
+@implementation WXMPhotoVideoCell
+
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) [self setupInterface];
     return self;
@@ -34,32 +41,62 @@
 
 /** 初始化界面 */
 - (void)setupInterface {
-    CGFloat w = [UIScreen mainScreen].bounds.size.width ;
-    CGFloat h = [UIScreen mainScreen].bounds.size.height;
+    CGFloat w = WXMPhoto_Width;
+    CGFloat h = WXMPhoto_Height;
     _contentScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
-    _contentScrollView.delegate = self;
     _contentScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
     _contentScrollView.showsHorizontalScrollIndicator = NO;
     _contentScrollView.showsVerticalScrollIndicator = NO;
     _contentScrollView.alwaysBounceHorizontal = NO;
     _contentScrollView.alwaysBounceVertical = NO;
     _contentScrollView.layer.masksToBounds = NO;
+    _contentScrollView.scrollEnabled = NO;
     
-    _imageView = [[WXMPhotoImageView alloc] initWithFrame:CGRectMake(0, 0, w, 0)];
+    _imageView = [[WXMPhotoImageView alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
+    _imageView.size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height);
     _imageView.contentMode = UIViewContentModeScaleAspectFit;
     _imageView.layer.masksToBounds = YES;
     _imageView.backgroundColor = [UIColor blackColor];
-    _imageView.userInteractionEnabled = NO;
-    
-    [self.contentView addSubview:self.blackView];
-    [self.contentView addSubview:_contentScrollView];
+    _imageView.userInteractionEnabled = YES;
     [_contentScrollView addSubview:_imageView];
-    [_contentScrollView setMinimumZoomScale:1.0];
-    [_contentScrollView setMaximumZoomScale:2.5f];
-    [self addTapGestureRecognizer];
+    
+    _playIcon = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"phoro_play"]];
+    _playIcon.size = WXMPhotoVideoSignSize;
+    _playIcon.contentMode = UIViewContentModeScaleAspectFit;
+    _playIcon.userInteractionEnabled = NO;
+    [_imageView addSubview:_playIcon];
+    
+    [self.contentView addSubview:_contentScrollView];
+    [self wxm_addTapGestureRecognizer];
+    
+    [KNotificationCenter addObserver:self selector:@selector(wxm_runAgain) name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
+    [KNotificationCenter addObserver:self selector:@selector(enterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
+    [KNotificationCenter addObserver:self selector:@selector(enterBackground) name:UIApplicationWillResignActiveNotification object:nil];
 }
 
-/** 设置图片 GIF */
+/** 添加三个手势 */
+- (void)wxm_addTapGestureRecognizer {
+    UITapGestureRecognizer *tapSingle = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondsToTapSingle:)];
+    tapSingle.numberOfTapsRequired = 1;
+    
+    _recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self  action:@selector(wxm_handlePan:)];
+    _recognizer->_direction = DirectionPanGestureRecognizerBottom;
+    _recognizer.maximumNumberOfTouches = 1;
+    
+    [tapSingle requireGestureRecognizerToFail:_recognizer];
+    [_imageView addGestureRecognizer:tapSingle];
+    [_imageView addGestureRecognizer:_recognizer];
+}
+
+
+/** 设置image位置 */
+- (void)setLocation:(CGFloat)scale {
+    self.imageView.frame = CGRectMake(0, 0, _contentScrollView.width, _contentScrollView.width * scale);
+    self.imageView.center = CGPointMake(_contentScrollView.width / 2, _contentScrollView.height / 2);
+    self.playIcon.layoutCenterSupView = YES;
+}
+
+/** 设置图片Video */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     @autoreleasepool {
         _photoAsset = photoAsset;
@@ -71,23 +108,6 @@
         CGFloat imageHeight = scale * screenWidth;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         
-        /** GIF */
-        if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
-            if (photoAsset.imageData)  {
-                [self setLocation:scale];
-                self.imageView.image = [WXMPhotoGIFImage imageWithData:photoAsset.imageData];
-            } else {
-                [man getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
-                    [self setLocation:scale];
-                    photoAsset.imageData = data;
-                    self.imageView.image = [WXMPhotoGIFImage imageWithData:photoAsset.imageData];
-                }];
-            }
-            return;
-        }
-        
-        
-        /** image */
         if (photoAsset.bigImage) {
             self.imageView.image = photoAsset.bigImage;
             scale = photoAsset.bigImage.size.height / photoAsset.bigImage.size.width;
@@ -106,14 +126,6 @@
     }
 }
 
-/** 设置image位置 */
-- (void)setLocation:(CGFloat)scale {
-    CGFloat cw = self.contentScrollView.frame.size.width;
-    CGFloat ch = self.contentScrollView.frame.size.height;
-    self.imageView.frame = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Width * scale);
-    self.imageView.center = CGPointMake(cw / 2, ch / 2);
-}
-
 /** 设置frame*/
 - (void)setFrame:(CGRect)frame {
     frame.origin.x = -WXMPhotoPreviewSpace / 2;
@@ -121,78 +133,55 @@
     [super setFrame:frame];
 }
 
-#pragma mark - UIScrollViewDelegate
-- (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView{
-    return _imageView;
-}
-
-- (void)scrollViewDidZoom:(UIScrollView *)scrollView {
-    CGRect imageViewFrame = self.imageView.frame;
-    CGFloat width = imageViewFrame.size.width;
-    CGFloat height = imageViewFrame.size.height;
-    CGFloat sHeight = scrollView.bounds.size.height;
-    CGFloat sWidth = scrollView.bounds.size.width;
-    if (height > sHeight) imageViewFrame.origin.y = 0;
-    else imageViewFrame.origin.y = (sHeight - height) / 2.0;
-    
-    if (width > sWidth) imageViewFrame.origin.x = 0;
-    else imageViewFrame.origin.x = (sWidth - width) / 2.0;
-    self.imageView.frame = imageViewFrame;
-}
-
 /** 还原 */
 - (void)originalAppearance {
-    [_contentScrollView setZoomScale:1.0 animated:NO];
-}
-
-/** 添加三个手势 */
-- (void)addTapGestureRecognizer {
-    UITapGestureRecognizer *tapSingle = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondsToTapSingle:)];
-    tapSingle.numberOfTapsRequired = 1;
-    
-    UITapGestureRecognizer *tapDouble = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondsToTapDouble:)];
-    tapDouble.numberOfTapsRequired = 2;
-    
-    _recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self  action:@selector(handlePan:)];
-    _recognizer->_direction = DirectionPanGestureRecognizerBottom;
-    _recognizer.maximumNumberOfTouches = 1;
-    
-    [tapSingle requireGestureRecognizerToFail:tapDouble];
-    [tapSingle requireGestureRecognizerToFail:_recognizer];
-    [tapDouble requireGestureRecognizerToFail:_recognizer];
-    
-    [_contentScrollView addGestureRecognizer:tapSingle];
-    [_contentScrollView addGestureRecognizer:tapDouble];
-    [_contentScrollView addGestureRecognizer:_recognizer];
+    [self wxm_removeAvPlayer];
 }
 
 /** 单击 */
 - (void)respondsToTapSingle:(UITapGestureRecognizer *)tap {
+    self.playIcon.hidden  ? [self wxm_avPlayStopPlay] : [self wxm_avPlayStartPlay];
     if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle)]) {
         [self.delegate wxm_respondsToTapSingle];
     }
 }
 
-/** 双击 */
-- (void)respondsToTapDouble:(UITapGestureRecognizer *)tap {
-    UIScrollView *scrollView = self.contentScrollView;
-    UIView *zoomView = [self viewForZoomingInScrollView:scrollView];
-    CGPoint point = [tap locationInView:zoomView];
-    if (!CGRectContainsPoint(zoomView.bounds, point)) return;
-    if (scrollView.zoomScale == scrollView.maximumZoomScale) [scrollView setZoomScale:1 animated:YES];
-    else [scrollView zoomToRect:CGRectMake(point.x, point.y, 1, 1) animated:YES];
+/** 开始播放视频 */
+- (void)wxm_avPlayStartPlay {
+  @autoreleasepool {
+      
+      void (^playBlock)(NSURL *url) = ^(NSURL *url) {
+          if (!_wxm_avPlayer) {
+              self.wxm_item = [AVPlayerItem playerItemWithURL:url];
+              self.wxm_avPlayer = [AVPlayer playerWithPlayerItem:self.wxm_item];
+              self.wxm_playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.wxm_avPlayer];
+              self.wxm_playerLayer.frame = self.contentScrollView.frame;
+              [self.imageView.layer insertSublayer:self.wxm_playerLayer atIndex:0];
+          }
+          self.playIcon.hidden = YES;
+          [self.wxm_avPlayer play];
+      };
+      
+      if (_photoAsset.videoUrl) playBlock(_photoAsset.videoUrl);
+      if (!_photoAsset.videoUrl) {
+          WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
+          [man getVideoByAsset:_photoAsset.asset completion:^(NSURL *url, NSData * data) {
+              _photoAsset.videoUrl = url;
+              _photoAsset.imageData = data;
+              playBlock(_photoAsset.videoUrl);
+          }];
+      }
+  }
 }
 
-/** 设置手势顺序 */
-- (void)setColleRecognizer:(UIPanGestureRecognizer *)colleRecognizer {
-    _colleRecognizer = colleRecognizer;
-    @try {
-        [_recognizer requireGestureRecognizerToFail:_colleRecognizer];
-    } @catch (NSException *exception) {} @finally {}
+/** 暂停 */
+- (void)wxm_avPlayStopPlay {
+    self.playIcon.hidden = NO;
+    if (self.wxm_avPlayer) [self.wxm_avPlayer pause];
 }
 
 /** 滑动 */
-- (void)handlePan:(UIPanGestureRecognizer *)recognizer {
+- (void)wxm_handlePan:(UIPanGestureRecognizer *)recognizer {
     [recognizer.view.superview bringSubviewToFront:recognizer.view];
     CGPoint center = recognizer.view.center;
     CGPoint translation = [recognizer translationInView:self];  /** 位移 */
@@ -221,7 +210,7 @@
             proportion = MAX(1 - scale, WXMPhotoMinification);
             if (displacement <= 0) scaleAlpha = 1;
         }
-        self.blackView.alpha = scaleAlpha;
+        self.wxm_blackView.alpha = scaleAlpha;
         recognizer.view.transform = CGAffineTransformScale(CGAffineTransformIdentity, proportion, proportion);
         
         CGPoint point_XY = [recognizer locationInView:self];
@@ -237,12 +226,12 @@
     if (recognizer.state == UIGestureRecognizerStateEnded ||
         recognizer.state == UIGestureRecognizerStateCancelled) {
         CGPoint velocity = [recognizer velocityInView:self];  /** 速度 */
-        BOOL cancle = (velocity.y < 0 || self.blackView.alpha >= 1);
+        BOOL cancle = (velocity.y < 0 || self.wxm_blackView.alpha >= 1);
         if (cancle) {
             [UIView animateWithDuration:0.35 animations:^{
                 recognizer.view.transform = CGAffineTransformIdentity;
                 recognizer.view.center = self.wxm_lastPoint;
-                self.blackView.alpha = 1;
+                self.wxm_blackView.alpha = 1;
             } completion:^(BOOL finished) {
                 if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
                     [self.delegate wxm_respondsEndDragCell:nil];
@@ -257,13 +246,43 @@
     }
 }
 
-- (UIView *)blackView {
-    if (!_blackView)  {
-        _blackView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Height)];
-        _blackView.backgroundColor = [UIColor blackColor];
-        objc_setAssociatedObject(_contentScrollView, @"black",_blackView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+/** 黑色遮罩 */
+- (UIView *)wxm_blackView {
+    if (!_wxm_blackView)  {
+        _wxm_blackView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Height)];
+        _wxm_blackView.backgroundColor = [UIColor blackColor];
+        objc_setAssociatedObject(_contentScrollView, @"black",_wxm_blackView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
-    return _blackView;
+    return _wxm_blackView;
+}
+
+- (void)wxm_runAgain {
+    [self.wxm_item seekToTime:kCMTimeZero];
+    [self.wxm_avPlayer play];
+}
+
+- (void)enterBackground {
+    NSLog(@"进入后台");
+    if (self.wxm_avPlayer && !self.playIcon.hidden) [self.wxm_avPlayer pause];
+}
+
+- (void)enterForeground {
+    NSLog(@"进入前台");
+    if (self.playIcon.hidden) [self wxm_avPlayStartPlay];
+}
+
+- (void)wxm_removeAvPlayer {
+    @try {
+        [self.wxm_avPlayer pause];
+        [self.wxm_avPlayer setRate:0];
+        self.wxm_item = nil;
+        self.wxm_avPlayer = nil;
+        [self.wxm_playerLayer removeFromSuperlayer];
+        [KNotificationCenter removeObserver:self];
+    } @catch (NSException *exception) { } @finally { }
+}
+
+- (void)dealloc {
+    [self wxm_removeAvPlayer];
 }
 @end
-

@@ -31,6 +31,8 @@
     return WXMPHAssetMediaTypeImage;
 }
 @end
+
+
 @implementation WXMPhotoManager
 
 + (instancetype)sharedInstance {
@@ -51,8 +53,8 @@
     
     NSString *msg = @"请在系统设置中打开“允许访问照片”，否则将无法获取照片";
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提示" message:msg preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *cancle = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
-    UIAlertAction *action = [UIAlertAction actionWithTitle:@"去开启" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+    UIAlertAction *cancle = [UIAlertAction actionWithTitle:@"取消" style:1 handler:nil];
+    UIAlertAction *action = [UIAlertAction actionWithTitle:@"去开启" style:0 handler:^(UIAlertAction * action) {
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
     }];
     [alert addAction:cancle];
@@ -129,6 +131,7 @@
         if (block) block(photoList);
     });
 }
+
 /** 获取相册结果集 */
 - (PHFetchResult *)fetchAssetsInAssetCollection:(PHAssetCollection*)assetCollection ascending:(BOOL)ascending {
     PHFetchOptions *option = [[PHFetchOptions alloc] init];
@@ -273,7 +276,19 @@
 }
 
 /** 获取视频 */
-- (void)getVideoByAsset:(PHAsset *)asset completion:(void (^)(NSDictionary *))completiont {
-    
+- (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(NSURL * , NSData *))completiont {
+    PHVideoRequestOptions *options = [[PHVideoRequestOptions alloc] init];
+    options.version = PHImageRequestOptionsVersionCurrent;
+    options.deliveryMode = PHVideoRequestOptionsDeliveryModeAutomatic;
+    [[PHImageManager defaultManager] requestAVAssetForVideo:assetData options:options resultHandler:^(AVAsset *asset, AVAudioMix *audioMix, NSDictionary *info) {
+        // 获取信息 asset audioMix info
+        // 上传视频时用到data
+        AVURLAsset *urlAsset = (AVURLAsset *)asset;
+        NSURL *url = urlAsset.URL;
+        NSData *data = [NSData dataWithContentsOfURL:url];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completiont(url,data);
+        });
+    }];
 }
 @end

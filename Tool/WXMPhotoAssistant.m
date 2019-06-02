@@ -62,10 +62,11 @@ static char wxm_Photoline;
 
 /** 获取原始图大小 */
 + (CGFloat)wxm_getOriginalSize:(PHAsset *)asset {
-    PHAssetResource *resource = [[PHAssetResource assetResourcesForAsset:asset] firstObject];
-    long long size = [[resource valueForKey:@"fileSize"] longLongValue];
-    return (CGFloat)size;
-    
+    @autoreleasepool {
+        PHAssetResource *resource = [[PHAssetResource assetResourcesForAsset:asset] firstObject];
+        long long size = [[resource valueForKey:@"fileSize"] longLongValue];
+        return (CGFloat)size;
+    }
     /** return [NSString stringWithFormat:@"%.2fM", (CGFloat)size / (1024 * 1024)]; */
 }
 

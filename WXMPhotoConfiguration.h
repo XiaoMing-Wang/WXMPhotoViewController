@@ -55,6 +55,15 @@
 /** 手势下拉缩小最小倍数 */
 #define WXMPhotoMinification 0.3
 
+/** 是否显示GIF标志 */
+#define WXMPhotoShowGIFSign YES
+
+/** 是否显示视频标志 */
+#define WXMPhotoShowVideoSign YES
+
+/** 播放按钮大小 */
+#define WXMPhotoVideoSignSize CGSizeMake(70, 70)
+
 
 /** 类型 */
 typedef NS_ENUM(NSInteger, WXMPhotoDetailType) {

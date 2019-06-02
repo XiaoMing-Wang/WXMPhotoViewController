@@ -18,6 +18,7 @@
 @property (nonatomic, assign) WXMPhotoDetailType photoType;
 @property (nonatomic, assign) BOOL canRespond;
 
+
 /** 多选模式下设置代理 */
 - (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
           indexPath:(NSIndexPath *)indexPath

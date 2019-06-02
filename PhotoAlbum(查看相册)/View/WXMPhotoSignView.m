@@ -29,21 +29,20 @@
     CGFloat x = (supWH * 0.5) - wh - 2.5;
     CGFloat y = 2.5;
     self.frame = CGRectMake(supWH * 0.5, 0, supWH * 0.5, supWH * 0.4);
-    [self addTarget:self action:@selector(touchEvent) forControlEvents:UIControlEventTouchUpInside];
-
-    _contentView = [[UIButton alloc] initWithFrame:CGRectMake(x, y, wh, wh)];
-    _contentView.userInteractionEnabled = NO;
-    _contentView.titleLabel.font = [UIFont systemFontOfSize:WXMSelectedFont];
+    [self wxm_addTarget:self action:@selector(wxm_touchEvent)];
     
     UIImage *normal = [UIImage imageNamed:@"photo_sign_default"];
     UIImage *selected = [UIImage imageNamed:@"photo_sign_background"];
+    _contentView = [[UIButton alloc] initWithFrame:CGRectMake(x, y, wh, wh)];
+    _contentView.userInteractionEnabled = NO;
+    _contentView.titleLabel.font = [UIFont systemFontOfSize:WXMSelectedFont];
     [_contentView setBackgroundImage:normal forState:UIControlStateNormal];
     [_contentView setBackgroundImage:selected forState:UIControlStateSelected];
     [self addSubview:_contentView];
 }
 
 /** 点击 */
-- (void)touchEvent {
+- (void)wxm_touchEvent {
     if (self.userInteraction == NO) {
         [self showAlertController];
         return;
@@ -53,8 +52,9 @@
     [self setProperties];
     [self setAnimation];
     
+    /** 设置第几个选中 */
     if (self.delegate && [self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
-        NSInteger count = [self.delegate touchWXMPhotoSignView:self.indexPath selected:self.selected];
+        NSInteger count = [self.delegate touchWXMPhotoSignView:_indexPath selected:self.selected];
         if (count >= 0 && count < WXMMultiSelectMax)  {
             [self.contentView setTitle:@(count + 1).stringValue forState:UIControlStateSelected];
         }

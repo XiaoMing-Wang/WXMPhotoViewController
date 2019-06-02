@@ -29,14 +29,15 @@ typedef enum {
 
 /** 相片 */
 @interface WXMPhotoAsset : NSObject
-@property (nonatomic, strong) PHAsset *asset;        /** 相片媒介 */
-@property (nonatomic, strong) UIImage *bigImage;     /** 大相片 */
-@property (nonatomic, strong) UIImage *smallImage;   /** 小相片 */
-@property (nonatomic, strong) UIImage *originalImage;/** 原始相片 */
-@property (nonatomic, strong) NSData *imageData;     /** gif Data */
-@property (nonatomic, assign) BOOL selected;         /** 选中 */
-@property (nonatomic, assign) CGFloat bytes;         /** 大小 */
-@property (nonatomic, assign) CGFloat aspectRatio;   /** 高/宽比例 */
+@property (nonatomic, strong) PHAsset *asset;              /** 相片媒介 */
+@property (nonatomic, strong) UIImage *smallImage;         /** 小相片 */
+@property (nonatomic, strong) UIImage *bigImage;           /** 大相片 */
+@property (nonatomic, strong) UIImage *originalImage;      /** 原始相片 */
+@property (nonatomic, strong) NSData *imageData;           /** gif video Data */
+@property (nonatomic, strong) NSURL *videoUrl;             /** video url */
+@property (nonatomic, assign) BOOL selected;               /** 选中 */
+@property (nonatomic, assign) CGFloat bytes;               /** 大小 */
+@property (nonatomic, assign) CGFloat aspectRatio;         /** 高/宽比例 */
 @property (nonatomic, assign) WXMPhotoMediaType mediaType; /** 相片类型 */
 @end
 
@@ -102,5 +103,6 @@ typedef enum {
 - (void)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
 /** 获取视频路径 */
-- (void)getVideoByAsset:(PHAsset *)asset completion:(void (^)(NSDictionary *))completiont;
+- (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(NSURL * , NSData *))completiont;
 @end
+

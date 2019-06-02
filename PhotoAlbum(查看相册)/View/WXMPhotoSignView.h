@@ -12,9 +12,11 @@
 
 @interface WXMPhotoSignView : UIButton
 @property (nonatomic, strong) NSIndexPath *indexPath;
-@property (nonatomic, weak) id<WXMPhotoSignProtocol> delegate;
 @property (nonatomic, strong) WXMPhotoSignModel *signModel;
-@property (nonatomic, assign) BOOL userInteraction;
 
+@property (nonatomic, weak) id<WXMPhotoSignProtocol> delegate;
+
+/** 数量是否达到上限 NO为达到 */
+@property (nonatomic, assign) BOOL userInteraction;
 - (instancetype)initWithSupViewSize:(CGSize)size;
 @end

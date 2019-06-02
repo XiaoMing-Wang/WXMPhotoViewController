@@ -10,6 +10,8 @@
 
 @interface WXMPreviewBottomBar : UIView
 
+@property (nonatomic, assign) BOOL isShowOriginalButton;
+
 /** 是否选取原图 */
 @property (nonatomic, assign, readonly) BOOL isOriginalImage;
 

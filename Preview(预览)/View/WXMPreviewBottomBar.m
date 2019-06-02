@@ -103,6 +103,13 @@
     if (self.wxm_loadFinsh) [self sortingUpPhotoView];
 }
 
+/** 显示隐藏原图按钮 */
+- (void)setIsShowOriginalButton:(BOOL)isShowOriginalButton {
+    _isShowOriginalButton = isShowOriginalButton;
+    UIButton *originalbg = [_finshView viewWithTag:100];
+    originalbg.hidden = !isShowOriginalButton;
+}
+
 /**  */
 - (void)setRealImageByte:(NSString *)realImageByte {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -246,4 +253,5 @@
         self.alpha = state;
     }];
 }
+
 @end

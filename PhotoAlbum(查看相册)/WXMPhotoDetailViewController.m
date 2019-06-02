@@ -282,7 +282,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         flow.minimumLineSpacing = kMargin;
         flow.minimumInteritemSpacing = kMargin;
         
-        CGRect rect = CGRectMake(0,WXMPhoto_BarHeight,WXMPhoto_Width,WXMPhoto_Height-WXMPhoto_BarHeight);
+        CGRect rect = {0,WXMPhoto_BarHeight,WXMPhoto_Width,WXMPhoto_Height-WXMPhoto_BarHeight};
         _collectionView = [[UICollectionView alloc] initWithFrame:rect collectionViewLayout:flow];
         _collectionView.backgroundColor = [UIColor whiteColor];
         _collectionView.dataSource = self;
