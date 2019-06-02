@@ -35,6 +35,7 @@ static char wxm_Photoline;
     UIGraphicsEndImageContext();
     return image;
 }
+
 /** 显示导航1px线条 */
 + (void)wxm_navigationLine:(UINavigationController *)nav show:(BOOL)show {
     CALayer *line = objc_getAssociatedObject(nav, &wxm_Photoline);
@@ -49,6 +50,25 @@ static char wxm_Photoline;
         objc_setAssociatedObject(nav, &wxm_Photoline, line, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     line.hidden = NO;
+}
+
+/** 获取视频时长 */
+- (NSString *)getNewTimeFromDurationSecond:(NSInteger)duration {
+    NSString *newTime;
+    if (duration < 10) {
+        newTime = [NSString stringWithFormat:@"0:0%zd",duration];
+    } else if (duration < 60) {
+        newTime = [NSString stringWithFormat:@"0:%zd",duration];
+    } else {
+        NSInteger min = duration / 60;
+        NSInteger sec = duration - (min * 60);
+        if (sec < 10) {
+            newTime = [NSString stringWithFormat:@"%zd:0%zd",min,sec];
+        } else {
+            newTime = [NSString stringWithFormat:@"%zd:%zd",min,sec];
+        }
+    }
+    return newTime;
 }
 
 /** 获取 UIBarButtonItem*/

@@ -24,7 +24,7 @@
     return transitions;
 }
 - (NSTimeInterval)transitionDuration:(id <UIViewControllerContextTransitioning>)transitionContext{
-    return 0.35;
+    return .35;
 }
 - (void)animateTransition:(id <UIViewControllerContextTransitioning>)transitionContext {
     if (self.transitionsType == WXMPhotoTransitionsTypePush) {
@@ -36,7 +36,6 @@
 
 /** push */
 - (void)pushWithTransitionContext:(id <UIViewControllerContextTransitioning>)transitionContext {
-    
 }
 
 /** pop */
@@ -66,7 +65,7 @@
             [mainImageView removeFromSuperview];
             
             /** wrap */
-            CGRect rect = CGRectMake(0, 0, scr.frame.size.width, scr.frame.size.width * scale);
+            CGRect rect = CGRectMake(0, 0, scr.width, scr.width * scale);
             WXMPhotoImageView *wrapImageView = [[WXMPhotoImageView alloc] initWithFrame:rect];
             wrapImageView.center = scr.center;
             wrapImageView.image = mainImageView.image;

@@ -30,6 +30,19 @@
     }
     return WXMPHAssetMediaTypeImage;
 }
+
+/** 获取时长 */
+- (NSString *)videoDrantion {
+    if (self.mediaType != WXMPHAssetMediaTypeVideo) return @"";
+    NSString *videoDrantion = [NSString stringWithFormat:@"%0.0f",self.asset.duration];
+    NSInteger videoDrantionInt = videoDrantion.integerValue;
+    
+    NSString *drantionString = @"";
+    NSInteger minutes = videoDrantionInt / 60;
+    NSInteger seconds = videoDrantionInt % 60;
+    drantionString = [NSString stringWithFormat:@"%02zd:%02zd",minutes,seconds];
+    return drantionString;
+}
 @end
 
 

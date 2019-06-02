@@ -66,6 +66,7 @@
     _playIcon.userInteractionEnabled = NO;
     [_imageView addSubview:_playIcon];
     
+    [self.contentView addSubview:self.wxm_blackView];
     [self.contentView addSubview:_contentScrollView];
     [self wxm_addTapGestureRecognizer];
     
@@ -84,8 +85,8 @@
     _recognizer.maximumNumberOfTouches = 1;
     
     [tapSingle requireGestureRecognizerToFail:_recognizer];
-    [_imageView addGestureRecognizer:tapSingle];
-    [_imageView addGestureRecognizer:_recognizer];
+    [_contentScrollView addGestureRecognizer:tapSingle];
+    [_contentScrollView addGestureRecognizer:_recognizer];
 }
 
 
@@ -238,7 +239,8 @@
                 }
             }];
         } else {
-            _contentScrollView.userInteractionEnabled = NO;
+            [self wxm_removeAvPlayer];
+            self.contentScrollView.userInteractionEnabled = NO;
             if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
                 [self.delegate wxm_respondsEndDragCell:self.contentScrollView];
             }
@@ -278,11 +280,13 @@
         self.wxm_item = nil;
         self.wxm_avPlayer = nil;
         [self.wxm_playerLayer removeFromSuperlayer];
+        self.playIcon.hidden = NO;
         [KNotificationCenter removeObserver:self];
     } @catch (NSException *exception) { } @finally { }
 }
 
 - (void)dealloc {
+    NSLog(@"释放wxm_playerLayer");
     [self wxm_removeAvPlayer];
 }
 @end

@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <Photos/Photos.h>
 
-/** 图片种类 */
+/** 资源种类 */
 typedef enum {
     WXMPHAssetMediaTypeImage,
     WXMPHAssetMediaTypeLivePhoto,
@@ -18,7 +18,7 @@ typedef enum {
     WXMPHAssetMediaTypeAudio,
 } WXMPhotoMediaType;
 
-/** 相册 */
+/** 相册对象 */
 @interface WXMPhotoList : NSObject
 @property (nonatomic, strong) NSString *title;                    /**相册的名字*/
 @property (nonatomic, assign) NSInteger photoNum;                 /**该相册的照片数量*/
@@ -27,15 +27,15 @@ typedef enum {
 @property (nonatomic, strong) PHAssetCollection *assetCollection; /**通过该属性可以取该相册的所有照片*/
 @end
 
-/** 相片 */
+/** 相片对象 */
 @interface WXMPhotoAsset : NSObject
 @property (nonatomic, strong) PHAsset *asset;              /** 相片媒介 */
 @property (nonatomic, strong) UIImage *smallImage;         /** 小相片 */
 @property (nonatomic, strong) UIImage *bigImage;           /** 大相片 */
 @property (nonatomic, strong) UIImage *originalImage;      /** 原始相片 */
 @property (nonatomic, strong) NSData *imageData;           /** gif video Data */
-@property (nonatomic, strong) NSURL *videoUrl;             /** video url */
-@property (nonatomic, assign) BOOL selected;               /** 选中 */
+@property (nonatomic, copy) NSURL *videoUrl;               /** video url */
+@property (nonatomic, copy) NSString *videoDrantion;       /** video 时间长度 */
 @property (nonatomic, assign) CGFloat bytes;               /** 大小 */
 @property (nonatomic, assign) CGFloat aspectRatio;         /** 高/宽比例 */
 @property (nonatomic, assign) WXMPhotoMediaType mediaType; /** 相片类型 */

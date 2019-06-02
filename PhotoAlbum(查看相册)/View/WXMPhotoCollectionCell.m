@@ -95,8 +95,7 @@
 - (void)wxm_setTypeSignInterface {
     if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo && WXMPhotoShowVideoSign) {
         [self.contentView addSubview:self.typeSign];
-        NSLog(@"%zd",_photoAsset.asset.duration);
-        NSString * duration = [NSString stringWithFormat:@"  %zd",_photoAsset.asset.duration];
+        NSString * duration = [NSString stringWithFormat:@"  %@",_photoAsset.videoDrantion];
         [self.typeSign setTitle:duration forState:UIControlStateNormal];
         [self.typeSign setImage:[UIImage imageNamed:@"photo_videoSmall"] forState:UIControlStateNormal];
         self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
