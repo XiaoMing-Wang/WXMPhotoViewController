@@ -9,6 +9,7 @@
 #import "WXMPhotoConfiguration.h"
 
 @interface WXMPhotoCollectionCell ()
+
 /** 白色蒙版 */
 @property(nonatomic, strong) UIView *obstructionsView;
 
@@ -76,12 +77,13 @@
 }
 
 /** 设置能否响应 */
-- (void)setUserCanTouch:(BOOL)userCanTouch {
+- (void)setUserCanTouch:(BOOL)userCanTouch animation:(BOOL)animation {
     _userCanTouch = userCanTouch;
     
     /** 用户能否点击 */
-    _obstructionsView.hidden = userCanTouch;
     _sign.userContinueExpansion = userCanTouch;
+    CGFloat duration = animation ? 0.2 : 0;
+    [UIView animateWithDuration:duration animations:^{ self.obstructionsView.alpha = !userCanTouch;}];
 }
 
 
@@ -96,9 +98,9 @@
     _sign.delegate = delegate;
     _sign.indexPath = indexPath;
     if (showMask == NO) {
-        self.userCanTouch = YES;
+        [self setUserCanTouch:YES animation:NO];
     } else {
-        self.userCanTouch = (signModel != nil);
+        [self setUserCanTouch:(signModel != nil) animation:NO];
     }
 }
 
@@ -141,7 +143,7 @@
 - (UIView *)obstructionsView {
     if (!_obstructionsView) {
         _obstructionsView = [[UIView alloc] initWithFrame:self.bounds];
-        _obstructionsView.hidden = YES;
+        _obstructionsView.alpha = 0;
         _obstructionsView.userInteractionEnabled = NO;
         _obstructionsView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.65];
         _sign = [[WXMPhotoSignView alloc] initWithSupViewSize:_imageView.frame.size];

@@ -219,9 +219,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             WXMPhotoCollectionCell * cell = (WXMPhotoCollectionCell *)obj;
             if (self.wxm_showWhiteMasing) {
                 NSString *indexString = @(cell.indexPath.row).stringValue;
-                cell.userCanTouch = [self.signObj.allKeys containsObject:indexString];
+                BOOL use = [self.signObj.allKeys containsObject:indexString];
+                [cell setUserCanTouch:use animation:YES];
+                /** cell.userCanTouch = [self.signObj.allKeys containsObject:indexString]; */
             } else {
-                cell.userCanTouch = YES;
+                [cell setUserCanTouch:YES animation:YES];
             }
         }
     }];    
