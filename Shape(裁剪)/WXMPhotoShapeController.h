@@ -17,4 +17,5 @@
 
 /** 回调 */
 @property (nonatomic, strong) void (^results)(UIImage *image);
+
 @end

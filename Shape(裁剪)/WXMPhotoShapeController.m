@@ -104,9 +104,14 @@
     [super viewDidAppear:animated];
     self.weakNavigationVC = self.navigationController;
     self.weakNavigationVC.interactivePopGestureRecognizer.enabled = NO;
+    [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:YES];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         self.navigationController.navigationBar.userInteractionEnabled = NO;
     });
+}
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:NO];
 }
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
@@ -118,6 +123,7 @@
     UIImage *imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
     [self.weakNavigationVC.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
 }
+
 
 @end
 
