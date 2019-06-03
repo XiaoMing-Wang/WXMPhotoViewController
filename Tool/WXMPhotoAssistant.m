@@ -78,7 +78,6 @@ static char wxm_Photoline;
         long long size = [[resource valueForKey:@"fileSize"] longLongValue];
         return (CGFloat)size;
     }
-    /** return [NSString stringWithFormat:@"%.2fM", (CGFloat)size / (1024 * 1024)]; */
 }
 
 /** 警告框 AlertViewController */

@@ -10,7 +10,7 @@
 
 @interface WXMPhotoCollectionCell ()
 /** 白色蒙版 */
-@property(nonatomic, strong) UIView *photoMaskView;
+@property(nonatomic, strong) UIView *obstructionsView;
 
 /** 图片 */
 @property(nonatomic, strong) UIImageView *imageView;
@@ -32,24 +32,19 @@
 }
 
 - (void)setupInterface {
+    _userCanTouch = YES;
     _imageView = [[UIImageView alloc] initWithFrame:self.bounds];
     _imageView.contentMode = UIViewContentModeScaleAspectFill;
     _imageView.clipsToBounds = YES;
-    [self.contentView addSubview:_imageView];
+    [self.contentView addSubview:self.imageView];
 }
 
 /** 设置相册类型 */
 - (void)setPhotoType:(WXMPhotoDetailType)photoType {
     _photoType = photoType;
-    
-    if (photoType == WXMPhotoDetailTypeMultiSelect && !_photoMaskView && !_sign) {
-        _photoMaskView = [[UIView alloc] initWithFrame:self.bounds];
-        _photoMaskView.hidden = YES;
-        _photoMaskView.userInteractionEnabled = NO;
-        _photoMaskView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.65];
-        _sign = [[WXMPhotoSignView alloc] initWithSupViewSize:_imageView.frame.size];
-        [self.contentView addSubview:_photoMaskView];
-        [self.contentView addSubview:_sign];
+    if (photoType == WXMPhotoDetailTypeMultiSelect) {
+        [self.contentView addSubview:self.obstructionsView];
+        [self.contentView addSubview:self.sign];
     }
 }
 
@@ -57,7 +52,6 @@
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     @autoreleasepool {
         _photoAsset = photoAsset;
-        [self wxm_setTypeSignInterface];
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         
         if (photoAsset.smallImage) {
@@ -77,27 +71,35 @@
         
         self.currentRequestID = ids;
         self.photoAsset.requestID = ids;
+        [self wxm_setTypeSignInterface];
     }
 }
+
+/** 设置能否响应 */
+- (void)setUserCanTouch:(BOOL)userCanTouch {
+    _userCanTouch = userCanTouch;
+    
+    /** 用户能否点击 */
+    _obstructionsView.hidden = userCanTouch;
+    _sign.userContinueExpansion = userCanTouch;
+}
+
 
 /** 多选模式下设置代理 */
 - (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
           indexPath:(NSIndexPath *)indexPath
           signModel:(WXMPhotoSignModel *)signModel
-            respond:(BOOL)respond {
+           showMask:(BOOL)showMask {
+    
+    _indexPath = indexPath;
     _sign.signModel = signModel;
     _sign.delegate = delegate;
     _sign.indexPath = indexPath;
-    
-    /** 白色蒙版 */
-    if (respond == NO) {
-        _photoMaskView.hidden = (signModel != nil);
-        _sign.userInteraction = _photoMaskView.hidden;
+    if (showMask == NO) {
+        self.userCanTouch = YES;
     } else {
-        _photoMaskView.hidden = YES;
-        _sign.userInteraction = YES;
+        self.userCanTouch = (signModel != nil);
     }
-    _canRespond = _photoMaskView.hidden;
 }
 
 /** 设置显示界面效果 */
@@ -135,4 +137,16 @@
     }
     return _typeSign;
 }
+
+- (UIView *)obstructionsView {
+    if (!_obstructionsView) {
+        _obstructionsView = [[UIView alloc] initWithFrame:self.bounds];
+        _obstructionsView.hidden = YES;
+        _obstructionsView.userInteractionEnabled = NO;
+        _obstructionsView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.65];
+        _sign = [[WXMPhotoSignView alloc] initWithSupViewSize:_imageView.frame.size];
+    }
+    return _obstructionsView;
+}
+
 @end

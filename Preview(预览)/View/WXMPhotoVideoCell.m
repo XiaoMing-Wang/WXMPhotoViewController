@@ -102,12 +102,11 @@
     @autoreleasepool {
         _photoAsset = photoAsset;
         CGFloat screenWidth  = WXMPhoto_Width * 2.0;
-        CGFloat imageHeight = self.photoAsset.aspectRatio * screenWidth;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         if (self.photoAsset.aspectRatio <= 0) {
             _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / (CGFloat)photoAsset.asset.pixelWidth * 1.0;
-            imageHeight = self.photoAsset.aspectRatio * screenWidth;
         }
+        CGFloat imageHeight = self.photoAsset.aspectRatio * screenWidth;
         
         if (photoAsset.bigImage) {
             self.imageView.image = photoAsset.bigImage;

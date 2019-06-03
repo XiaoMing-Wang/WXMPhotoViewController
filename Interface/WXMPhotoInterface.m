@@ -47,7 +47,7 @@
 /** 获取相册路由方式 */
 - (UIViewController *)routeAchieveWXMPhotoViewController:(void (^)(id obj))results {
     WXMPhotoViewController * vc = [WXMPhotoViewController new];
-    vc.photoType = WXMPhotoDetailTypeTailoring;
+    vc.photoType = WXMPhotoDetailTypeMultiSelect;
     if (results) vc.results = results;
     UINavigationController * nav = [[UINavigationController alloc] initWithRootViewController:vc];
     return nav;

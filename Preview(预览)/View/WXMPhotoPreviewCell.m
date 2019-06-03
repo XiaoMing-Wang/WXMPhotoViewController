@@ -66,13 +66,11 @@
     @autoreleasepool {
         _photoAsset = photoAsset;
         CGFloat screenWidth  = WXMPhoto_Width * 2.0;
-        CGFloat imageHeight = self.photoAsset.aspectRatio * screenWidth;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         if (self.photoAsset.aspectRatio <= 0) {
             _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / (CGFloat)photoAsset.asset.pixelWidth * 1.0;
-            imageHeight = self.photoAsset.aspectRatio * screenWidth;
         }
-        
+        CGFloat imageHeight = self.photoAsset.aspectRatio * screenWidth;
         
         /** GIF */
         if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
@@ -92,13 +90,13 @@
             
             PHAsset *asset = photoAsset.asset;
             CGSize size = CGSizeMake(screenWidth, imageHeight);
-            NSLog(@"%@",NSStringFromCGSize(size));
+            /**  NSLog(@"%@",NSStringFromCGSize(size));  */
             if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
             int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
                 photoAsset.bigImage = image;
                 self.imageView.image = image;
                 [self setLocation:self.photoAsset.aspectRatio];
-    /** NSLog(@"%@",NSStringFromCGSize(image.size)); */
+                /** NSLog(@"%@",NSStringFromCGSize(image.size)); */
             }];
             self.currentRequestID = ids;
             self.photoAsset.requestID = ids;

@@ -17,6 +17,7 @@
 - (instancetype)initWithSupViewSize:(CGSize)size {
     if (self = [super initWithFrame:CGRectZero]) {
         self.supSize = size;
+        self.userContinueExpansion = YES;
         [self setupInterface];
     }
     return self;
@@ -43,8 +44,8 @@
 
 /** 点击 */
 - (void)wxm_touchEvent {
-    if (self.userInteraction == NO) {
-        [self showAlertController];
+    if (self.userContinueExpansion == NO) {
+        [self wxm_showAlertController];
         return;
     }
     
@@ -85,7 +86,7 @@
 }
 
 /** 提示框 */
-- (void)showAlertController {
+- (void)wxm_showAlertController {
     NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
     [WXMPhotoAssistant showAlertViewControllerWithTitle:title message:@"" cancel:@"知道了"
                                             otherAction:nil completeBlock:nil];

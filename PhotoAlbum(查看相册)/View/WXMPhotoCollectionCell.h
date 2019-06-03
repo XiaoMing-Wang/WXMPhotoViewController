@@ -16,12 +16,15 @@
 @interface WXMPhotoCollectionCell : UICollectionViewCell
 @property (nonatomic, strong) WXMPhotoAsset *photoAsset;
 @property (nonatomic, assign) WXMPhotoDetailType photoType;
-@property (nonatomic, assign) BOOL canRespond;
 
+/** 能否相应 默认YES NO出现白色遮罩 */
+@property (nonatomic, assign) BOOL userCanTouch;
+@property (nonatomic, strong) NSIndexPath *indexPath;
 
 /** 多选模式下设置代理 */
 - (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
           indexPath:(NSIndexPath *)indexPath
           signModel:(WXMPhotoSignModel *)signModel
-            respond:(BOOL)respond;
+           showMask:(BOOL)showMask;
+
 @end

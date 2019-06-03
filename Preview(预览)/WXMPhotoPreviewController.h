@@ -7,6 +7,7 @@
 //
 #import "WXMPhotoConfiguration.h"
 #import <UIKit/UIKit.h>
+#import "WXMDictionary_Array.h"
 
 @interface WXMPhotoPreviewController : UIViewController
 
@@ -16,7 +17,8 @@
 /** 预览类型 */
 @property (nonatomic, assign) WXMPhotoPreviewType previewType;
 
-/** 选中的 */
+/** 存储被标记的图片model */
+@property (nonatomic, strong) WXMDictionary_Array *signObj;
 @property (nonatomic, strong) NSMutableDictionary *signDictionary;
 
 /** 全部 */

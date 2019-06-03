@@ -20,7 +20,10 @@
 @implementation WXMPhotoViewController
 
 - (instancetype)init {
-    if (self = [super init]) self.pushCamera = YES;
+    if (self = [super init]) {
+        self.pushCamera = YES;
+        self.exitPreview = YES;
+    }
     return self;
 }
 

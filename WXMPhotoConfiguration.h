@@ -43,7 +43,7 @@
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
 #define WXMMultiSelectMax 4
 
-/** 默认传递大小  */
+/** 默认传回的图片大小  */
 #define WXMDefaultSize CGSizeMake(200, 200 * 1.78)
 
 /** 预览黑边间距 */

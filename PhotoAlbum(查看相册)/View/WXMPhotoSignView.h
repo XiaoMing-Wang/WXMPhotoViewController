@@ -15,8 +15,8 @@
 @property (nonatomic, strong) WXMPhotoSignModel *signModel;
 @property (nonatomic, weak) id<WXMPhotoSignProtocol> delegate;
 
-/** 数量是否达到上限 NO为达到 */
-@property (nonatomic, assign) BOOL userInteraction;
+/** 能否在添加 NO不可添加 */
+@property (nonatomic, assign) BOOL userContinueExpansion;
 
 
 - (instancetype)initWithSupViewSize:(CGSize)size;
