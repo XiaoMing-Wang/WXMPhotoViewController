@@ -49,7 +49,7 @@
 /** 预览黑边间距 */
 #define WXMPhotoPreviewSpace 20
 
-/** 预览下面工具栏推按大小 */
+/** 预览下面工具栏推图案大小 */
 #define WXMPhotoPreviewImageWH 53
 
 /** 手势下拉缩小最小倍数 */

@@ -22,7 +22,6 @@
 
 /** Dictionary */
 - (void)setObject:(id)anObject forKey:(id)aKey {
-    if (self.maxCount > 0 && self.count >= self.maxCount) return;
     if (!anObject || !aKey) return;
     if ([self.allKeys containsObject:aKey]) {
         NSInteger idex = [[self.signDictionary objectForKey:aKey] integerValue];
@@ -31,6 +30,7 @@
             [self.contentArray replacePointerAtIndex:idex withPointer:(__bridge void *)(anObject)];
         }
     } else {
+        if (self.maxCount > 0 && self.count >= self.maxCount) return;
         [self.contentDictionary setObject:anObject forKey:aKey];
         [self.contentArray addPointer:(__bridge void * _Nullable)(anObject)];
         [self.signDictionary setObject:self.location forKey:aKey];

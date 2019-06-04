@@ -101,27 +101,6 @@
             self.currentRequestID = ids;
             self.photoAsset.requestID = ids;
         }
-        
-        
-        
-        /** image */
-//        if (photoAsset.bigImage) {
-//            self.imageView.image = photoAsset.bigImage;
-//            [self setLocation:self.photoAsset.aspectRatio];
-//            if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
-//        } else {
-//            PHAsset *asset = photoAsset.asset;
-//            CGSize size = CGSizeMake(screenWidth, imageHeight);
-//            if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
-//            int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-//                /** NSLog(@"%@",NSStringFromCGSize(image.size)); */
-//                photoAsset.bigImage = image;
-//                self.imageView.image = image;
-//                [self setLocation:self.photoAsset.aspectRatio];
-//            }];
-//            self.currentRequestID = ids;
-//            self.photoAsset.requestID = ids;
-//        }
     }
 }
 

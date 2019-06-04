@@ -35,6 +35,7 @@
     _leftButton.hidden = !_showLeftButton;
 }
 
+/** 设置右按钮是否显示 */
 - (void)setShowRightButton:(BOOL)showRightButton  {
     _showRightButton = showRightButton;
     _rightButton.hidden = !_showRightButton;
