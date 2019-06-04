@@ -29,4 +29,5 @@
 
 /** 显示隐藏 */
 - (void)setAccordingState:(BOOL)state;
+- (void)setSignObj:(WXMDictionary_Array *)signObj removeIdx:(NSInteger)idx;
 @end

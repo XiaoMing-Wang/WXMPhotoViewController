@@ -207,11 +207,11 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         [self wxm_showAlertController];
         return;
     }
-    
+      
     if (self.signCallback)  {
         self.signObj = self.signCallback(self.selectedIndex);
         [self wxm_setUpTopView:self.selectedIndex];
-        self.bottomBarView.signObj = self.signObj;
+        [self.bottomBarView setSignObj:self.signObj removeIdx:obj.rank];
     }
 }
 
@@ -294,7 +294,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 - (WXMPreviewBottomBar *)bottomBarView {
     if (!_bottomBarView) {
         _bottomBarView = [[WXMPreviewBottomBar alloc] initWithFrame:CGRectZero];
-        _bottomBarView.signObj = self.signObj;
+        [_bottomBarView setSignObj:self.signObj removeIdx:0];
         _bottomBarView.delegate = self;
     }
     return _bottomBarView;

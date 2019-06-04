@@ -112,48 +112,90 @@
 }
 
 /** 赋值 */
-- (void)setSignObj:(WXMDictionary_Array *)signObj {
+- (void)setSignObj:(WXMDictionary_Array *)signObj removeIdx:(NSInteger)idx {
     _signObj = signObj;
     _line.alpha = (signObj.count > 0);
     _photoView.alpha = (signObj.count > 0);
     [self.collectionView reloadData];
     [self.collectionView layoutIfNeeded];
-    [self animateCollection];
-    self.lastCount = _signObj.count;
+    [self animateCollectionWithIdx:idx];
+    [self scrollPosition];
+    self.lastCount = self.signObj.count;
 }
 
-- (void)animateCollection {
-    
+- (void)animateCollectionWithIdx:(NSInteger)removeIdx {
     if (self.lastCount == 0 || _signObj.count == 0 || _isAnimation) return;
     NSArray *cells = _collectionView.visibleCells;
-    for (UICollectionViewCell *cell in cells) {
-        NSInteger idex = [self.collectionView indexPathForCell:cell].row;
-        
-        /** 增加 */
-        if (cells.count >= self.lastCount && (idex == cells.count - 1)) {
-            cell.contentView.alpha = 0;
-            cell.contentView.transform = CGAffineTransformMakeScale(.1, .1);
-            [UIView animateWithDuration:0.25 animations:^{
-                cell.contentView.alpha = 1;
-                cell.contentView.transform = CGAffineTransformIdentity;
-            }];
-            break;
+    BOOL wxm_add = (_signObj.count > self.lastCount);
+    if (wxm_add) {
+        for (UICollectionViewCell *cell in cells) {
+            NSInteger idex = [self.collectionView indexPathForCell:cell].row;
+            if (cells.count >= self.lastCount && (idex == self.signObj.count - 1)) {
+                cell.contentView.alpha = 0;
+                cell.contentView.transform = CGAffineTransformMakeScale(.1, .1);
+                [UIView animateWithDuration:0.25 animations:^{
+                    cell.contentView.alpha = 1;
+                    cell.contentView.transform = CGAffineTransformIdentity;
+                }];
+                break;
+            }
         }
-        
-        /** 减少 */
-        else if (cells.count < self.lastCount && idex >= 1) {
-            cell.contentView.left = WXMPhotoPreviewImageWH + 12;
-            [UIView animateWithDuration:0.35 animations:^{
-                cell.contentView.left = 0;
-            }];
+    } else {
+        if (_collectionView.contentSizeWidth > WXMPhoto_Width) return;
+        for (UICollectionViewCell *cell in cells) {
+            NSInteger idex = [self.collectionView indexPathForCell:cell].row;
+            if (idex >= (removeIdx - 1)) {
+                cell.contentView.left = cell.contentView.width + 12;
+                [UIView animateWithDuration:0.35 animations:^{
+                    cell.contentView.left = 0;
+                }];
+            }
         }
         
     }
+    
+//    for (UICollectionViewCell *cell in cells) {
+//        NSInteger idex = [self.collectionView indexPathForCell:cell].row;
+//
+//        /** 增加 */
+//        if (cells.count >= self.lastCount && (idex == self.signObj.count - 1)) {
+//            cell.contentView.alpha = 0;
+//            cell.contentView.transform = CGAffineTransformMakeScale(.1, .1);
+//            [UIView animateWithDuration:0.25 animations:^{
+//                cell.contentView.alpha = 1;
+//                cell.contentView.transform = CGAffineTransformIdentity;
+//            }];
+//            return;
+//        }
+    
+        /** 减少 */
+//        else if (cells.count < self.lastCount && idex >= (removeIdx - 1)) {
+//            cell.contentView.left = cell.contentView.width + 12;
+//            [UIView animateWithDuration:0.35 animations:^{
+//                cell.contentView.left = 0;
+//            }];
+//        }
+        
+//    }
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         self.isAnimation = NO;
     });
 }
+
+/**  */
+- (void)scrollPosition {
+    if (_signObj.count >= self.lastCount && _signObj.count > 0) {
+        UICollectionViewScrollPosition position = UICollectionViewScrollPositionRight;
+        NSIndexPath * index = [NSIndexPath indexPathForRow:_signObj.count - 1 inSection:0];
+        [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:YES];
+    } else {
+        UICollectionViewScrollPosition position = UICollectionViewScrollPositionRight;
+        NSIndexPath * index = [NSIndexPath indexPathForRow:_signObj.count - 1 inSection:0];
+        [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:YES];
+    }
+}
+
 
 #pragma mark _____________________________________________UICollectionView dataSource
 
@@ -213,11 +255,13 @@
         _collectionView.dataSource = self;
         _collectionView.delegate = self;
         _collectionView.alwaysBounceVertical = NO;
+        _collectionView.alwaysBounceHorizontal = YES;
         _collectionView.contentInset = UIEdgeInsetsMake(0, 10, 0, 10);
         [_collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"cell"];
     }
     return _collectionView;
 }
+
 /** 创建预览imageview */
 - (UIImageView *)createImageView {
     UIImageView * imageView = [[UIImageView alloc] initWithFrame:CGRectZero];

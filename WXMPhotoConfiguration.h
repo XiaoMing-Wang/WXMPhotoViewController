@@ -41,7 +41,7 @@
 #define WXMSelectedFont 15
 
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
-#define WXMMultiSelectMax 4
+#define WXMMultiSelectMax 10
 
 /** 默认传回的图片大小  */
 #define WXMDefaultSize CGSizeMake(200, 200 * 1.78)
