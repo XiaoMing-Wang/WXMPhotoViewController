@@ -41,7 +41,7 @@
 #define WXMSelectedFont 15
 
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
-#define WXMMultiSelectMax 10
+#define WXMMultiSelectMax 12
 
 /** 默认传回的图片大小  */
 #define WXMDefaultSize CGSizeMake(200, 200 * 1.78)
@@ -104,7 +104,9 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 @protocol WXMPreviewToolbarProtocol <NSObject>
 - (void)wxm_touchTopLeftItem;
 - (void)wxm_touchTopRightItem:(id)obj;
+
 - (void)wxm_touchButtomFinsh;
+- (void)wxm_touchButtomDidSelectItem:(NSIndexPath *)idx;
 @end
 
 

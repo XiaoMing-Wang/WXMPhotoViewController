@@ -11,7 +11,9 @@
 
 @interface WXMPhotoShapeController : UIViewController
 
+
 @property (nonatomic, strong) UIImage *shapeImage;
+
 
 @property (nonatomic, weak) id<WXMPhotoProtocol> delegate;
 
@@ -19,3 +21,4 @@
 @property (nonatomic, strong) void (^results)(UIImage *image);
 
 @end
+

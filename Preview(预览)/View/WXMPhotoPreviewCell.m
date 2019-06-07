@@ -78,10 +78,7 @@
                 [self setLocation:self.photoAsset.aspectRatio];
                 self.imageView.image = [WXMPhotoGIFImage imageWithData:data];
             }];
-           
         } else {
-            
-            /** 点进来那张会加载 */
             if (photoAsset.bigImage) {
                 self.imageView.image = photoAsset.bigImage;
                 [self setLocation:self.photoAsset.aspectRatio];
@@ -90,7 +87,6 @@
             
             PHAsset *asset = photoAsset.asset;
             CGSize size = CGSizeMake(screenWidth, imageHeight);
-            /**  NSLog(@"%@",NSStringFromCGSize(size));  */
             if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
             int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
                 photoAsset.bigImage = image;

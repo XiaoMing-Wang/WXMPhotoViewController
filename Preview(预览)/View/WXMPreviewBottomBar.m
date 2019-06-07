@@ -15,10 +15,11 @@
 @property (nonatomic, strong) UIView *finshView;
 @property (nonatomic, strong) UIView *line;
 
-/** 上一次的个数 */
-@property (nonatomic, assign) NSInteger lastCount;
 @property (nonatomic, assign) BOOL isAnimation;
+@property (nonatomic, assign) NSInteger lastSeleIdx;
+@property (nonatomic, strong) NSIndexPath *lastIndexPath;
 @end
+
 @implementation WXMPreviewBottomBar
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -31,11 +32,12 @@
     CGFloat h = 125;
     CGFloat y = WXMPhoto_Height - h;
     self.frame = CGRectMake(0, y, WXMPhoto_Width, h);
+    self.lastSeleIdx = -1;
     
     /** 上半部分预览 */
     _photoView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, 80)];
     _photoView.backgroundColor = WXMPhoto_RGBColor(33, 33, 33);
-    _photoView.alpha = 1;
+    _photoView.alpha = 0;
     [_photoView addSubview:self.collectionView];
     
     /** 下半部分按钮 */
@@ -44,7 +46,7 @@
     
     _line = [[UIView alloc] initWithFrame:CGRectMake(0, 80 - 0.5, WXMPhoto_Width, 0.5)];
     _line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.25];
-    _line.alpha = 1;
+    _line.alpha = 0;
     
     self.collectionView.layoutCenterSupView = NO;
     [self addSubview:_photoView];
@@ -78,8 +80,8 @@
     finishButton.layer.cornerRadius = 4;
     [finishButton wxm_addTarget:self action:@selector(finishTouchEvents)];
     
-    [_finshView addSubview:originalbg];
-    [_finshView addSubview:finishButton];
+    [self.finshView addSubview:originalbg];
+    [self.finshView addSubview:finishButton];
 }
 
 /** 原图选中 */
@@ -111,91 +113,47 @@
     });
 }
 
-/** 赋值 */
+/** 赋值 0=增加 >0 删除 */
 - (void)setSignObj:(WXMDictionary_Array *)signObj removeIdx:(NSInteger)idx {
     _signObj = signObj;
-    _line.alpha = (signObj.count > 0);
-    _photoView.alpha = (signObj.count > 0);
-    [self.collectionView reloadData];
-    [self.collectionView layoutIfNeeded];
-    [self animateCollectionWithIdx:idx];
-    [self scrollPosition];
-    self.lastCount = self.signObj.count;
-}
-
-- (void)animateCollectionWithIdx:(NSInteger)removeIdx {
-    if (self.lastCount == 0 || _signObj.count == 0 || _isAnimation) return;
-    NSArray *cells = _collectionView.visibleCells;
-    BOOL wxm_add = (_signObj.count > self.lastCount);
-    if (wxm_add) {
-        for (UICollectionViewCell *cell in cells) {
-            NSInteger idex = [self.collectionView indexPathForCell:cell].row;
-            if (cells.count >= self.lastCount && (idex == self.signObj.count - 1)) {
-                cell.contentView.alpha = 0;
-                cell.contentView.transform = CGAffineTransformMakeScale(.1, .1);
-                [UIView animateWithDuration:0.25 animations:^{
-                    cell.contentView.alpha = 1;
-                    cell.contentView.transform = CGAffineTransformIdentity;
-                }];
-                break;
-            }
-        }
-    } else {
-        if (_collectionView.contentSizeWidth > WXMPhoto_Width) return;
-        for (UICollectionViewCell *cell in cells) {
-            NSInteger idex = [self.collectionView indexPathForCell:cell].row;
-            if (idex >= (removeIdx - 1)) {
-                cell.contentView.left = cell.contentView.width + 12;
-                [UIView animateWithDuration:0.35 animations:^{
-                    cell.contentView.left = 0;
-                }];
-            }
-        }
+    [UIView animateWithDuration:0.35 animations:^{
+        _line.alpha = (signObj.count > 0);
+        _photoView.alpha = (signObj.count > 0);
+    }];
+    
+    if (idx == -1) {
+        [self.collectionView reloadData];
         
-    }
-    
-//    for (UICollectionViewCell *cell in cells) {
-//        NSInteger idex = [self.collectionView indexPathForCell:cell].row;
-//
-//        /** 增加 */
-//        if (cells.count >= self.lastCount && (idex == self.signObj.count - 1)) {
-//            cell.contentView.alpha = 0;
-//            cell.contentView.transform = CGAffineTransformMakeScale(.1, .1);
-//            [UIView animateWithDuration:0.25 animations:^{
-//                cell.contentView.alpha = 1;
-//                cell.contentView.transform = CGAffineTransformIdentity;
-//            }];
-//            return;
-//        }
-    
-        /** 减少 */
-//        else if (cells.count < self.lastCount && idex >= (removeIdx - 1)) {
-//            cell.contentView.left = cell.contentView.width + 12;
-//            [UIView animateWithDuration:0.35 animations:^{
-//                cell.contentView.left = 0;
-//            }];
-//        }
+    } else if (idx == 0) {
+        UICollectionViewCell *lastCell = [self.collectionView cellForItemAtIndexPath:_lastIndexPath];
+        [lastCell viewWithTag:10086].layer.borderColor = [UIColor clearColor].CGColor;
+        UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
         
-//    }
-    
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        self.isAnimation = NO;
-    });
-}
-
-/**  */
-- (void)scrollPosition {
-    if (_signObj.count >= self.lastCount && _signObj.count > 0) {
-        UICollectionViewScrollPosition position = UICollectionViewScrollPositionRight;
-        NSIndexPath * index = [NSIndexPath indexPathForRow:_signObj.count - 1 inSection:0];
-        [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:YES];
-    } else {
-        UICollectionViewScrollPosition position = UICollectionViewScrollPositionRight;
-        NSIndexPath * index = [NSIndexPath indexPathForRow:_signObj.count - 1 inSection:0];
-        [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:YES];
+        NSInteger changeRow = MAX((signObj.count - 1), 0);
+        NSLog(@"%ld",changeRow);
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:changeRow inSection:0];
+        [_collectionView insertItemsAtIndexPaths:@[indexPath]];
+        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:position animated:YES];
+        
+        UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
+        cell.contentView.alpha = 0;
+        cell.contentView.transform = CGAffineTransformMakeScale(.1, .1);
+        CGFloat duration = (signObj.count - 1 == 0) ? 0 : 0.35;
+        [UIView animateWithDuration:duration animations:^{
+            cell.contentView.alpha = 1;
+            cell.contentView.transform = CGAffineTransformIdentity;
+        }];
+        
+    } else if (idx > 0) {
+        CGFloat width = _collectionView.contentSizeWidth - WXMPhotoPreviewImageWH - 12;
+        if (width < WXMPhoto_Width) {
+            CGPoint point = CGPointMake(-_collectionView.contentInsetLeft, 0);
+            [_collectionView setContentOffset:point animated:YES];
+        }
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:idx - 1 inSection:0];
+        [_collectionView deleteItemsAtIndexPaths:@[indexPath]];
     }
 }
-
 
 #pragma mark _____________________________________________UICollectionView dataSource
 
@@ -205,22 +163,30 @@
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    UICollectionView *cv = collectionView;
-    NSIndexPath *ip = indexPath;
-    UICollectionViewCell *cell = [cv dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:ip];
+    UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
     UIImageView * content = [cell.contentView viewWithTag:10086];
     if (!content) {
         content = [self createImageView];
         [cell.contentView addSubview:content];
     }
     
-    content.layer.borderColor = [UIColor clearColor].CGColor;
     WXMPhotoSignModel * signModel = [self.signObj objectAtIndex:indexPath.row];
     content.image = signModel.image;
+    content.layer.borderColor = [UIColor clearColor].CGColor;
     if (self.seletedIdx == signModel.indexPath.row) {
+        self.lastIndexPath = indexPath;
         content.layer.borderColor = WXMSelectedColor.CGColor;
     }
     return cell;
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    WXMPhotoSignModel * signModel = [self.signObj objectAtIndex:indexPath.row];
+    SEL sel = @selector(wxm_touchButtomDidSelectItem:);
+    if (self.delegate && [self.delegate respondsToSelector:sel]) {
+        [self.delegate wxm_touchButtomDidSelectItem:signModel.indexPath];
+    }
+
 }
 
 /** 显示隐藏 */
@@ -234,9 +200,21 @@
 /**  */
 - (void)setSeletedIdx:(NSInteger)seletedIdx {
     _seletedIdx = seletedIdx;
-    [self.collectionView reloadData];
+    if (self.lastSeleIdx == -1) self.lastSeleIdx = seletedIdx;
+    
+    /** 翻页 */
+    if (self.lastSeleIdx != seletedIdx) {
+        [self.collectionView reloadData];
+        self.lastSeleIdx = seletedIdx;
+        WXMPhotoSignModel * signModel = [self.signObj objectForKey:@(seletedIdx).stringValue];
+        NSInteger idx = [self.signObj indexOfObject:signModel];
+        if (idx >= 0) {
+            UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
+            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:idx inSection:0];
+            [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:position animated:YES];
+        }
+    }
 }
-
 
 - (UICollectionView *)collectionView {
     if (_collectionView == nil) {
@@ -269,7 +247,7 @@
     imageView.size = CGSizeMake(WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
     imageView.layer.borderWidth = 1.5;
     imageView.contentMode = UIViewContentModeScaleAspectFill;
-    imageView.layer.borderColor = WXMSelectedColor.CGColor;
+    imageView.layer.borderColor = [UIColor clearColor].CGColor;
     imageView.tag = 10086;
     return imageView;
 }

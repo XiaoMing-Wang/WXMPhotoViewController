@@ -20,6 +20,7 @@
 /** 相片 */
 @property(nonatomic, strong) UIImage *image;
 
+/** rank是动态的 保存的不准确 */
 /** 排名 */
 @property(nonatomic, assign) NSInteger rank;
 

@@ -31,7 +31,7 @@
     return WXMPHAssetMediaTypeImage;
 }
 
-/** 获取时长 */
+/** 获取视频时长 */
 - (NSString *)videoDrantion {
     if (self.mediaType != WXMPHAssetMediaTypeVideo) return @"";
     NSString *videoDrantion = [NSString stringWithFormat:@"%0.0f",self.asset.duration];
@@ -43,14 +43,13 @@
     drantionString = [NSString stringWithFormat:@"%02zd:%02zd",minutes,seconds];
     return drantionString;
 }
-@end
 
+@end
 
 @implementation WXMPhotoManager
 
 static WXMPhotoManager *manager = nil;
 + (instancetype)sharedInstance {
-   
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         manager = [[self alloc] init];
@@ -66,16 +65,16 @@ static WXMPhotoManager *manager = nil;
     }
     
     NSString *msg = @"请在系统设置中打开“允许访问照片”，否则将无法获取照片";
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提示" message:msg preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController*al= [UIAlertController alertControllerWithTitle:@"提示" message:msg preferredStyle:1];
     UIAlertAction *cancle = [UIAlertAction actionWithTitle:@"取消" style:1 handler:nil];
-    UIAlertAction *action = [UIAlertAction actionWithTitle:@"去开启" style:0 handler:^(UIAlertAction * action) {
+    UIAlertAction *action = [UIAlertAction actionWithTitle:@"去开启" style:0 handler:^(UIAlertAction *acs) {
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
     }];
-    [alert addAction:cancle];
-    [alert addAction:action];
+    [al addAction:cancle];
+    [al addAction:action];
     UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
     UIViewController * root = window.rootViewController.presentedViewController?:window.rootViewController;
-    [root presentViewController:alert animated:YES completion:nil];
+    [root presentViewController:al animated:YES completion:nil];
     return NO;
 }
 
@@ -104,7 +103,7 @@ static WXMPhotoManager *manager = nil;
         /** 获取系统相册 */
         PHFetchResult * smartAlbum = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
         
-        [smartAlbum enumerateObjectsUsingBlock:^(PHAssetCollection * collection, NSUInteger idx, BOOL * stop) {
+        [smartAlbum enumerateObjectsUsingBlock:^(PHAssetCollection *collection,NSUInteger idx,BOOL *stop) {
             
             /** 去掉视频和最近删除的 */
             if (!([collection.localizedTitle isEqualToString:@"Recently Deleted"] ||
@@ -141,6 +140,7 @@ static WXMPhotoManager *manager = nil;
             }
         }];
         
+        
         dispatch_async(dispatch_get_main_queue(), ^{
             self.picturesArray = photoList;
             if (block) block(photoList);
@@ -149,9 +149,9 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 获取相册结果集 */
-- (PHFetchResult *)fetchAssetsInAssetCollection:(PHAssetCollection*)assetCollection ascending:(BOOL)ascending {
+- (PHFetchResult *)fetchAssetsInAssetCollection:(PHAssetCollection*)assetCollection ascending:(BOOL)asc {
     PHFetchOptions *option = [[PHFetchOptions alloc] init];
-    option.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:ascending]];
+    option.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:asc]];
     PHFetchResult *result = [PHAsset fetchAssetsInAssetCollection:assetCollection options:option];
     return result;
 }
@@ -195,10 +195,10 @@ static WXMPhotoManager *manager = nil;
     if (original) size = PHImageManagerMaximumSize;
     else size = assetSize;
     
-    //下载图片
+    /** 下载图片 */
     /** option.networkAccessAllowed = YES; */
     /**  targetSize 即你想要的图片尺寸，若想要原尺寸则可输入PHImageManagerMaximumSize */
-    int32_t requestID =  [[PHCachingImageManager defaultManager] requestImageForAsset:asset targetSize:size contentMode:PHImageContentModeAspectFill options:option resultHandler:^(UIImage *image,NSDictionary *info) {
+    int32_t requestID = [[PHCachingImageManager defaultManager] requestImageForAsset:asset targetSize:size contentMode:PHImageContentModeAspectFill options:option resultHandler:^(UIImage *image,NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (completion) completion(image);
         });
@@ -211,7 +211,7 @@ static WXMPhotoManager *manager = nil;
                     synchronous:(BOOL)synchronous
                      completion:(void (^)(UIImage *AssetImage))completion {
     
-    //PHImageRequestOptionsResizeModeExact精准大小
+    /** PHImageRequestOptionsResizeModeExact精准大小 */
     return [self getPicturesByAsset:asset
                         synchronous:synchronous
                            original:YES
@@ -246,7 +246,6 @@ static WXMPhotoManager *manager = nil;
         return [self getPictures_customSize:asset synchronous:YES assetSize:size completion:comple];
     }
 }
-
 
 /** GIF */
 - (int32_t)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion {
@@ -303,6 +302,7 @@ static WXMPhotoManager *manager = nil;
     }];
 }
 
+/** 取消 */
 - (void)cancelRequestWithID:(int32_t)requestID {
     [[PHCachingImageManager defaultManager] cancelImageRequest:requestID];
 }

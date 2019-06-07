@@ -188,7 +188,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 }
 #pragma mark 回调
 
-/** 设置topview */
+/** 设置topview bottomBarView 属性 */
 - (void)wxm_setUpTopView:(NSInteger)location {
     NSString * indexString = @(location).stringValue;
     self.topBarView.signModel = [self.signObj objectForKey:indexString];
@@ -213,6 +213,14 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         [self wxm_setUpTopView:self.selectedIndex];
         [self.bottomBarView setSignObj:self.signObj removeIdx:obj.rank];
     }
+}
+
+/** 下工具栏回调 */
+- (void)wxm_touchButtomDidSelectItem:(NSIndexPath *)idx {
+    UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
+    [self.collectionView scrollToItemAtIndexPath:idx atScrollPosition:position animated:NO];
+    [self wxm_setUpTopView:idx.row];
+    self.selectedIndex = idx.row;
 }
 
 /** 完成按钮 */
@@ -294,7 +302,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 - (WXMPreviewBottomBar *)bottomBarView {
     if (!_bottomBarView) {
         _bottomBarView = [[WXMPreviewBottomBar alloc] initWithFrame:CGRectZero];
-        [_bottomBarView setSignObj:self.signObj removeIdx:0];
+        [_bottomBarView setSignObj:self.signObj removeIdx:-1];
         _bottomBarView.delegate = self;
     }
     return _bottomBarView;

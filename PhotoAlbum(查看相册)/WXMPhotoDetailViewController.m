@@ -149,7 +149,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         self.sign = NO;
         size = CGSizeEqualToSize(self.expectSize, CGSizeZero) ? WXMDefaultSize : self.expectSize;
         [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-            phsset.bigImage = image;
             WXMPhotoSignModel *signModel = [self wxm_signModel:indexPath signImage:image];
             [self.signObj setObject:signModel forKey:indexString];
             if (self.signObj.count >= WXMMultiSelectMax) [self wxm_reloadAllAvailableCell];

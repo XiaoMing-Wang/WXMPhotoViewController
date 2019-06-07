@@ -32,8 +32,7 @@
 @property (nonatomic, copy) NSDictionary* (^callback)(NSInteger index, NSInteger rank);
 @property (nonatomic, strong) WXMDictionary_Array* (^signCallback)(NSInteger index);
 
-/**  */
-/** @property (nonatomic, strong) UIImage *windowImage; */
+/** 转场背景 */
 @property (nonatomic, strong) UIView *wxm_windowView;
 @property (nonatomic, strong) UIView *wxm_contentView;
 

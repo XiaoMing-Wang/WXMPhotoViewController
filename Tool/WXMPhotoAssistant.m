@@ -35,16 +35,16 @@ static char wxm_Photoline;
 }
 
 /** 截图 */
-+ (UIImage *)wxmPhoto_makeViewImage:(UIView *)screenshots {
-    @autoreleasepool {
-        CGSize size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height);
-        UIGraphicsBeginImageContextWithOptions(size, NO, [UIScreen mainScreen].scale);
-        [screenshots.layer renderInContext:UIGraphicsGetCurrentContext()];
-        UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-        return image;
-    }
-}
+//+ (UIImage *)wxmPhoto_makeViewImage:(UIView *)screenshots {
+//    @autoreleasepool {
+//        CGSize size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height);
+//        UIGraphicsBeginImageContextWithOptions(size, NO, [UIScreen mainScreen].scale);
+//        [screenshots.layer renderInContext:UIGraphicsGetCurrentContext()];
+//        UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+//        UIGraphicsEndImageContext();
+//        return image;
+//    }
+//}
 
 /** 显示导航1px线条 */
 + (void)wxm_navigationLine:(UINavigationController *)nav show:(BOOL)show {

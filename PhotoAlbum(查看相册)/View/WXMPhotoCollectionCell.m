@@ -159,10 +159,13 @@
 /** 设置动画 */
 - (void)setAnimation {
     if (!self.chooseButton.selected) return;
+    self.chooseButton.userInteractionEnabled = NO;
     self.chooseButton.transform = CGAffineTransformMakeScale(0.3, 0.3);
     [UIView animateWithDuration:1.f delay:0 usingSpringWithDamping:0.4 initialSpringVelocity:0.0 options:UIViewAnimationOptionLayoutSubviews animations:^{
         self.chooseButton.transform = CGAffineTransformIdentity;
-    } completion:nil];
+    } completion:^(BOOL finished) {
+        self.chooseButton.userInteractionEnabled = YES;
+    }];
 }
 
 /** 提示框 */
