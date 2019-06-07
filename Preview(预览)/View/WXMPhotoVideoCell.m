@@ -99,24 +99,24 @@
 
 /** 设置图片Video */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
+    _photoAsset = photoAsset;
     @autoreleasepool {
-        _photoAsset = photoAsset;
         CGFloat screenWidth  = WXMPhoto_Width * 2.0;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-        if (self.photoAsset.aspectRatio <= 0) {
+        if (_photoAsset.aspectRatio <= 0) {
             _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / (CGFloat)photoAsset.asset.pixelWidth * 1.0;
         }
-        CGFloat imageHeight = self.photoAsset.aspectRatio * screenWidth;
+        CGFloat imageHeight = photoAsset.aspectRatio * screenWidth;
         
         if (photoAsset.bigImage) {
             self.imageView.image = photoAsset.bigImage;
-            [self setLocation:self.photoAsset.aspectRatio];
+            [self setLocation:_photoAsset.aspectRatio];
         } else {
             PHAsset *asset = photoAsset.asset;
             CGSize size = CGSizeMake(screenWidth, imageHeight);
             [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
                 photoAsset.bigImage = image;
-                [self setLocation:self.photoAsset.aspectRatio];
+                [self setLocation:_photoAsset.aspectRatio];
                 self.imageView.image = image;
             }];
         }

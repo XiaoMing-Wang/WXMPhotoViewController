@@ -63,25 +63,26 @@
 
 /** 设置图片 GIF */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
+    _photoAsset = photoAsset;
     @autoreleasepool {
-        _photoAsset = photoAsset;
         CGFloat screenWidth  = WXMPhoto_Width * 2.0;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-        if (self.photoAsset.aspectRatio <= 0) {
-            _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / (CGFloat)photoAsset.asset.pixelWidth * 1.0;
+        if (_photoAsset.aspectRatio <= 0) {
+            _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / 
+            (CGFloat)photoAsset.asset.pixelWidth * 1.0;
         }
-        CGFloat imageHeight = self.photoAsset.aspectRatio * screenWidth;
+        CGFloat imageHeight = _photoAsset.aspectRatio * screenWidth;
         
         /** GIF */
         if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
             [man getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
-                [self setLocation:self.photoAsset.aspectRatio];
+                [self setLocation:_photoAsset.aspectRatio];
                 self.imageView.image = [WXMPhotoGIFImage imageWithData:data];
             }];
         } else {
             if (photoAsset.bigImage) {
                 self.imageView.image = photoAsset.bigImage;
-                [self setLocation:self.photoAsset.aspectRatio];
+                [self setLocation:_photoAsset.aspectRatio];
                 return;
             }
             
@@ -95,7 +96,7 @@
                 /** NSLog(@"%@",NSStringFromCGSize(image.size)); */
             }];
             self.currentRequestID = ids;
-            self.photoAsset.requestID = ids;
+            _photoAsset.requestID = ids;
         }
     }
 }
@@ -139,7 +140,7 @@
     [_contentScrollView setZoomScale:1.0 animated:NO];
 }
 
-/** 添加三个手势 */
+/** 添加手势 */
 - (void)addTapGestureRecognizer {
     UITapGestureRecognizer *tapSingle = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondsToTapSingle:)];
     tapSingle.numberOfTapsRequired = 1;
@@ -190,7 +191,7 @@
     [recognizer.view.superview bringSubviewToFront:recognizer.view];
     CGPoint center = recognizer.view.center;
     CGPoint translation = [recognizer translationInView:self];  /** 位移 */
-    CGFloat wxm_centery = center.y + translation.y;           /** y轴位移 */
+    CGFloat wxm_centery = center.y + translation.y;             /** y轴位移 */
     CGFloat recognizer_W = recognizer.view.frame.size.width;
     CGFloat recognizer_H = recognizer.view.frame.size.height;
     

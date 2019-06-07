@@ -5,7 +5,7 @@
 //  Created by edz on 2019/6/3.
 //  Copyright © 2019 wq. All rights reserved.
 //
-
+/** 数组指点二合一的对象 */
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -25,9 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeAllObjects;
 - (void)enumerateKeysAndObjectsUsingBlock:(void (NS_NOESCAPE ^)(id key, id obj, BOOL *stop))block;
 
-/** Array */
 - (NSUInteger)count;
 
+/** Array */
 - (void)addObject:(id)object;
 - (void)addObjectsFromArray:(NSArray *)array;
 - (NSUInteger)indexOfObject:(id)anObject;

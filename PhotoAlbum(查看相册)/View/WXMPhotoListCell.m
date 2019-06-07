@@ -39,10 +39,9 @@
 
 /** 赋值 相册界面相片少同步获取 */
 - (void)setPhoneList:(WXMPhotoList *)phoneList {
+    _phoneList = phoneList;
     @autoreleasepool {
-        _phoneList = phoneList;
         NSRange range = NSMakeRange(0, _phoneList.title.length);
-        
         NSString *infoHelp = [NSString stringWithFormat:@"  (%zd)", _phoneList.photoNum];
         NSString *info = [_phoneList.title stringByAppendingString:infoHelp];
         NSMutableAttributedString *atts = [[NSMutableAttributedString alloc] initWithString:info];
@@ -55,7 +54,7 @@
             CGSize size = CGSizeMake(w, w);
             PHAsset *asset = self.phoneList.firstAsset;
             WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-            [man getPictures_customSize:asset synchronous:YES assetSize:size completion:^(UIImage *image) {
+            [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
                 self.posterImageView.image = image;
                 phoneList.firstImage = image;
             }];

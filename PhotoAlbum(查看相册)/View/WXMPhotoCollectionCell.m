@@ -37,7 +37,9 @@
     _imageView = [[UIImageView alloc] initWithFrame:self.bounds];
     _imageView.contentMode = UIViewContentModeScaleAspectFill;
     _imageView.clipsToBounds = YES;
+    
     [self.contentView addSubview:self.imageView];
+    [self.contentView addSubview:self.typeSign];
 }
 
 /** 设置相册类型 */
@@ -51,29 +53,27 @@
 
 /** 异步赋值 数量特别多异步获取 */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
-    @autoreleasepool {
-        _photoAsset = photoAsset;
-        WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-        
-        if (photoAsset.smallImage) {
-            self.imageView.image = photoAsset.smallImage;
-            if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
-            return;
-        }
-
-        PHAsset *asset = photoAsset.asset;
-        CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
+    _photoAsset = photoAsset;
+    [self wxm_setTypeSignInterface];
+    
+    WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
+    if (photoAsset.smallImage) {
+        self.imageView.image = photoAsset.smallImage;
         if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
-        int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-            self.photoAsset.aspectRatio = image.size.height / image.size.width * 1.0;
-            self.imageView.image = image;
-            photoAsset.smallImage = image;
-        }];
-        
-        self.currentRequestID = ids;
-        self.photoAsset.requestID = ids;
-        [self wxm_setTypeSignInterface];
+        return;
     }
+    
+    PHAsset *asset = photoAsset.asset;
+    CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
+    if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
+    int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+        photoAsset.aspectRatio = image.size.height / image.size.width * 1.0;
+        photoAsset.smallImage = image;
+        self.imageView.image = image;
+    }];
+    
+    self.currentRequestID = ids;
+    _photoAsset.requestID = ids;
 }
 
 /** 设置能否响应 */
@@ -104,24 +104,25 @@
 
 /** 设置显示界面效果 */
 - (void)wxm_setTypeSignInterface {
-    if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo && WXMPhotoShowVideoSign) {
-        [self.contentView addSubview:self.typeSign];
-        NSString * duration = [NSString stringWithFormat:@"  %@",_photoAsset.videoDrantion];
-        [self.typeSign setTitle:duration forState:UIControlStateNormal];
-        [self.typeSign setImage:[UIImage imageNamed:@"photo_videoSmall"] forState:UIControlStateNormal];
-        self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
-        self.typeSign.titleLabel.font = [UIFont systemFontOfSize:12];
-        
-    } else if (_photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && WXMPhotoShowGIFSign) {
-        [self.contentView addSubview:self.typeSign];
-        self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:16];
-        [self.typeSign setTitle:@"  GIF" forState:UIControlStateNormal];
-        [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
-        self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-    } else {
-        [self.typeSign removeFromSuperview];
-    }
-    [self.contentView bringSubviewToFront:self.typeSign];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.typeSign.hidden = YES;
+        [self.contentView bringSubviewToFront:self.typeSign];
+        if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo && WXMPhotoShowVideoSign) {
+            self.typeSign.hidden = NO;
+            NSString * duration = [NSString stringWithFormat:@"  %@",_photoAsset.videoDrantion];
+            [self.typeSign setTitle:duration forState:UIControlStateNormal];
+            [self.typeSign setImage:[UIImage imageNamed:@"photo_videoSmall"] forState:UIControlStateNormal];
+            self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+            self.typeSign.titleLabel.font = [UIFont systemFontOfSize:12];
+            
+        } else if (_photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && WXMPhotoShowGIFSign) {
+            self.typeSign.hidden = NO;
+            self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:16];
+            [self.typeSign setTitle:@"  GIF" forState:UIControlStateNormal];
+            [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
+            self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+        }
+    });
 }
 
 /** 设置button选中 */
@@ -190,7 +191,8 @@
         _typeSign.left = 5;
         _typeSign.userInteractionEnabled = NO;
         _typeSign.titleLabel.font = [UIFont systemFontOfSize:12];
-        [_typeSign setTitle:@"  00:66" forState:UIControlStateNormal];
+        [_typeSign setTitle:@"" forState:UIControlStateNormal];
+        _typeSign.hidden = YES;
         [_typeSign setImage:[UIImage imageNamed:@"photo_videoOverlay2"] forState:UIControlStateNormal];
     }
     return _typeSign;
