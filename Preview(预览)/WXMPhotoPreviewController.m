@@ -37,10 +37,11 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     self.navigationItem.leftBarButtonItem = item;
     self.navigationController.delegate = self;
     
+    self.showToolbar = YES;
     self.weakNavigationVC = self.navigationController;
     self.view.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:1.0];
-    if (self.windowImage) self.view.layer.contents = (id)self.windowImage.CGImage;
-    if (self.windowView) [self.view addSubview:self.windowView];
+    if (self.wxm_windowView) [self.view addSubview:self.wxm_windowView];
+    if (self.wxm_contentView) [self.view addSubview:self.wxm_contentView];
     [self.view addSubview:self.collectionView];
     
     self.navigationController.navigationBar.translucent = YES;
@@ -103,7 +104,6 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 - (void)collectionView:(UICollectionView *)collectionView
   didEndDisplayingCell:(UICollectionViewCell *)cell
     forItemAtIndexPath:(NSIndexPath *)indexPath {
-    
     if ([cell respondsToSelector:@selector(originalAppearance)]) {
         [cell performSelector:@selector(originalAppearance)];
     }
@@ -123,6 +123,8 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     CGFloat offY = scrollView.contentOffset.x;
     self.selectedIndex = offY / scrollView.frame.size.width;
     [self wxm_setUpTopView:self.selectedIndex];
+    
+    /** 设置原图大小 */
     [self wxm_setBottomBarViewrealByte];
 }
 
@@ -149,14 +151,20 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 /** cell回调代理 */
 - (void)wxm_respondsToTapSingle {
     self.showToolbar = !self.showToolbar;
-    self.topBarView.hidden = self.bottomBarView.hidden = self.showToolbar;
+    self.topBarView.hidden = self.bottomBarView.hidden = !self.showToolbar;
     [UIApplication sharedApplication].statusBarHidden = self.topBarView.hidden;
     if (self.topBarView.hidden == NO) self.topBarView.alpha = 1;
     if (self.bottomBarView.hidden == NO) self.bottomBarView.alpha = 1;
 }
 
-/**  */
+/** 手势滑动代理回调 */
 - (void)wxm_respondsBeginDragCell {
+    if (self.dragCallback) {
+        self.wxm_contentView = self.dragCallback();
+        self.wxm_contentView.maskView = self.maskBottomView;
+        [self.view insertSubview:self.wxm_contentView aboveSubview:self.wxm_windowView];
+    }
+    
     self.collectionView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0];
     [self.topBarView setAccordingState:NO];
     [self.bottomBarView setAccordingState:NO];
@@ -172,30 +180,38 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
         self.collectionView.scrollEnabled = YES;
         [UIApplication sharedApplication].statusBarHidden = NO;
+        [self.wxm_contentView removeFromSuperview];
     } else {
         self.transitionScrollView = jump;
         [self.navigationController popViewControllerAnimated:YES];
     }
-    
 }
 #pragma mark 回调
 
-/** 工具栏回调 */
+/** 设置topview */
+- (void)wxm_setUpTopView:(NSInteger)location {
+    NSString * indexString = @(location).stringValue;
+    self.topBarView.signModel = [self.signObj objectForKey:indexString];
+    self.bottomBarView.seletedIdx = location;
+}
+
+/** 上工具栏回调 */
 - (void)wxm_touchTopLeftItem {
     self.navigationController.delegate = nil;
     [self.navigationController popViewControllerAnimated:YES];
 }
 
+/** 上工具栏回调 */
 - (void)wxm_touchTopRightItem:(WXMPhotoSignModel *)obj {
-    if (self.signDictionary.allKeys.count >= WXMMultiSelectMax && !obj) {
+    if (self.signObj.count >= WXMMultiSelectMax && !obj) {
         [self wxm_showAlertController];
         return;
     }
-    
-    if (self.callback)  {
-        self.signDictionary = self.callback(self.selectedIndex,obj.rank).mutableCopy;
+      
+    if (self.signCallback)  {
+        self.signObj = self.signCallback(self.selectedIndex);
         [self wxm_setUpTopView:self.selectedIndex];
-        self.bottomBarView.signDictionary = self.signDictionary;
+        [self.bottomBarView setSignObj:self.signObj removeIdx:obj.rank];
     }
 }
 
@@ -209,12 +225,6 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     }
 }
 
-/** 翻页 */
-- (void)wxm_setUpTopView:(NSInteger)location {
-    NSString * indexString = @(location).stringValue;
-    self.topBarView.signModel = [self.signDictionary objectForKey:indexString];
-    self.bottomBarView.seletedIdx = location;
-}
 
 /** 回调单张图片 */
 - (void)wxm_singlePhotoSendImage {
@@ -268,8 +278,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:1.0];
     UIImage * image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
     [self.weakNavigationVC.navigationBar setBackgroundImage:image forBarMetrics:UIBarMetricsDefault];
-    [self.windowView removeFromSuperview];
-    self.windowView = nil;
+    [self.wxm_windowView removeFromSuperview];
     NSLog(@"释放 %@",NSStringFromClass(self.class));
 }
 
@@ -285,7 +294,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 - (WXMPreviewBottomBar *)bottomBarView {
     if (!_bottomBarView) {
         _bottomBarView = [[WXMPreviewBottomBar alloc] initWithFrame:CGRectZero];
-        _bottomBarView.signDictionary = self.signDictionary;
+        [_bottomBarView setSignObj:self.signObj removeIdx:0];
         _bottomBarView.delegate = self;
     }
     return _bottomBarView;
@@ -315,6 +324,14 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     return _collectionView;
 }
 
+- (UIView *)maskBottomView {
+    UIView * maskBottom = [UIView new];
+    maskBottom.size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_BarHeight);
+    maskBottom.top = WXMPhoto_BarHeight;
+    maskBottom.backgroundColor = [UIColor blackColor];
+    return maskBottom;
+}
+
 /** 提示框 */
 - (void)wxm_showAlertController {
     NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
@@ -330,8 +347,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     return self.selectedIndex;
 }
 
-- (id<UIViewControllerAnimatedTransitioning>)navigationController:(UINavigationController *)navigationController
-                                  animationControllerForOperation:(UINavigationControllerOperation)operation
+- (id<UIViewControllerAnimatedTransitioning>)navigationController:(UINavigationController *)navigationController animationControllerForOperation:(UINavigationControllerOperation)operation
                                                fromViewController:(UIViewController *)fromVC
                                                  toViewController:(UIViewController *)toVC {
     if (operation == UINavigationControllerOperationPop) {

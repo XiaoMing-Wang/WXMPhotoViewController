@@ -148,7 +148,7 @@
   @autoreleasepool {
       
       void (^playBlock)(NSURL *url) = ^(NSURL *url) {
-          if (!_wxm_avPlayer) {
+          if (!self.wxm_avPlayer) {
               self.wxm_item = [AVPlayerItem playerItemWithURL:url];
               self.wxm_avPlayer = [AVPlayer playerWithPlayerItem:self.wxm_item];
               self.wxm_playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.wxm_avPlayer];
@@ -164,7 +164,7 @@
           WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
           [man getVideoByAsset:_photoAsset.asset completion:^(NSURL *url, NSData * data) {
               self.photoAsset.videoUrl = url;
-              playBlock(_photoAsset.videoUrl);
+              playBlock(self.photoAsset.videoUrl);
           }];
       }
   }

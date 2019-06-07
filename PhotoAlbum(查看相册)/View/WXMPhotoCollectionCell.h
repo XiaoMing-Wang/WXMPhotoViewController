@@ -8,17 +8,24 @@
 
 #import <UIKit/UIKit.h>
 #import "WXMPhotoConfiguration.h"
-#import "WXMPhotoSignView.h"
 #import "WXMPhotoSignModel.h"
 #import "WXMPhotoManager.h"
 
 /** 单个相册CollectionViewCell*/
 @interface WXMPhotoCollectionCell : UICollectionViewCell
 @property (nonatomic, assign) BOOL userCanTouch;
-@property (nonatomic, strong) WXMPhotoAsset *photoAsset;
-@property (nonatomic, assign) WXMPhotoDetailType photoType;
-
 @property (nonatomic, strong) NSIndexPath *indexPath;
+
+@property (nonatomic, strong) WXMPhotoAsset *photoAsset;
+@property (nonatomic, strong) WXMPhotoSignModel *signModel;
+@property (nonatomic, assign) WXMPhotoDetailType photoType;
+@property (nonatomic, weak) id<WXMPhotoSignProtocol> delegate;
+
+/** 设置button选中 */
+- (void)signButtonSelected:(BOOL)selected;
+
+/** 刷新标号排名 */
+- (void)refreshRankingWithSignModel:(WXMPhotoSignModel *)signModel;
 
 /** 设置蒙版 */
 - (void)setUserCanTouch:(BOOL)userCanTouch animation:(BOOL)animation;

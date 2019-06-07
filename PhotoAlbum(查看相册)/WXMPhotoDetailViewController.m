@@ -32,7 +32,6 @@
 
 /** 存储被标记的图片model */
 @property (nonatomic, strong) WXMDictionary_Array *signObj;
-/** @property (nonatomic, strong) NSMutableDictionary *signDictionary; */
 
 @property (nonatomic, assign) BOOL sign;
 @property (nonatomic, assign) BOOL refresh;
@@ -46,7 +45,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.dataSource = @[].mutableCopy;
-    /** self.signDictionary = @{}.mutableCopy; */
     self.view.backgroundColor = [UIColor whiteColor];
     self.navigationItem.leftBarButtonItem = nil;
     self.navigationItem.title = self.phoneList.title;
@@ -155,28 +153,22 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             WXMPhotoSignModel *signModel = [self wxm_signModel:indexPath signImage:image];
             [self.signObj setObject:signModel forKey:indexString];
             if (self.signObj.count >= WXMMultiSelectMax) [self wxm_reloadAllAvailableCell];
-            /** NSLog(@"%@",self.signObj); */
         }];
         return;
     }
     
     
-    /** 多选 (点大图)) */
+    /** 先同步获取大图 否则跳界面会闪 */
     if (_photoType == WXMPhotoDetailTypeMultiSelect && !self.sign) {
         if (respond == NO && cell.userCanTouch == NO) return;
-        size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height);
-        
-        /** 先同步获取大图 否则跳界面会闪 */
-        [manager getPictures_customSize:asset synchronous:YES assetSize:size completion:^(UIImage *image) {
+        size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
+        [manager wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
             phsset.bigImage = image;
-            WXMPhotoPreviewController * preview = [WXMPhotoPreviewController new];
-            preview.dataSource = self.dataSource;
-            /** preview.signDictionary = self.signDictionary; */
-            preview.indexPath = indexPath;
-            preview.windowImage = [WXMPhotoAssistant wxmPhoto_makeViewImage:self.navigationController.view];
+            WXMPhotoPreviewController *preview = [self wxm_getPreviewController:indexPath];
+            preview.previewType = WXMPhotoPreviewTypeMost;
             [self.navigationController pushViewController:preview animated:YES];
-            preview.callback = ^NSDictionary *(NSInteger index,NSInteger rank) {
-                return [self previewCallBack:index rank:rank];
+            preview.signCallback = ^WXMDictionary_Array *(NSInteger index) {
+                return [self previewCallBack:index];
             };
         }];
     }
@@ -204,7 +196,10 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         preview.resultArray = self.resultArray;
         preview.indexPath = index;
         preview.signObj = self.signObj;
-        preview.windowView = [WXMPhotoAssistant wxmPhoto_snapViewImage:self.navigationController.view];
+        preview.wxm_windowView = [WXMPhotoAssistant wxmPhoto_snapViewImage:self.navigationController.view];
+        preview.dragCallback = ^UIView *{
+            return [WXMPhotoAssistant wxmPhoto_snapViewImage:self.view];
+        };
         return preview;
     }
 }
@@ -221,7 +216,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                 NSString *indexString = @(cell.indexPath.row).stringValue;
                 BOOL use = [self.signObj.allKeys containsObject:indexString];
                 [cell setUserCanTouch:use animation:YES];
-                /** cell.userCanTouch = [self.signObj.allKeys containsObject:indexString]; */
             } else {
                 [cell setUserCanTouch:YES animation:YES];
             }
@@ -241,27 +235,30 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 #pragma mark 在下一个界面(预览)选中取消的回调
 /** 预览模式回调(不能立即刷新 刷新会导致转场动画时获取不到cell以及cell的位置) */
-- (NSDictionary *)previewCallBack:(NSInteger)index rank:(NSInteger)rank{
+- (WXMDictionary_Array *)previewCallBack:(NSInteger)index {
     NSString *indexString = @(index).stringValue;
-    self.refresh = YES;
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+    BOOL isFull = (self.signObj.count >= WXMMultiSelectMax);
+    WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)[self.collectionView cellForItemAtIndexPath:indexPath];
     
-//    /** 取消选中 */
-//    if ([self.signDictionary.allKeys containsObject:indexString]) {
-//        [self.signDictionary removeObjectForKey:indexString];
-//    /** [self wxm_signDictionarySorting:rank]; */
-//        /** [self.collectionView reloadData]; */
-//    } else {
-//        NSIndexPath * indexPath = [NSIndexPath indexPathForRow:index inSection:0];
-//        WXMPhotoAsset *phsset = self.dataSource[index];
-//        WXMPhotoSignModel *signModel = [WXMPhotoSignModel new];
-//        signModel.albumName = self.phoneList.title;
-//        signModel.rank = self.signDictionary.allKeys.count + 1;
-//        signModel.indexPath = indexPath;
-//        signModel.image = phsset.smallImage;
-//        [self.signDictionary setObject:signModel forKey:indexString];
-//        /** [self.collectionView reloadData]; */
-//    }
-    return nil;
+    /** 取消选中 */
+    if ([self.signObj.allKeys containsObject:indexString]) {
+        [self.signObj removeObjectForKey:indexString];
+        [cell signButtonSelected:NO];
+        [self wxm_signDictionarySorting];              /** 重新排名 */
+        if (isFull) [self wxm_reloadAllAvailableCell]; /** 刷新遮罩 */
+        
+    /** 选中 */
+    } else {
+        WXMPhotoAsset *phsset = self.dataSource[index];
+        cell.signModel = [self wxm_signModel:indexPath signImage:phsset.bigImage];
+        [self.signObj setObject:cell.signModel forKey:indexString];
+        [cell signButtonSelected:YES];
+        if (self.signObj.count >= WXMMultiSelectMax) [self wxm_reloadAllAvailableCell];
+    }
+    
+    
+    return self.signObj;
 }
 
 #pragma mark 点击绿色小勾的回调
@@ -278,21 +275,21 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     } else {
         self.sign = NO;
         BOOL isFull = (self.signObj.count >= WXMMultiSelectMax);
-        
-        NSString *indexString = @(index.row).stringValue;
-        WXMPhotoSignModel *signModel = [self.signObj objectForKey:indexString];
-        NSInteger rank = signModel.rank;   /** 删除的当前item的排名 大于它的全部要-1 */
-        [self.signObj removeObjectForKey:indexString];
-        [self wxm_signDictionarySorting:rank];
+        [self.signObj removeObjectForKey:@(index.row).stringValue];
         if (isFull) [self wxm_reloadAllAvailableCell];
+        [self wxm_signDictionarySorting];
     }
     return self.signObj.allKeys.count;
 }
 
 /** 取消一个后面的需要重新排序 */
-- (void)wxm_signDictionarySorting:(NSInteger)rank {
-    [self.signObj enumerateKeysAndObjectsUsingBlock:^(id key, WXMPhotoSignModel* obj, BOOL *stop) {
-        if (obj.rank >= rank) obj.rank -= 1;
+- (void)wxm_signDictionarySorting {
+    [self.signObj enumerateKeysAndObjectsUsingBlock:^(NSString *key, WXMPhotoSignModel *obj, BOOL *stop) {
+        NSInteger row = key.integerValue;
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:0];
+        WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)[self.collectionView cellForItemAtIndexPath:indexPath];
+        obj.rank = [self.signObj indexOfObject:obj] + 1;
+        [cell refreshRankingWithSignModel:obj];
     }];
 }
 
@@ -323,7 +320,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         _collectionView.dataSource = self;
         _collectionView.delegate = self;
         _collectionView.alwaysBounceVertical = YES;
-    /** _collectionView.prefetchingEnabled = NO;  */
         [_collectionView registerClass:[WXMPhotoCollectionCell class] forCellWithReuseIdentifier:@"cell"];
     }
     return _collectionView;

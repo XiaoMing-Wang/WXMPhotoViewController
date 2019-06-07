@@ -9,7 +9,6 @@
 #import <UIKit/UIKit.h>
 #import "WXMPhotoManager.h"
 #import "WXMPhotoConfiguration.h"
-#import "WXMPhotoSignView.h"
 #import "WXMPhotoSignModel.h"
 
 /** 相册UITableViewCell*/

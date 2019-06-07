@@ -41,7 +41,7 @@
 #define WXMSelectedFont 15
 
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
-#define WXMMultiSelectMax 4
+#define WXMMultiSelectMax 10
 
 /** 默认传回的图片大小  */
 #define WXMDefaultSize CGSizeMake(200, 200 * 1.78)
@@ -49,7 +49,7 @@
 /** 预览黑边间距 */
 #define WXMPhotoPreviewSpace 20
 
-/** 预览下面工具栏推按大小 */
+/** 预览下面工具栏推图案大小 */
 #define WXMPhotoPreviewImageWH 53
 
 /** 手势下拉缩小最小倍数 */

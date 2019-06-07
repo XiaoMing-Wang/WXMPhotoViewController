@@ -28,19 +28,23 @@
 @property (nonatomic, strong) NSIndexPath *indexPath;
 
 /** 回调 */
+@property (nonatomic, copy) UIView* (^dragCallback)(void);
 @property (nonatomic, copy) NSDictionary* (^callback)(NSInteger index, NSInteger rank);
+@property (nonatomic, strong) WXMDictionary_Array* (^signCallback)(NSInteger index);
 
 /**  */
-@property (nonatomic, strong) UIImage *windowImage;
-@property (nonatomic, strong) UIView *windowView;
+/** @property (nonatomic, strong) UIImage *windowImage; */
+@property (nonatomic, strong) UIView *wxm_windowView;
+@property (nonatomic, strong) UIView *wxm_contentView;
 
 /** 回调 */
 @property (nonatomic, weak) id<WXMPhotoProtocol> delegate;
 @property (nonatomic, strong) void (^results)(UIImage *image);
 @property (nonatomic, strong) void (^resultArray)(NSArray<UIImage *> *images);
 
-/** 动画 */
 @property (nonatomic, strong) UIImage * (^transitions)(NSInteger index);
-- (UIScrollView *)transitionScrollerView;
+
+/** 自定义转场使用 */
 - (NSInteger)transitionIndex;
+- (UIScrollView *)transitionScrollerView;
 @end
