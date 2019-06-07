@@ -35,7 +35,7 @@
     self.jurisdictionData = @[].mutableCopy;
     self.view.backgroundColor = [UIColor whiteColor];
     self.navigationItem.leftBarButtonItem = nil;
-    self.navigationItem.title = @"相册";
+    self.navigationItem.title = WXMPhotoVCNavigationItem;
     self.navigationController.navigationBar.translucent = YES;
     self.automaticallyAdjustsScrollViewInsets = NO;
     if (@available(iOS 11.0, *)) {
@@ -48,8 +48,9 @@
     [self.navigationController.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
     [WXMPhotoAssistant wxm_navigationLine:self.navigationController show:YES];
     
+    NSString *tl = WXMPhotoVCRightItem;
     SEL sel = @selector(wxm_backLastViewController);
-    UIBarButtonItem *item = [WXMPhotoAssistant wxm_createButtonItem:@"取消" target:self action:sel];
+    UIBarButtonItem *item = [WXMPhotoAssistant wxm_createButtonItem:tl target:self action:sel];
     self.navigationItem.rightBarButtonItem = item;
     
     /** 再次判断权限 */
@@ -63,7 +64,8 @@
 }
 
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    WXMPhotoListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+    WXMPhotoListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"
+                                                             forIndexPath:indexPath];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.phoneList = [self.jurisdictionData objectAtIndex:indexPath.row];
     return cell;
@@ -81,6 +83,7 @@
     photoDetail.exitPreview = self.exitPreview;
     photoDetail.photoType = self.photoType;
     photoDetail.expectSize = self.expectSize;
+    photoDetail.showVideo = self.showVideo;
     
     photoDetail.delegate = self.delegate;
     photoDetail.results = self.results;
@@ -130,14 +133,14 @@
 /** TableView */
 - (UITableView *)listTableView {
     if (!_listTableView) {
-        CGRect rect =  (CGRect){0,WXMPhoto_BarHeight,WXMPhoto_Width,WXMPhoto_Height - WXMPhoto_BarHeight};
-        _listTableView = [[UITableView alloc] initWithFrame:rect];
+        CGRect rectMin = CGRectMake(0, 0, 0, CGFLOAT_MIN);
+        _listTableView = [[UITableView alloc] initWithFrame:WXMPhoto_SRect];
         _listTableView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0);
         _listTableView.tableFooterView = [UIView new];
         _listTableView.showsVerticalScrollIndicator = NO;
         _listTableView.separatorColor = WXMPhoto_RGBColor(235, 235, 235);
         _listTableView.backgroundColor = [UIColor whiteColor];
-        _listTableView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 0, CGFLOAT_MIN)];
+        _listTableView.tableHeaderView = [[UIView alloc] initWithFrame:rectMin];
         _listTableView.rowHeight = 100;
         _listTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         _listTableView.showsVerticalScrollIndicator = YES;

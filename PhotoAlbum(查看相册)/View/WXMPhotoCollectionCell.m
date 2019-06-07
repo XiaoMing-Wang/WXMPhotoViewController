@@ -108,7 +108,7 @@
         self.typeSign.hidden = YES;
         [self.contentView bringSubviewToFront:self.typeSign];
         if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo && WXMPhotoShowVideoSign) {
-            self.typeSign.hidden = NO;
+            self.typeSign.hidden = (!self.showVideo);
             NSString * duration = [NSString stringWithFormat:@"  %@",_photoAsset.videoDrantion];
             [self.typeSign setTitle:duration forState:UIControlStateNormal];
             [self.typeSign setImage:[UIImage imageNamed:@"photo_videoSmall"] forState:UIControlStateNormal];

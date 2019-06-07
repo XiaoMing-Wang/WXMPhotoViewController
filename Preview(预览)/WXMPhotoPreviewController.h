@@ -14,6 +14,9 @@
 /** 相册模式 */
 @property (nonatomic, assign) WXMPhotoDetailType photoType;
 
+/** 是否显示视频 NO会显示为视频第一帧 */
+@property (nonatomic, assign) BOOL showVideo;
+
 /** 预览类型 */
 @property (nonatomic, assign) WXMPhotoPreviewType previewType;
 

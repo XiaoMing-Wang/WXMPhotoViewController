@@ -10,6 +10,7 @@
 #import "WXMPhotoConfiguration.h"
 #import "TOCropView.h"
 #import "TOCropToolbar.h"
+#import "UIView+WXMPhoto.h"
 
 @interface WXMPhotoShapeController () <TOCropViewDelegate>
 @property(nonatomic, weak) UINavigationController *weakNavigationVC;
@@ -53,6 +54,8 @@
     _cropToolbar.clampButtonHidden = YES;
     _cropToolbar.doneTextButtonTitle = @"确定";
     _cropToolbar.cancelTextButtonTitle = @"取消";
+    [_cropToolbar.doneIconButton wxm_setEnlargeEdgeWithTop:10 left:15 right:15 bottom:10];
+    [_cropToolbar.cancelIconButton wxm_setEnlargeEdgeWithTop:10 left:15 right:15 bottom:10];
     
     _cropToolbar.cancelButtonTapped = ^{ [weakself popViewController]; };
     _cropToolbar.doneButtonTapped = ^{ [weakself dismissViewController]; };

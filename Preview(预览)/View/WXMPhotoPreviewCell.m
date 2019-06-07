@@ -92,7 +92,7 @@
             int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
                 photoAsset.bigImage = image;
                 self.imageView.image = image;
-                [self setLocation:self.photoAsset.aspectRatio];
+                [self setLocation:_photoAsset.aspectRatio];
                 /** NSLog(@"%@",NSStringFromCGSize(image.size)); */
             }];
             self.currentRequestID = ids;
@@ -174,8 +174,11 @@
     UIView *zoomView = [self viewForZoomingInScrollView:scrollView];
     CGPoint point = [tap locationInView:zoomView];
     if (!CGRectContainsPoint(zoomView.bounds, point)) return;
-    if (scrollView.zoomScale == scrollView.maximumZoomScale) [scrollView setZoomScale:1 animated:YES];
-    else [scrollView zoomToRect:CGRectMake(point.x, point.y, 1, 1) animated:YES];
+    if (scrollView.zoomScale == scrollView.maximumZoomScale) {
+        [scrollView setZoomScale:1 animated:YES];
+    } else {
+        [scrollView zoomToRect:CGRectMake(point.x, point.y, 1, 1) animated:YES];
+    }
 }
 
 /** 设置手势顺序 */
@@ -226,7 +229,6 @@
         rect.origin.x = point_XY.x - distance_x;
         rect.origin.y = point_XY.y - distance_y;
         recognizer.view.frame = rect;
-        /** [recognizer setTranslation:CGPointZero inView:self]; */
     }
     
     if (recognizer.state == UIGestureRecognizerStateEnded ||
@@ -239,13 +241,15 @@
                 recognizer.view.center = self.wxm_lastPoint;
                 self.blackView.alpha = 1;
             } completion:^(BOOL finished) {
-                if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
+                if (self.delegate &&
+                    [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
                     [self.delegate wxm_respondsEndDragCell:nil];
                 }
             }];
         } else {
             _contentScrollView.userInteractionEnabled = NO;
-            if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
+            if (self.delegate &&
+                [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
                 [self.delegate wxm_respondsEndDragCell:self.contentScrollView];
             }
         }

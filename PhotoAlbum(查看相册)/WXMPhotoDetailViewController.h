@@ -17,6 +17,9 @@
 /** 是否有预览默认YES WXMPhotoDetailTypeGetPhoto 和 WXMPhotoDetailTypeGetPhoto_256设置有效 */
 @property (nonatomic, assign) BOOL exitPreview;
 
+/** 是否显示视频 NO会显示为视频第一帧 */
+@property (nonatomic, assign) BOOL showVideo;
+
 /** 期望获取图片大小 */
 @property (nonatomic, assign) CGSize expectSize;
 

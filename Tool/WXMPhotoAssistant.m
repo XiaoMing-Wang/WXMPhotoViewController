@@ -48,6 +48,7 @@ static char wxm_Photoline;
 
 /** 显示导航1px线条 */
 + (void)wxm_navigationLine:(UINavigationController *)nav show:(BOOL)show {
+    if (!nav) return;
     CALayer *line = objc_getAssociatedObject(nav, &wxm_Photoline);
     if (line && show == NO) line.hidden = YES;
     if (show == NO) return;;

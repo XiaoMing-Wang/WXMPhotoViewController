@@ -10,6 +10,8 @@
 #define WXMPhoto_IPHONEX ((WXMPhoto_Height == 812.0f) ? YES : NO)
 #define WXMPhoto_BarHeight ((WXMPhoto_IPHONEX) ? 88.0f : 64.0f)
 #define WXMPhoto_KWindow [[[UIApplication sharedApplication] delegate] window]
+#define WXMPhoto_SRect \
+CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_BarHeight)
 #define WXMPhoto_RGBColor(r, g, b)\
 [UIColor colorWithRed:(r)/255.0f green:(g)/255.0f blue:(b)/255.0f alpha:1]
 
@@ -18,6 +20,22 @@
 #import <UIKit/UIKit.h>
 #import "WXMPhotoAssistant.h"
 #import "UIView+WXMPhoto.h"
+#import "WXMPhotoSignModel.h"
+
+#pragma mark 查看界面
+#define WXMPhotoVCNavigationItem @"相册"
+#define WXMPhotoVCRightItem @"取消"
+
+#pragma mark WXMPhotoDetailViewController
+
+/** collection列表是否显示下边工具栏 */
+#define WXMPhotoShowDetailToolbar YES
+
+/** 工具栏颜色 */
+#define WXMPhotoDetailToolbarColor [UIColor whiteColor]
+
+/** 工具栏字体 */
+#define WXMPhotoDetailToolbarTextColor [UIColor blackColor]
 
 /** 导航栏颜色 */
 #define WXMBarColor [[UIColor whiteColor] colorWithAlphaComponent:1]
@@ -41,7 +59,7 @@
 #define WXMSelectedFont 15
 
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
-#define WXMMultiSelectMax 12
+#define WXMMultiSelectMax 4
 
 /** 默认传回的图片大小  */
 #define WXMDefaultSize CGSizeMake(200, 200 * 1.78)
@@ -100,11 +118,17 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 - (void)wxm_respondsEndDragCell:(UIScrollView *)jump;
 @end
 
-/** 工具栏回调 */
+/** 查看详情工具栏回调 */
+@protocol WXMDetailToolbarProtocol <NSObject>
+- (void)wxm_touchPreviewControl;
+- (void)wxm_touchDismissViewController;
+
+@end
+
+/** 预览上下工具栏回调 */
 @protocol WXMPreviewToolbarProtocol <NSObject>
 - (void)wxm_touchTopLeftItem;
 - (void)wxm_touchTopRightItem:(id)obj;
-
 - (void)wxm_touchButtomFinsh;
 - (void)wxm_touchButtomDidSelectItem:(NSIndexPath *)idx;
 @end

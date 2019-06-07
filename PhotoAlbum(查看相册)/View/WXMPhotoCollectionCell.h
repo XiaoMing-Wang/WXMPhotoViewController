@@ -13,6 +13,7 @@
 
 /** 单个相册CollectionViewCell*/
 @interface WXMPhotoCollectionCell : UICollectionViewCell
+@property (nonatomic, assign) BOOL showVideo;
 @property (nonatomic, assign) BOOL userCanTouch;
 @property (nonatomic, strong) NSIndexPath *indexPath;
 

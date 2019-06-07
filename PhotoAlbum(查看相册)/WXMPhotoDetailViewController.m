@@ -21,11 +21,13 @@
 #import "WXMPhotoShapeController.h"
 #import "WXMDictionary_Array.h"
 #import <objc/runtime.h>
+#import "WXMPhotoDetailToolbar.h"
 
 @interface WXMPhotoDetailViewController ()
-<UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol>
+<UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol,WXMDetailToolbarProtocol>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
+@property (nonatomic, strong) WXMPhotoDetailToolbar *toolbar;
 
 /** 数据源 */
 @property (nonatomic, strong) NSMutableArray *dataSource;
@@ -34,16 +36,18 @@
 @property (nonatomic, strong) WXMDictionary_Array *signObj;
 
 @property (nonatomic, assign) BOOL sign;
-@property (nonatomic, assign) BOOL refresh;
+@property (nonatomic, assign) BOOL preview;
 
 /** 是否显示白色遮罩 */
 @property (nonatomic, assign) BOOL wxm_showWhiteMasing;
+
 @end
 
 @implementation WXMPhotoDetailViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
     self.dataSource = @[].mutableCopy;
     self.view.backgroundColor = [UIColor whiteColor];
     self.navigationItem.leftBarButtonItem = nil;
@@ -55,11 +59,14 @@
     }
     
     [self.view addSubview:self.collectionView];
+    if (WXMPhotoShowDetailToolbar && self.photoType == WXMPhotoDetailTypeMultiSelect) {
+        [self.view addSubview:self.toolbar];
+    }
     
     /** 获取图片 */
     [self wxm_getDisplayImages];
     SEL sel = @selector(dismissViewController);
-    UIBarButtonItem *item = [WXMPhotoAssistant wxm_createButtonItem:@"完成" target:self action:sel];
+    UIBarButtonItem *item = [WXMPhotoAssistant wxm_createButtonItem:@"取消" target:self action:sel];
     self.navigationItem.rightBarButtonItem = item;
 }
 
@@ -91,17 +98,20 @@
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    UICollectionView *cv = collectionView;
-    NSIndexPath *ip = indexPath;
-    WXMPhotoCollectionCell *cell = [cv dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:ip];
+    WXMPhotoCollectionCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell"
+                                                                             forIndexPath:indexPath];
     cell.photoType = self.photoType;
     cell.photoAsset = self.dataSource[indexPath.row];
+    cell.showVideo = self.showVideo;
     
     /** 多选模式 */
     if (self.photoType == WXMPhotoDetailTypeMultiSelect) {
         NSString *indexString = @(indexPath.row).stringValue;
         WXMPhotoSignModel *signModel = [self.signObj objectForKey:indexString];
-        [cell setDelegate:self indexPath:indexPath signModel:signModel showMask:self.wxm_showWhiteMasing];
+        [cell setDelegate:self
+                indexPath:indexPath
+                signModel:signModel
+                 showMask:self.wxm_showWhiteMasing];
     }
     return cell;
 }
@@ -144,13 +154,14 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     }
     
     
-    /** 多选(点图标)  添加(取消在下面回调) */
+    /** 多选(点图标) 添加(取消在下面回调) */
     if (_photoType == WXMPhotoDetailTypeMultiSelect && self.sign) {
         self.sign = NO;
         size = CGSizeEqualToSize(self.expectSize, CGSizeZero) ? WXMDefaultSize : self.expectSize;
         [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
             WXMPhotoSignModel *signModel = [self wxm_signModel:indexPath signImage:image];
             [self.signObj setObject:signModel forKey:indexString];
+            self.toolbar.signObj = self.signObj;
             if (self.signObj.count >= WXMMultiSelectMax) [self wxm_reloadAllAvailableCell];
         }];
         return;
@@ -159,12 +170,13 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
     /** 先同步获取大图 否则跳界面会闪 */
     if (_photoType == WXMPhotoDetailTypeMultiSelect && !self.sign) {
-        if (respond == NO && cell.userCanTouch == NO) return;
+        if (respond == NO && cell.userCanTouch == NO && !self.preview) return;
         size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
         [manager wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
             phsset.bigImage = image;
             WXMPhotoPreviewController *preview = [self wxm_getPreviewController:indexPath];
             preview.previewType = WXMPhotoPreviewTypeMost;
+            self.preview = NO;
             [self.navigationController pushViewController:preview animated:YES];
             preview.signCallback = ^WXMDictionary_Array *(NSInteger index) {
                 return [self previewCallBack:index];
@@ -195,7 +207,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         preview.resultArray = self.resultArray;
         preview.indexPath = index;
         preview.signObj = self.signObj;
-        preview.wxm_windowView = [WXMPhotoAssistant wxmPhoto_snapViewImage:self.navigationController.view];
+        preview.showVideo = self.showVideo;
+        UIView * snapView = self.navigationController.view;
+        preview.wxm_windowView = [WXMPhotoAssistant wxmPhoto_snapViewImage:snapView];
         preview.dragCallback = ^UIView *{
             return [WXMPhotoAssistant wxmPhoto_snapViewImage:self.view];
         };
@@ -208,7 +222,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     self.wxm_showWhiteMasing = (self.signObj.count >= WXMMultiSelectMax);
     
     /** visibleCells collectionView新的刷新机制会生成新的cell导致不能刷新 */
-    [self.collectionView.subviews enumerateObjectsUsingBlock:^(UIView *obj, NSUInteger idx, BOOL *stop) {
+    [self.collectionView.subviews enumerateObjectsUsingBlock:^(UIView*obj, NSUInteger idx, BOOL*stop){
         if ([obj isKindOfClass:[WXMPhotoCollectionCell class]]) {
             WXMPhotoCollectionCell * cell = (WXMPhotoCollectionCell *)obj;
             if (self.wxm_showWhiteMasing) {
@@ -231,6 +245,20 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     signModel.image = image;
     return signModel;
 }
+
+#pragma mark 点击toobar回调
+/** 预览按钮 */
+- (void)wxm_touchPreviewControl {
+    self.sign = NO;
+    self.preview = YES;
+    WXMPhotoSignModel *signModel = self.signObj.lastObject;
+    [self collectionView:_collectionView didSelectItemAtIndexPath:signModel.indexPath];
+}
+
+- (void)wxm_touchDismissViewController {
+    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+}
+
 
 #pragma mark 在下一个界面(预览)选中取消的回调
 /** 预览模式回调(不能立即刷新 刷新会导致转场动画时获取不到cell以及cell的位置) */
@@ -256,7 +284,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         if (self.signObj.count >= WXMMultiSelectMax) [self wxm_reloadAllAvailableCell];
     }
     
-    
+    self.toolbar.signObj = self.signObj;
     return self.signObj;
 }
 
@@ -278,6 +306,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         if (isFull) [self wxm_reloadAllAvailableCell];
         [self wxm_signDictionarySorting];
     }
+    
+    self.toolbar.signObj = self.signObj;
     return self.signObj.allKeys.count;
 }
 
@@ -324,6 +354,14 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     return _collectionView;
 }
 
+- (WXMPhotoDetailToolbar *)toolbar {
+    if (!_toolbar) {
+        _toolbar = [[WXMPhotoDetailToolbar alloc] initWithFrame:CGRectZero];
+        _toolbar.detailDelegate = self;
+    }
+    return _toolbar;
+}
+
 - (WXMDictionary_Array *)signObj {
     if (!_signObj) {
         _signObj = [[WXMDictionary_Array alloc] init];
@@ -335,15 +373,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 - (UICollectionView *)transitionCollectionView {
     if (_collectionView) return _collectionView;
     return nil;
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    dispatch_queue_t mainQueue = dispatch_get_main_queue();
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.125 * NSEC_PER_SEC)), mainQueue, ^{
-        if (self.refresh) [self.collectionView reloadData];
-        self.refresh = NO;
-    });
 }
 
 - (void)dealloc {

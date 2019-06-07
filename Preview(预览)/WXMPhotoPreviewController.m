@@ -88,7 +88,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     UICollectionView *cv = collectionView;
     UICollectionViewCell * cell = nil;
     
-    if (asset.mediaType == WXMPHAssetMediaTypeVideo) {
+    if (asset.mediaType == WXMPHAssetMediaTypeVideo && self.showVideo) {
         cell = [cv dequeueReusableCellWithReuseIdentifier:@"aCell" forIndexPath:indexPath];
         ((WXMPhotoVideoCell *)cell).delegate = self;
         ((WXMPhotoVideoCell *)cell).photoAsset = asset;
@@ -128,11 +128,10 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     [self wxm_setBottomBarViewrealByte];
 }
 
-/** 获取当前图片的原始大小 */
+/** 获取当前图片的data大小 */
 - (void)wxm_setBottomBarViewrealByte {
     WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
-    if (asset.mediaType == WXMPHAssetMediaTypeVideo) {
-        
+    if (asset.mediaType == WXMPHAssetMediaTypeVideo && self.showVideo) {
         self.bottomBarView.isShowOriginalButton = NO;
     } else {
         CGFloat bytes = asset.bytes;

@@ -26,7 +26,7 @@
     return transitions;
 }
 - (NSTimeInterval)transitionDuration:(id <UIViewControllerContextTransitioning>)transitionContext{
-    return .35;
+    return 0.35;
 }
 - (void)animateTransition:(id <UIViewControllerContextTransitioning>)transitionContext {
     if (self.transitionsType == WXMPhotoTransitionsTypePush) {
@@ -60,15 +60,17 @@
             CGRect aRect = [cell convertRect:cell.bounds toView:window];
             
             /** from */
+            UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
             UIImageView *mainImageView = [self mainImageView:scr];
             UIImageView *blackView = objc_getAssociatedObject(scr, @"black");
+            CGRect rect_Window = [mainImageView convertRect:mainImageView.bounds toView:window];
             CGFloat scale = mainImageView.height / mainImageView.width;
             [mainImageView removeFromSuperview];
             
-            /** wrap */
             CGRect rect = CGRectMake(0, 0, scr.width, scr.width * scale);
+            if (scr.zoomScale > 1) rect = rect_Window;
             WXMPhotoImageView *wrapImageView = [[WXMPhotoImageView alloc] initWithFrame:rect];
-            wrapImageView.center = scr.center;
+            if (scr.zoomScale <= 1) wrapImageView.center = scr.center;
             wrapImageView.image = mainImageView.image;
             wrapImageView.contentMode = UIViewContentModeScaleAspectFill;
             wrapImageView.clipsToBounds = YES;
@@ -86,7 +88,6 @@
             /** 缩放 */
             [self setMaskview:wrapImageView.frame mRect:aRect];
             wrapImageView.maskView = self.mask;
-            
             
             [[transitionContext containerView] insertSubview:toView belowSubview:fromView];
             [[transitionContext containerView] addSubview:wrapImageView];
