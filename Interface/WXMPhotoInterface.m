@@ -7,29 +7,33 @@
 //
 
 #import "WXMPhotoInterface.h"
-#import "WQComponentHeader.h"
+#import "WXMComponentHeader.h"
 #import "WXMPhotoViewController.h"
 #import "WXMPhotoInterFaceProtocol.h"
 #import "WXMPhotoManager.h"
 
-@WXMService(WXMPhotoInterFaceProtocol, WXMPhotoInterface);
-@interface WXMPhotoInterface () <WXMPhotoInterFaceProtocol,WQComponentFeedBack>
+@WXMService(WXMPhotoInterFaceProtocol, WXMPhotoInterface); 
+@interface WXMPhotoInterface () <WXMPhotoInterFaceProtocol,WXMComponentFeedBack>
 @end
 
 @implementation WXMPhotoInterface
 
-+ (NSArray *)events {
-    return @[@"1001",@"1000"];
+//- (BOOL)cacheImplementer {
+//    return YES;
+//}
+
+- (NSArray *)modules_events {
+    return @[@"XProtocol(500-550,988-1000)"];
 }
-+ (NSArray *)modules {
-    return @[@"WXMPhotoInterFaceProtocol"];
-}
-+ (void)providedEventModule_event:(NSString *)module_event eventObj:(id)eventObj {
+
+- (void)providedEventModule_event:(WXMMessageContext *)context {
     /** WXMPhotoInterFaceProtocol:1000 */
     
     
-    NSLog(@"%@",module_event);
+    NSLog(@"%@",context.module);
+    NSLog(@"%ld",context.event);
 }
+
 /** 判断权限 */
 - (id)photoPermission {
     return @([WXMPhotoManager sharedInstance].wxm_photoPermission);
@@ -63,4 +67,7 @@
     return nav;
 }
 
+- (void)dealloc {
+    NSLog(@"dealloc------222");
+}
 @end

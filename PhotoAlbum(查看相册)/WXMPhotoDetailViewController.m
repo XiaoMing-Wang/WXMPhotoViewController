@@ -285,7 +285,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [self.signObj removeObjectForKey:indexString];
         [self wxm_signDictionarySorting:rank];
         if (isFull) [self wxm_reloadAllAvailableCell];
-        /** NSLog(@"%@",self.signObj); */
     }
     return self.signObj.allKeys.count;
 }
