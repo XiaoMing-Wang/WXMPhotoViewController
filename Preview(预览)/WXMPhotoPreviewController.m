@@ -137,7 +137,10 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         bytes = [WXMPhotoAssistant wxm_getOriginalSize:asset.asset];
         asset.bytes = bytes;
     }
-    NSString * realByte =  [NSString stringWithFormat:@"%.2fM", bytes / (1024 * 1024)];
+    NSString * realByte = [NSString stringWithFormat:@"%.1fM", bytes / (1024 * 1024)];
+    if (bytes / (1024 * 1024) < 0.1f) {
+        realByte = [NSString stringWithFormat:@"%.0fk", (bytes / (1024))];
+    }
     [self.bottomBarView setRealImageByte:realByte video:video];
 }
 

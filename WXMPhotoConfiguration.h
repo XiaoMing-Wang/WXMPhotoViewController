@@ -25,6 +25,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 #pragma mark 查看界面
 #define WXMPhotoVCNavigationItem @"相册"
+
 #define WXMPhotoVCRightItem @"取消"
 
 #pragma mark WXMPhotoDetailViewController
@@ -89,7 +90,7 @@ typedef NS_ENUM(NSInteger, WXMPhotoDetailType) {
     WXMPhotoDetailTypeGetPhoto = 0,     /* 单选大图 */
     WXMPhotoDetailTypeGetPhoto_256 = 1, /* 单选256*256 */
     WXMPhotoDetailTypeMultiSelect = 2,  /* 多选 + 预览 */
-    WXMPhotoDetailTypePreview = 3,      /* 单选 + 预览 */
+    //WXMPhotoDetailTypePreview = 3,      /* 单选 + 预览 */
     WXMPhotoDetailTypeTailoring = 4,    /* 预览 + 裁剪 */
 };
 

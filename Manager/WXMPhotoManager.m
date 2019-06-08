@@ -101,9 +101,9 @@ static WXMPhotoManager *manager = nil;
         NSMutableArray<WXMPhotoList *> *photoList = @[].mutableCopy;
         
         /** 获取系统相册 */
-        PHFetchResult * smartAlbum = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
+        PHFetchResult * album = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
         
-        [smartAlbum enumerateObjectsUsingBlock:^(PHAssetCollection *collection,NSUInteger idx,BOOL *stop) {
+        [album enumerateObjectsUsingBlock:^(PHAssetCollection *collection,NSUInteger idx,BOOL*stop){
             
             /** 去掉视频和最近删除的 */
             if (!([collection.localizedTitle isEqualToString:@"Recently Deleted"] ||
@@ -119,7 +119,10 @@ static WXMPhotoManager *manager = nil;
                     list.photoNum = result.count;
                     list.firstAsset = result.firstObject;
                     list.assetCollection = collection;
-                    [photoList addObject:list];
+                    if ([list.title isEqualToString:@"相机胶卷"]) {
+                        [photoList insertObject:list atIndex:0];
+                    } else [photoList addObject:list];
+                    
                     if (idx == 0) self.firstPhotoList = list;
                     if ([list.title isEqualToString:@"相机胶卷"]) self.firstPhotoList = list;
                 }
@@ -136,7 +139,9 @@ static WXMPhotoManager *manager = nil;
                 list.photoNum = result.count;
                 list.firstAsset = result.firstObject;
                 list.assetCollection = collection;
-                [photoList addObject:list];
+                if ([list.title isEqualToString:@"我的照片流"] && photoList.count >= 1) {
+                    [photoList insertObject:list atIndex:1];
+                } else [photoList addObject:list];
             }
         }];
         
