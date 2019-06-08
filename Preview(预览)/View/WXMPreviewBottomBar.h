@@ -28,6 +28,7 @@
 @property (nonatomic, assign) id<WXMPreviewToolbarProtocol> delegate;
 
 /** 显示隐藏 */
+- (void)setOriginalImage;
 - (void)setAccordingState:(BOOL)state;
 - (void)setSignObj:(WXMDictionary_Array *)signObj removeIdx:(NSInteger)idx;
 @end

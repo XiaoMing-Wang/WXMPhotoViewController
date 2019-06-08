@@ -5,6 +5,7 @@
 //  Created by edz on 2019/5/12.
 //  Copyright © 2019年 wq. All rights reserved.
 //
+#define WXMPhoto_originalNoti @"WXMPhoto_originalNoti"
 #define WXMPhoto_Width [UIScreen mainScreen].bounds.size.width
 #define WXMPhoto_Height [UIScreen mainScreen].bounds.size.height
 #define WXMPhoto_IPHONEX ((WXMPhoto_Height == 812.0f) ? YES : NO)

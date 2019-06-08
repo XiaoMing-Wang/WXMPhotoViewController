@@ -16,6 +16,7 @@
 
 /** 是否显示视频 NO会显示为视频第一帧 */
 @property (nonatomic, assign) BOOL showVideo;
+@property (nonatomic, assign) BOOL isOriginalImage;
 
 /** 预览类型 */
 @property (nonatomic, assign) WXMPhotoPreviewType previewType;

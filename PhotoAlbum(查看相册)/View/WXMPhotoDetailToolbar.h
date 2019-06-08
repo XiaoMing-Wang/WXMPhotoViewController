@@ -10,7 +10,7 @@
 #import "WXMDictionary_Array.h"
 #import "WXMPhotoConfiguration.h"
 
-@interface WXMPhotoDetailToolbar : UIToolbar
+@interface WXMPhotoDetailToolbar : UIView
 
 /** 存储被标记的图片model */
 @property (nonatomic, strong) WXMDictionary_Array *signObj;

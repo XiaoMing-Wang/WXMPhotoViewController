@@ -13,9 +13,12 @@
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) UIView *photoView;
 @property (nonatomic, strong) UIView *finshView;
+@property (nonatomic, strong) UIButton *originalButton;
+@property (nonatomic, strong) UIButton *finishButton;
 @property (nonatomic, strong) UIView *line;
 
 @property (nonatomic, assign) BOOL isAnimation;
+@property (nonatomic, assign, readwrite) BOOL isOriginalImage;
 @property (nonatomic, assign) NSInteger lastSeleIdx;
 @property (nonatomic, strong) NSIndexPath *lastIndexPath;
 @end
@@ -59,16 +62,19 @@
 - (void)wxm_setUpFinshView {
     
     CGFloat height = 30;
-    UIButton *originalbg = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 200, height)];
-    originalbg.tag = 100;
-    [originalbg setImage:[UIImage imageNamed:@"photo_original_def"] forState:UIControlStateNormal];
-    [originalbg setImage:[UIImage imageNamed:@"photo_sign_background2"] forState:UIControlStateSelected];
-    [originalbg setTitle:@"  原图(0.00M)" forState:UIControlStateNormal];
-    originalbg.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-    originalbg.titleLabel.font = [UIFont systemFontOfSize:15];
-    originalbg.left = 15;
-    originalbg.centerY = _finshView.height / 2;
-    [originalbg wxm_addTarget:self action:@selector(originalTouchEvents:)];
+    self.originalButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 200, height)];
+    self.originalButton.tag = 100;
+    [self.originalButton setImage:[UIImage imageNamed:@"photo_orwhite_de"]
+                         forState:UIControlStateNormal];
+    [self.originalButton setImage:[UIImage imageNamed:@"photo_orwhite_se"]
+                forState:UIControlStateSelected];
+    [self.originalButton setTitle:@"  原图(0.00M)" forState:UIControlStateNormal];
+    self.originalButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    self.originalButton.titleLabel.font = [UIFont systemFontOfSize:15];
+    self.originalButton.left = 15;
+    self.originalButton.centerY = _finshView.height / 2;
+    [self.originalButton wxm_setEnlargeEdgeWithTop:5 left:10 right:-120 bottom:0];
+    [self.originalButton wxm_addTarget:self action:@selector(originalTouchEvents:)];
     
     UIButton * finishButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 60, height)];
     finishButton.layoutRight = 15;
@@ -79,15 +85,24 @@
     finishButton.backgroundColor = WXMSelectedColor;
     finishButton.layer.cornerRadius = 4;
     [finishButton wxm_addTarget:self action:@selector(finishTouchEvents)];
+    self.finishButton = finishButton;
     
-    [self.finshView addSubview:originalbg];
+    [self.finshView addSubview:self.originalButton];
     [self.finshView addSubview:finishButton];
+}
+
+
+- (void)setOriginalImage {
+    self.originalButton.selected = YES;
+    self.isOriginalImage = YES;
 }
 
 /** 原图选中 */
 - (void)originalTouchEvents:(UIButton *)sender {
     sender.selected = !sender.selected;
     _isOriginalImage = sender.selected;
+    [[NSNotificationCenter defaultCenter] postNotificationName:WXMPhoto_originalNoti
+                                                        object:@(_isOriginalImage).stringValue];
 }
 
 /** 完成按钮 */
@@ -100,22 +115,23 @@
 /** 显示隐藏原图按钮 */
 - (void)setIsShowOriginalButton:(BOOL)isShowOriginalButton {
     _isShowOriginalButton = isShowOriginalButton;
-    [self.finshView viewWithTag:100].hidden = !isShowOriginalButton;
+    self.originalButton.hidden = !isShowOriginalButton;
 }
 
 /** 更新原图大小 */
 - (void)setRealImageByte:(NSString *)realImageByte {
     _realImageByte = realImageByte;
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIButton *originalbg = [self.finshView viewWithTag:100];
-        NSString *text = [NSString stringWithFormat:@"  原图（%@）",realImageByte];
-        [originalbg setTitle:text forState:UIControlStateNormal];
+        NSString *text = [NSString stringWithFormat:@"  原图(%@)",realImageByte];
+        [self.originalButton setTitle:text forState:UIControlStateNormal];
     });
 }
 
 /** 赋值 0=增加 >0 删除 */
 - (void)setSignObj:(WXMDictionary_Array *)signObj removeIdx:(NSInteger)idx {
     _signObj = signObj;
+    NSString *title = signObj.count?[NSString stringWithFormat:@"完成(%ld)",signObj.count]:@"完成";
+    [self.finishButton setTitle:title forState:UIControlStateNormal];
     [UIView animateWithDuration:0.35 animations:^{
         _line.alpha = (signObj.count > 0);
         _photoView.alpha = (signObj.count > 0);
@@ -130,7 +146,6 @@
         UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
         
         NSInteger changeRow = MAX((signObj.count - 1), 0);
-        NSLog(@"%ld",changeRow);
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:changeRow inSection:0];
         [_collectionView insertItemsAtIndexPaths:@[indexPath]];
         [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:position animated:YES];

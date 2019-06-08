@@ -303,6 +303,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         _bottomBarView = [[WXMPreviewBottomBar alloc] initWithFrame:CGRectZero];
         [_bottomBarView setSignObj:self.signObj removeIdx:-1];
         _bottomBarView.delegate = self;
+        if (self.isOriginalImage) [_bottomBarView setOriginalImage];
     }
     return _bottomBarView;
 }

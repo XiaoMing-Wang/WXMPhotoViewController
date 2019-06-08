@@ -234,7 +234,7 @@
     if (recognizer.state == UIGestureRecognizerStateEnded ||
         recognizer.state == UIGestureRecognizerStateCancelled) {
         CGPoint velocity = [recognizer velocityInView:self];  /** 速度 */
-        BOOL cancle = (velocity.y < 0 || self.blackView.alpha >= 1);
+        BOOL cancle = (velocity.y < 5 || self.blackView.alpha >= 1);
         if (cancle) {
             [UIView animateWithDuration:0.35 animations:^{
                 recognizer.view.transform = CGAffineTransformIdentity;

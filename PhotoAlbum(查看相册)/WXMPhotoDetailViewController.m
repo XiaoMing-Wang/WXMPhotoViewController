@@ -61,6 +61,7 @@
     [self.view addSubview:self.collectionView];
     if (WXMPhotoShowDetailToolbar && self.photoType == WXMPhotoDetailTypeMultiSelect) {
         [self.view addSubview:self.toolbar];
+        self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, self.toolbar.height, 0);
     }
     
     /** 获取图片 */
@@ -208,6 +209,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         preview.indexPath = index;
         preview.signObj = self.signObj;
         preview.showVideo = self.showVideo;
+        preview.isOriginalImage = self.toolbar.isOriginalImage;
         UIView * snapView = self.navigationController.view;
         preview.wxm_windowView = [WXMPhotoAssistant wxmPhoto_snapViewImage:snapView];
         preview.dragCallback = ^UIView *{
