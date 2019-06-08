@@ -37,8 +37,6 @@
 
 @property (nonatomic, assign) BOOL sign;
 @property (nonatomic, assign) BOOL preview;
-
-/** 是否显示白色遮罩 */
 @property (nonatomic, assign) BOOL wxm_showWhiteMasing;
 
 @end
@@ -76,7 +74,7 @@
     PHAssetCollection *asset = _phoneList.assetCollection;
     WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
     NSArray *arrayAll = [manager wxm_getAssetsInAssetCollection:asset ascending:YES];
-    [arrayAll enumerateObjectsUsingBlock:^(PHAsset * obj, NSUInteger idx, BOOL * stop) {
+    [arrayAll enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
         WXMPhotoAsset *asset = [WXMPhotoAsset new];
         asset.asset = obj;
         [self.dataSource addObject:asset];
@@ -93,7 +91,8 @@
 
 #pragma mark _____________________________________________UICollectionView dataSource
 
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+- (NSInteger)collectionView:(UICollectionView *)collectionView
+     numberOfItemsInSection:(NSInteger)section {
     return _dataSource.count;
 }
 
@@ -166,7 +165,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             signModel.image = image;
             [self.signObj setObject:signModel forKey:indexString];
             self.toolbar.signObj = self.signObj;
-            if (self.signObj.count >= WXMMultiSelectMax) [self wxm_reloadAllAvailableCell];
+            
+            if (self.signObj.count >= WXMMultiSelectMax ||
+                (!WXMPhotoShooseVideo_Photo && self.signObj.count == 1)) {
+                [self wxm_reloadAllAvailableCell];
+            }
         }];
         return;
     }
@@ -263,7 +266,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
-
 #pragma mark 在下一个界面(预览)选中取消的回调
 /** 预览模式回调(不能立即刷新 刷新会导致转场动画时获取不到cell以及cell的位置) */
 - (WXMDictionary_Array *)previewCallBack:(NSInteger)index {
@@ -318,7 +320,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 /** 取消一个后面的需要重新排序 */
 - (void)wxm_signDictionarySorting {
-    [self.signObj enumerateKeysAndObjectsUsingBlock:^(NSString *key, WXMPhotoSignModel *obj, BOOL *stop) {
+    [self.signObj enumerateKeysAndObjectsUsingBlock:^(NSString *key,WXMPhotoSignModel *obj,BOOL *stop) {
         NSInteger row = key.integerValue;
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:0];
         WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)[self.collectionView cellForItemAtIndexPath:indexPath];
@@ -348,7 +350,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         flow.minimumLineSpacing = kMargin;
         flow.minimumInteritemSpacing = kMargin;
         
-        CGRect rect = {0,WXMPhoto_BarHeight,WXMPhoto_Width,WXMPhoto_Height-WXMPhoto_BarHeight};
+        CGRect rect = WXMPhoto_SRect;
         _collectionView = [[UICollectionView alloc] initWithFrame:rect collectionViewLayout:flow];
         _collectionView.backgroundColor = [UIColor whiteColor];
         _collectionView.dataSource = self;

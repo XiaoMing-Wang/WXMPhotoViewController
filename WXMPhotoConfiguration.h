@@ -33,6 +33,9 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** collection列表是否显示下边工具栏 */
 #define WXMPhotoShowDetailToolbar YES
 
+/** 多选是否支持同时选图片和视频 */
+#define WXMPhotoShooseVideo_Photo NO
+
 /** 工具栏颜色 */
 #define WXMPhotoDetailToolbarColor [UIColor whiteColor]
 

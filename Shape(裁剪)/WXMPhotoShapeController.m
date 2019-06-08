@@ -13,10 +13,9 @@
 #import "UIView+WXMPhoto.h"
 
 @interface WXMPhotoShapeController () <TOCropViewDelegate>
-@property(nonatomic, weak) UINavigationController *weakNavigationVC;
+@property (nonatomic, weak) UINavigationController *weakNavigationVC;
 @property (nonatomic, strong) TOCropView *cropView;
 @property (nonatomic, strong) TOCropToolbar *cropToolbar;
-
 @end
 
 @implementation WXMPhotoShapeController
@@ -30,7 +29,8 @@
     self.navigationController.navigationBar.backgroundColor = [UIColor clearColor];
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
     UIImage *imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
-    [self.navigationController.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setBackgroundImage:imageN
+                                                  forBarMetrics:UIBarMetricsDefault];
     
     self.navigationController.navigationBar.translucent = YES;
     self.automaticallyAdjustsScrollViewInsets = NO;
