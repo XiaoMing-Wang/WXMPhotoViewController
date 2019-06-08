@@ -88,6 +88,8 @@
             
             PHAsset *asset = photoAsset.asset;
             CGSize size = CGSizeMake(screenWidth, imageHeight);
+            if (imageHeight * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
+            
             if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
             int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
                 photoAsset.bigImage = image;
@@ -107,6 +109,10 @@
     CGFloat ch = self.contentScrollView.frame.size.height;
     self.imageView.frame = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Width * scale);
     self.imageView.center = CGPointMake(cw / 2, ch / 2);
+    if (self.imageView.height*self.contentScrollView.maximumZoomScale < WXMPhoto_Height) {
+        CGFloat maxZoomScale = WXMPhoto_Height / self.imageView.height;
+        self.contentScrollView.maximumZoomScale = maxZoomScale;
+    }
 }
 
 /** 设置frame*/

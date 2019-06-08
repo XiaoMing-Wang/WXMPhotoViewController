@@ -15,7 +15,7 @@
 @property (nonatomic, assign, readonly) BOOL isOriginalImage;
 
 /** 显示原图的按钮是否显示 */
-@property (nonatomic, assign) BOOL isShowOriginalButton;
+@property (nonatomic, assign) BOOL showOriginalButton;
 
 /** 当前显示图片原图大小 */
 @property (nonatomic, assign) NSString *realImageByte;
@@ -29,6 +29,7 @@
 
 /** 显示隐藏 */
 - (void)setOriginalImage;
+- (void)setRealImageByte:(NSString *)realImageByte video:(BOOL)video;
 - (void)setAccordingState:(BOOL)state;
 - (void)setSignObj:(WXMDictionary_Array *)signObj removeIdx:(NSInteger)idx;
 @end

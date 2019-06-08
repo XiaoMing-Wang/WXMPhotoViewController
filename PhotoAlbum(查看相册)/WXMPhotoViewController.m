@@ -23,6 +23,7 @@
     if (self = [super init]) {
         self.pushCamera = YES;
         self.exitPreview = YES;
+        self.showVideo = YES;
     }
     return self;
 }
@@ -84,7 +85,6 @@
     photoDetail.photoType = self.photoType;
     photoDetail.expectSize = self.expectSize;
     photoDetail.showVideo = self.showVideo;
-    
     photoDetail.delegate = self.delegate;
     photoDetail.results = self.results;
     photoDetail.resultArray = self.resultArray;

@@ -63,7 +63,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMMultiSelectMax 4
 
 /** 默认传回的图片大小  */
-#define WXMDefaultSize CGSizeMake(200, 200 * 1.78)
+#define WXMDefaultSize CGSizeZero
 
 /** 预览黑边间距 */
 #define WXMPhotoPreviewSpace 20
@@ -86,7 +86,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 /** 类型 */
 typedef NS_ENUM(NSInteger, WXMPhotoDetailType) {
-    WXMPhotoDetailTypeGetPhoto = 0,     /* 单选原图 */
+    WXMPhotoDetailTypeGetPhoto = 0,     /* 单选大图 */
     WXMPhotoDetailTypeGetPhoto_256 = 1, /* 单选256*256 */
     WXMPhotoDetailTypeMultiSelect = 2,  /* 多选 + 预览 */
     WXMPhotoDetailTypePreview = 3,      /* 单选 + 预览 */

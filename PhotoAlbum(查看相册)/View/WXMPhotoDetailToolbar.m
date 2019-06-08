@@ -17,9 +17,9 @@
 
 @property (nonatomic, strong) UIButton *originalImageButton;
 @property (nonatomic, assign, readwrite) BOOL isOriginalImage;
-//@property (nonatomic, strong) UIView *cylindrical;
-//@property (nonatomic, strong) UIView *originalVew;
-//@property (nonatomic, strong) UILabel *originaSize;
+@property (nonatomic, strong) UIView *cylindrical;
+@property (nonatomic, strong) UIView *originalVew;
+@property (nonatomic, strong) UILabel *originaSize;
 @end
 
 @implementation WXMPhotoDetailToolbar
@@ -125,56 +125,62 @@
  }
 
 /**  */
-- (UIButton *)originalImageButton {
-    if (!_originalImageButton) {
-        _originalImageButton = [[UIButton alloc] init];
-        _originalImageButton.size = CGSizeMake(80, 42);
-        _originalImageButton.titleLabel.font = [UIFont systemFontOfSize:15];
-        [_originalImageButton setTitle:@"  原图" forState:UIControlStateNormal];
-        [_originalImageButton wxm_addTarget:self action:@selector(originalEvent:)];
-        _originalImageButton.centerX = self.width / 2;
-        _originalImageButton.top = 3;
-
-        UIImage *defImage = [UIImage imageNamed:@"photo_original_def"];
-        UIImage *seleImage = [UIImage imageNamed:@"photo_original_selected"];
-        [_originalImageButton setTitleColor:WXMPhotoDetailToolbarTextColor
-                                   forState:UIControlStateNormal];
-        [_originalImageButton setTitleColor:WXMPhoto_DTextColor
-                                   forState:UIControlStateDisabled];
-        [_originalImageButton setImage:defImage forState:UIControlStateNormal];
-        [_originalImageButton setImage:defImage forState:UIControlStateHighlighted];
-        [_originalImageButton setImage:seleImage forState:UIControlStateSelected];
-    }
-    return _originalImageButton;
-}
-
-/**  */
 //- (UIButton *)originalImageButton {
 //    if (!_originalImageButton) {
 //        _originalImageButton = [[UIButton alloc] init];
 //        _originalImageButton.size = CGSizeMake(80, 42);
-//        _originalImageButton.titleLabel.textColor = WXMPhoto_DTextColor;
-//        [_originalImageButton setTitleColor:WXMPhoto_DTextColor forState:UIControlStateNormal];
-//        [_originalImageButton setTitleColor:WXMPhoto_DTextColor forState:UIControlStateDisabled];
-//        _originalImageButton.titleLabel.font = [UIFont systemFontOfSize:14];
+//        _originalImageButton.titleLabel.font = [UIFont systemFontOfSize:15];
 //        [_originalImageButton setTitle:@"  原图" forState:UIControlStateNormal];
 //        [_originalImageButton wxm_addTarget:self action:@selector(originalEvent:)];
 //        _originalImageButton.centerX = self.width / 2;
 //        _originalImageButton.top = 3;
 //
-//        [_originalImageButton setImage:[UIImage imageNamed:@"photo_original_def"]
-//                              forState:UIControlStateNormal];
-//        [_originalImageButton setImage:[UIImage imageNamed:@"photo_original_selected"]
-//                              forState:UIControlStateSelected];
-//
-//        _cylindrical = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 23, 23)];
-//        _cylindrical.layer.cornerRadius = _cylindrical.width / 2;
-//        _cylindrical.layer.masksToBounds = YES;
-//        _cylindrical.layer.borderColor = [UIColor whiteColor].CGColor;
-//        _cylindrical.layer.borderWidth = .75;
-//        _cylindrical.centerY = _originalImageButton.height / 2;
-//        _cylindrical.userInteractionEnabled = NO;
-//
+//        UIImage *defImage = [UIImage imageNamed:@"photo_original_def"];
+//        UIImage *seleImage = [UIImage imageNamed:@"photo_original_selected"];
+//        [_originalImageButton setTitleColor:WXMPhotoDetailToolbarTextColor
+//                                   forState:UIControlStateNormal];
+//        [_originalImageButton setTitleColor:WXMPhoto_DTextColor
+//                                   forState:UIControlStateDisabled];
+//        [_originalImageButton setImage:defImage forState:UIControlStateNormal];
+//        [_originalImageButton setImage:defImage forState:UIControlStateHighlighted];
+//        [_originalImageButton setImage:seleImage forState:UIControlStateSelected];
+//    }
+//    return _originalImageButton;
+//}
+
+/**  */
+- (UIButton *)originalImageButton {
+    if (!_originalImageButton) {
+        _originalImageButton = [[UIButton alloc] init];
+        _originalImageButton.size = CGSizeMake(80, 42);
+        _originalImageButton.titleLabel.textColor = WXMPhoto_DTextColor;
+        [_originalImageButton setTitleColor:WXMPhoto_DTextColor forState:UIControlStateNormal];
+        [_originalImageButton setTitleColor:WXMPhoto_DTextColor forState:UIControlStateDisabled];
+        _originalImageButton.titleLabel.font = [UIFont systemFontOfSize:14];
+        [_originalImageButton setTitle:@"  原图" forState:UIControlStateNormal];
+        [_originalImageButton wxm_addTarget:self action:@selector(originalEvent:)];
+        _originalImageButton.centerX = self.width / 2;
+        _originalImageButton.top = 3;
+
+        [_originalImageButton setImage:[UIImage imageNamed:@"photo_original_def"]
+                              forState:UIControlStateNormal];
+        [_originalImageButton setImage:[UIImage imageNamed:@"photo_original_selected"]
+                              forState:UIControlStateSelected];
+
+        _cylindrical = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 23, 23)];
+        _cylindrical.layer.cornerRadius = _cylindrical.width / 2;
+        _cylindrical.layer.masksToBounds = YES;
+        _cylindrical.layer.borderColor = [UIColor whiteColor].CGColor;
+        _cylindrical.layer.borderWidth = .75;
+        _cylindrical.centerY = _originalImageButton.height / 2;
+        _cylindrical.userInteractionEnabled = NO;
+
+        UIImageView * image2 = [[UIImageView alloc] initWithFrame:CGRectZero];
+        image2.image = [UIImage imageNamed:@"photo_videoOverlay"];
+        image2.size = CGSizeMake(23, 23 * 33 / 48);
+        [_cylindrical addSubview:image2];
+        image2.layoutCenterSupView = YES;
+        
 //        _originalVew = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 17, 17)];
 //        _originalVew.layer.cornerRadius = _originalVew.width / 2;
 //        _originalVew.backgroundColor = WXMSelectedColor;
@@ -182,33 +188,33 @@
 //        _originalVew.layoutCenterSupView = YES;
 //    /** _originalVew.hidden = YES; */
 //        _originalVew.userInteractionEnabled = NO;
-//
-//        UIImage *image = [_cylindrical wxm_makeImage];
-//        NSString *path_document = NSHomeDirectory();
-//        NSString *imagePath = [path_document stringByAppendingString:@"/Documents/pic.png"];
-//        NSLog(@"%@",imagePath);
-//        [UIImagePNGRepresentation(image) writeToFile:imagePath atomically:YES];
 
-//        _originaSize = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
-//        _originaSize.userInteractionEnabled = NO;
-//        _originaSize.text = @"原图";
-//        _originaSize.font = [UIFont systemFontOfSize:14];
-//        _originaSize.textColor = WXMPhoto_DTextColor;
-//        [_originaSize sizeToFit];
-//        _originaSize.numberOfLines = 1;
-//        _originaSize.left = _cylindrical.right + 6;
-//        _originaSize.textAlignment = NSTextAlignmentLeft;
-//        _originaSize.centerY = _cylindrical.centerY;
-//
-//        _originalImageButton.width = _cylindrical.width + 4 + _originaSize.width;
-//        _originalImageButton.centerX = self.width / 2;
-//        _originalImageButton.top = 3;
-//        [_originalImageButton addSubview:_cylindrical];
-//        [_originalImageButton addSubview:_originaSize];
-//
-//    }
-//    return _originalImageButton;
-//}
+        UIImage *image = [image2 wxm_makeImage];
+        NSString *path_document = NSHomeDirectory();
+        NSString *imagePath = [path_document stringByAppendingString:@"/Documents/pic.png"];
+        NSLog(@"%@",imagePath);
+        [UIImagePNGRepresentation(image) writeToFile:imagePath atomically:YES];
+
+       /**   _originaSize = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
+        _originaSize.userInteractionEnabled = NO;
+        _originaSize.text = @"原图";
+        _originaSize.font = [UIFont systemFontOfSize:14];
+        _originaSize.textColor = WXMPhoto_DTextColor;
+        [_originaSize sizeToFit];
+        _originaSize.numberOfLines = 1;
+        _originaSize.left = _cylindrical.right + 6;
+        _originaSize.textAlignment = NSTextAlignmentLeft;
+        _originaSize.centerY = _cylindrical.centerY; */
+
+        _originalImageButton.width = _cylindrical.width + 4 + _originaSize.width;
+        _originalImageButton.centerX = self.width / 2;
+        _originalImageButton.top = 3;
+        [_originalImageButton addSubview:_cylindrical];
+        [_originalImageButton addSubview:_originaSize];
+
+    }
+    return _originalImageButton;
+}
 
 
 @end

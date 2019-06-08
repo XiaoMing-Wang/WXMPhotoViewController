@@ -64,10 +64,11 @@
     CGFloat height = 30;
     self.originalButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 200, height)];
     self.originalButton.tag = 100;
-    [self.originalButton setImage:[UIImage imageNamed:@"photo_orwhite_de"]
-                         forState:UIControlStateNormal];
-    [self.originalButton setImage:[UIImage imageNamed:@"photo_orwhite_se"]
-                forState:UIControlStateSelected];
+    
+    UIImage *deImage = [UIImage imageNamed:@"photo_orwhite_de"];
+    UIImage *seImage = [UIImage imageNamed:@"photo_orwhite_se"];
+    [self.originalButton setImage:deImage forState:UIControlStateNormal];
+    [self.originalButton setImage:seImage forState:UIControlStateSelected];
     [self.originalButton setTitle:@"  原图(0.00M)" forState:UIControlStateNormal];
     self.originalButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
     self.originalButton.titleLabel.font = [UIFont systemFontOfSize:15];
@@ -113,16 +114,28 @@
 }
 
 /** 显示隐藏原图按钮 */
-- (void)setIsShowOriginalButton:(BOOL)isShowOriginalButton {
-    _isShowOriginalButton = isShowOriginalButton;
-    self.originalButton.hidden = !isShowOriginalButton;
+- (void)setShowOriginalButton:(BOOL)showOriginalButton{
+    _showOriginalButton = showOriginalButton;
+    self.originalButton.hidden = !showOriginalButton;
 }
 
 /** 更新原图大小 */
-- (void)setRealImageByte:(NSString *)realImageByte {
+- (void)setRealImageByte:(NSString *)realImageByte video:(BOOL)video {
     _realImageByte = realImageByte;
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSString *text = [NSString stringWithFormat:@"  原图(%@)",realImageByte];
+        NSString *text = [NSString stringWithFormat:@"  原图 (%@)",realImageByte];
+        if (video) {
+            UIImage *veImage = [UIImage imageNamed:@"photo_videoOverlay23"];
+            [self.originalButton setImage:veImage forState:UIControlStateNormal];
+            [self.originalButton setImage:veImage forState:UIControlStateSelected];
+            self.originalButton.userInteractionEnabled = NO;
+        } else {
+            UIImage *deImage = [UIImage imageNamed:@"photo_orwhite_de"];
+            UIImage *seImage = [UIImage imageNamed:@"photo_orwhite_se"];
+            [self.originalButton setImage:deImage forState:UIControlStateNormal];
+            [self.originalButton setImage:seImage forState:UIControlStateSelected];
+            self.originalButton.userInteractionEnabled = YES;
+        }
         [self.originalButton setTitle:text forState:UIControlStateNormal];
     });
 }

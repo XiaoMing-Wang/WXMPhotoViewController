@@ -134,6 +134,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (_photoType == WXMPhotoDetailTypeGetPhoto || _photoType == WXMPhotoDetailTypeGetPhoto_256) {
         if (self.exitPreview) {
             size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
+            CGFloat imageHeight = size.height;
+            if (imageHeight * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto_256 && !self.exitPreview) {
             size = CGSizeMake(256, 256);
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto && !self.exitPreview) {
