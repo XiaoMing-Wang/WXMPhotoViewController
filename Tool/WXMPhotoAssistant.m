@@ -28,10 +28,8 @@ static char wxm_Photoline;
 
 /** */
 + (UIView *)wxmPhoto_snapViewImage:(UIView *)screenshots {
-    @autoreleasepool {
-        UIView *snapView = [screenshots snapshotViewAfterScreenUpdates:YES];
-        return snapView;
-    }
+    UIView *snapView = [screenshots snapshotViewAfterScreenUpdates:YES];
+    return snapView;
 }
 
 /** 截图 */

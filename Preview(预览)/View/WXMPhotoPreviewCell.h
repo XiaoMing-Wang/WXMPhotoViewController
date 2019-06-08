@@ -18,5 +18,8 @@
 /** 还原Zoom */
 - (void)originalAppearance;
 
+/** 获取当前image */
+- (UIImage *)currentImage;
+
 @end
 

@@ -28,13 +28,10 @@ typedef enum {
 @property (nonatomic, strong) PHAssetCollection *assetCollection; /**通过该属性可以取该相册的所有照片*/
 @end
 
-
 /** 相片对象 */
 @interface WXMPhotoAsset : NSObject
 @property (nonatomic, strong) PHAsset *asset;         /** 相片媒介 */
-@property (nonatomic, strong) UIImage *smallImage;    /** 小相片 */
-@property (nonatomic, strong) UIImage *bigImage;      /** 大相片 */
-@property (nonatomic, strong) UIImage *originalImage; /** 原始相片 */
+@property (nonatomic, weak) UIImage *bigImage;        /** 大相片 */
 @property (nonatomic, copy) NSURL *videoUrl;          /** video url */
 @property (nonatomic, copy) NSString *videoDrantion;  /** video 时间长度 */
 

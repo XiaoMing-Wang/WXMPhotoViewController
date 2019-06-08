@@ -56,19 +56,13 @@
     _photoAsset = photoAsset;
     [self wxm_setTypeSignInterface];
     
-    WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-    if (photoAsset.smallImage) {
-        self.imageView.image = photoAsset.smallImage;
-        if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
-        return;
-    }
-    
     PHAsset *asset = photoAsset.asset;
+    WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
     CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
     if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
     int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
         photoAsset.aspectRatio = image.size.height / image.size.width * 1.0;
-        photoAsset.smallImage = image;
+        //photoAsset.smallImage = image;
         self.imageView.image = image;
     }];
     

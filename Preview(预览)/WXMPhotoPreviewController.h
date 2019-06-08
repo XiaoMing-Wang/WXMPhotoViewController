@@ -33,7 +33,6 @@
 
 /** 回调 */
 @property (nonatomic, copy) UIView* (^dragCallback)(void);
-@property (nonatomic, copy) NSDictionary* (^callback)(NSInteger index, NSInteger rank);
 @property (nonatomic, strong) WXMDictionary_Array* (^signCallback)(NSInteger index);
 
 /** 转场背景 */

@@ -80,19 +80,13 @@
                 self.imageView.image = [WXMPhotoGIFImage imageWithData:data];
             }];
         } else {
-            if (photoAsset.bigImage) {
-                self.imageView.image = photoAsset.bigImage;
-                [self setLocation:_photoAsset.aspectRatio];
-                return;
-            }
-            
             PHAsset *asset = photoAsset.asset;
             CGSize size = CGSizeMake(screenWidth, imageHeight);
             if (imageHeight * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
             
             if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
             int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                photoAsset.bigImage = image;
+                photoAsset.bigImage = image;  
                 self.imageView.image = image;
                 [self setLocation:_photoAsset.aspectRatio];
                 /** NSLog(@"%@",NSStringFromCGSize(image.size)); */
@@ -101,6 +95,11 @@
             _photoAsset.requestID = ids;
         }
     }
+}
+
+/** 获取当前image */
+- (UIImage *)currentImage {
+    return self.imageView.image;
 }
 
 /** 设置image位置 */

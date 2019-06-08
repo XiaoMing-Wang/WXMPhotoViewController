@@ -108,19 +108,20 @@
         }
         CGFloat imageHeight = photoAsset.aspectRatio * screenWidth;
         
-        if (photoAsset.bigImage) {
-            self.imageView.image = photoAsset.bigImage;
+        PHAsset *asset = photoAsset.asset;
+        CGSize size = CGSizeMake(screenWidth, imageHeight);
+        [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+            photoAsset.bigImage = image;
+            self.imageView.image = image;
             [self setLocation:_photoAsset.aspectRatio];
-        } else {
-            PHAsset *asset = photoAsset.asset;
-            CGSize size = CGSizeMake(screenWidth, imageHeight);
-            [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                photoAsset.bigImage = image;
-                [self setLocation:_photoAsset.aspectRatio];
-                self.imageView.image = image;
-            }];
-        }
+            [self wxm_avPlayStartPlay:NO];
+            [self.wxm_avPlayer pause];
+        }];
     }
+}
+
+- (UIImage *)currentImage {
+    return self.imageView.image;
 }
 
 /** 设置frame*/
@@ -137,14 +138,14 @@
 
 /** 单击 */
 - (void)respondsToTapSingle:(UITapGestureRecognizer *)tap {
-    self.playIcon.hidden  ? [self wxm_avPlayStopPlay] : [self wxm_avPlayStartPlay];
+    self.playIcon.hidden  ? [self wxm_avPlayStopPlay] : [self wxm_avPlayStartPlay:YES];
     if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle)]) {
         [self.delegate wxm_respondsToTapSingle];
     }
 }
 
 /** 开始播放视频 */
-- (void)wxm_avPlayStartPlay {
+- (void)wxm_avPlayStartPlay:(bool)playImmediately {
   @autoreleasepool {
       
       void (^playBlock)(NSURL *url) = ^(NSURL *url) {
@@ -155,8 +156,11 @@
               self.wxm_playerLayer.frame = self.contentScrollView.frame;
               [self.imageView.layer insertSublayer:self.wxm_playerLayer atIndex:0];
           }
-          self.playIcon.hidden = YES;
-          [self.wxm_avPlayer play];
+          
+          if (playImmediately) {
+              self.playIcon.hidden = YES;
+              [self.wxm_avPlayer play];
+          }
       };
       
       if (self.photoAsset.videoUrl) playBlock(_photoAsset.videoUrl);
@@ -265,7 +269,7 @@
 
 - (void)enterForeground {
     NSLog(@"进入前台");
-    if (self.playIcon.hidden) [self wxm_avPlayStartPlay];
+    if (self.playIcon.hidden) [self wxm_avPlayStartPlay:YES];
 }
 
 - (void)wxm_removeAvPlayer {

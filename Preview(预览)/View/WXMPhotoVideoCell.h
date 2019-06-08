@@ -13,4 +13,7 @@
 @property (nonatomic, strong) WXMPhotoAsset *photoAsset;
 @property (nonatomic, assign) id<WXMPreviewCellProtocol> delegate;
 @property (nonatomic, weak) UIPanGestureRecognizer *colleRecognizer;
+
+/** 获取当前image */
+- (UIImage *)currentImage;
 @end

@@ -8,20 +8,23 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+@class PHAsset;
 
 @interface WXMPhotoSignModel : NSObject
 
 /** 相册名字 */
-@property(nonatomic, copy) NSString *albumName;
+@property (nonatomic, copy) NSString *albumName;
 
 /** 位置 */
-@property(nonatomic, strong) NSIndexPath *indexPath;
+@property (nonatomic, strong) NSIndexPath *indexPath;
 
 /** 相片 */
-@property(nonatomic, strong) UIImage *image;
+@property (nonatomic, strong) UIImage *image;
 
 /** rank是动态的 保存的不准确 */
-/** 排名 */
-@property(nonatomic, assign) NSInteger rank;
+@property (nonatomic, assign) NSInteger rank;
 
+/** 相片媒介 */
+@property (nonatomic, strong) PHAsset *asset;
 @end
+

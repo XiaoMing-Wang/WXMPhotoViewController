@@ -205,7 +205,8 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         [self wxm_showAlertController];
         return;
     }
-      
+    
+    /** 勾选回掉 */
     if (self.signCallback)  {
         self.signObj = self.signCallback(self.selectedIndex);
         [self wxm_setUpTopView:self.selectedIndex];
@@ -219,6 +220,12 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     [self.collectionView scrollToItemAtIndexPath:idx atScrollPosition:position animated:NO];
     [self wxm_setUpTopView:idx.row];
     self.selectedIndex = idx.row;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        CATransition *transition = [CATransition animation];
+        transition.duration = 0.175;
+        transition.type = kCATransitionFade;
+        [self.collectionView.layer addAnimation:transition forKey:@"animations"];
+    });
 }
 
 /** 完成按钮 */
@@ -264,7 +271,6 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     
     /** 单选大图 */
     if (_photoType == WXMPhotoDetailTypeGetPhoto) {
-        
         [man wxm_synchronousGetPictures:asset.asset size:size completion:^(UIImage *image) {
             resultBlocks(image);
         }];

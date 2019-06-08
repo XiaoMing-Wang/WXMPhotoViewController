@@ -24,6 +24,7 @@
         self.pushCamera = YES;
         self.exitPreview = YES;
         self.showVideo = YES;
+        self.jurisdictionData = @[].mutableCopy;
     }
     return self;
 }
@@ -33,7 +34,6 @@
 
     self.lastEdgesForExtendedLayout = self.edgesForExtendedLayout;
     self.edgesForExtendedLayout = UIRectEdgeAll;
-    self.jurisdictionData = @[].mutableCopy;
     self.view.backgroundColor = [UIColor whiteColor];
     self.navigationItem.leftBarButtonItem = nil;
     self.navigationItem.title = WXMPhotoVCNavigationItem;
@@ -96,7 +96,7 @@
 
 /** 返回 */
 - (void)wxm_backLastViewController {
-    [self.navigationController popViewControllerAnimated:YES];
+    /** [self.navigationController popViewControllerAnimated:YES]; */
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
