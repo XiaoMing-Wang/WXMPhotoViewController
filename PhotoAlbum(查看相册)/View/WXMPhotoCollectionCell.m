@@ -48,6 +48,8 @@
     if (photoType == WXMPhotoDetailTypeMultiSelect) {
         [self.contentView addSubview:self.maskCoverView];
         [self.contentView addSubview:self.chooseButton];
+    }  else if (photoType == WXMPhotoDetailTypeTailoring) {
+        [self.typeSign removeFromSuperview];
     }
 }
 
@@ -62,7 +64,6 @@
     if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
     int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
         photoAsset.aspectRatio = image.size.height / image.size.width * 1.0;
-        //photoAsset.smallImage = image;
         self.imageView.image = image;
     }];
     
@@ -92,8 +93,11 @@
     [self signButtonSelected:(signModel != nil)];
     [self wxm_setTypeSignInterface];
     
-    if (showMask == NO) [self setUserCanTouch:YES animation:NO];
-    else [self setUserCanTouch:(signModel != nil) animation:NO];
+    if (showMask == NO) {
+        [self setUserCanTouch:YES animation:NO];
+    } else {
+        [self setUserCanTouch:(signModel != nil) animation:NO];
+    }
 }
 
 /** 设置显示界面效果 */

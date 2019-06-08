@@ -13,5 +13,7 @@
 #import "WXMPhotoConfiguration.h"
 #import "WXMPhotoViewController.h"
 #import "WXMPhotoDetailViewController.h"
+#import "WXMPhotoPreviewController.h"
+#import "WXMPhotoShapeController.h"
 
 #endif /* WXMPhotoHeader_h */

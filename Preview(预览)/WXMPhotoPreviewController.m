@@ -78,7 +78,8 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 }
 #pragma mark _____________________________________________UICollectionView dataSource
 
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+- (NSInteger)collectionView:(UICollectionView *)collectionView
+     numberOfItemsInSection:(NSInteger)section {
     return _dataSource.count;
 }
 

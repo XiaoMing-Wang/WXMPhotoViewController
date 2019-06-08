@@ -34,7 +34,6 @@ typedef enum {
 @property (nonatomic, weak) UIImage *bigImage;        /** 大相片 */
 @property (nonatomic, copy) NSURL *videoUrl;          /** video url */
 @property (nonatomic, copy) NSString *videoDrantion;  /** video 时间长度 */
-
 @property (nonatomic, assign) int32_t requestID;
 @property (nonatomic, assign) CGFloat bytes;               /** 大小 */
 @property (nonatomic, assign) CGFloat aspectRatio;         /** 高/宽比例 */

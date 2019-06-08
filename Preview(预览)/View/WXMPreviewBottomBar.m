@@ -145,7 +145,7 @@
     _signObj = signObj;
     NSString *title = signObj.count?[NSString stringWithFormat:@"完成(%ld)",signObj.count]:@"完成";
     [self.finishButton setTitle:title forState:UIControlStateNormal];
-    [UIView animateWithDuration:0.35 animations:^{
+    [UIView animateWithDuration:((idx > 0) ? 0.5 : 0) animations:^{
         _line.alpha = (signObj.count > 0);
         _photoView.alpha = (signObj.count > 0);
     }];
