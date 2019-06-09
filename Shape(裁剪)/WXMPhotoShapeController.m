@@ -115,10 +115,12 @@
         self.navigationController.navigationBar.userInteractionEnabled = NO;
     });
 }
+
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:NO];
 }
+
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
     self.weakNavigationVC.interactivePopGestureRecognizer.enabled = YES;

@@ -101,8 +101,10 @@ typedef enum {
 /** 获取GIF */
 - (int32_t)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
+
 /** 获取视频路径 */
 - (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(NSURL * , NSData *))completiont;
+
 
 /** 获取livephoto 系统大于9.1 */
 - (void)getLivePhotoByAsset:(PHAsset *)assetData
