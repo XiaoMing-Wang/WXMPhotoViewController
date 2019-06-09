@@ -16,6 +16,7 @@ typedef enum {
     WXMPHAssetMediaTypePhotoGif,
     WXMPHAssetMediaTypeVideo,
     WXMPHAssetMediaTypeAudio,
+    WXMPHAssetMediaTypeNone,
 } WXMPhotoMediaType;
 
 

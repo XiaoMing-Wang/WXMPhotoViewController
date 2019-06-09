@@ -71,7 +71,7 @@
     [self.originalButton setImage:seImage forState:UIControlStateSelected];
     [self.originalButton setTitle:@"  原图(0.00M)" forState:UIControlStateNormal];
     self.originalButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-    self.originalButton.titleLabel.font = [UIFont systemFontOfSize:14.8];
+    self.originalButton.titleLabel.font = [UIFont systemFontOfSize:13];
     self.originalButton.left = 15;
     self.originalButton.centerY = _finshView.height / 2;
     [self.originalButton wxm_setEnlargeEdgeWithTop:5 left:10 right:-120 bottom:0];

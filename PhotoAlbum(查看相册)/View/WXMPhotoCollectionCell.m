@@ -96,7 +96,7 @@
     [self signButtonSelected:(signModel != nil)];
     [self wxm_setTypeSignInterface];
     
-    if (signModel) showMask = NO;
+    if (signModel != nil) showMask = NO;
     [self setUserCanTouch:!showMask animation:NO];
 }
 

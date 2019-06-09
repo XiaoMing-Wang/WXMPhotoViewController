@@ -37,7 +37,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoChooseVideo_Photo NO
 
 /** 是否支持播放livephoto */
-#define WXMPhotoShowLivePhto YES
+#define WXMPhotoShowLivePhto NO
 
 /** livephoto是否静音 */
 #define WXMPhotoShowLivePhtoMuted NO
@@ -77,6 +77,9 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
 #define WXMMultiSelectMax 4
+
+/** WXMPhotoDetailTypeMultiSelect 支持最大视频数 */
+#define WXMMultiSelectVideoMax 3
 
 /** 默认传回的图片大小  */
 #define WXMDefaultSize CGSizeZero
