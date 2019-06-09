@@ -75,6 +75,10 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     NSIndexPath * index = [NSIndexPath indexPathForRow:self.indexPath.row inSection:0];
     UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
     [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:NO];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.02 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+         [self playLivePhoto];
+    });
+   
 }
 #pragma mark _____________________________________________UICollectionView dataSource
 
@@ -127,6 +131,22 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     
     /** 设置原图大小 */
     [self wxm_setBottomBarViewrealByte];
+    
+    if (self.dataSource.count < self.selectedIndex) return;
+    if (WXMPhotoShowLivePhto == NO) return;
+    [self playLivePhoto];
+}
+
+/** 播放livephoto */
+- (void)playLivePhoto {
+    if (self.dataSource.count < self.selectedIndex) return;
+    if (WXMPhotoShowLivePhto == NO) return;
+    NSIndexPath *index = [NSIndexPath indexPathForRow:self.selectedIndex inSection:0];
+    UITableViewCell * cell = nil;
+    cell = (UITableViewCell *)[self.collectionView cellForItemAtIndexPath:index];
+    if ([cell isKindOfClass:WXMPhotoPreviewCell.class]) {
+        [((WXMPhotoPreviewCell *)cell) startPlayLivePhoto];
+    }
 }
 
 /** 获取当前图片的data大小 */

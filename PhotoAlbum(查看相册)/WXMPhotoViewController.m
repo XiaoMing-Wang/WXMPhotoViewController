@@ -96,14 +96,13 @@
 
 /** 返回 */
 - (void)wxm_backLastViewController {
-    /** [self.navigationController popViewControllerAnimated:YES]; */
+    [self.navigationController popViewControllerAnimated:YES];
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
 /** 判断是否有权限 */
 - (void)judgeAuthority {
     [self.jurisdictionData removeAllObjects];
-    
     void(^resultsBlock)(void) = ^(void) {
         if ([WXMPhotoManager sharedInstance].picturesArray) {
             [self.jurisdictionData addObjectsFromArray:[WXMPhotoManager sharedInstance].picturesArray];

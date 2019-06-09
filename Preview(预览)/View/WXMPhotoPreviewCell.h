@@ -15,11 +15,13 @@
 @property (nonatomic, assign) id<WXMPreviewCellProtocol> delegate;
 @property (nonatomic, weak) UIPanGestureRecognizer *colleRecognizer;
 
-/** 还原Zoom */
+/** 还原zoom */
 - (void)originalAppearance;
 
 /** 获取当前image */
 - (UIImage *)currentImage;
 
+/** 开始播放livephoto */
+- (void)startPlayLivePhoto;
 @end
 

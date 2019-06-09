@@ -307,6 +307,24 @@ static WXMPhotoManager *manager = nil;
     }];
 }
 
+
+
+/** 获取livePhoto */
+- (void)getLivePhotoByAsset:(PHAsset *)assetData
+                   liveSize:(CGSize)liveSize
+                 completion:(void (^)(PHLivePhoto *))completiont {
+        
+    PHLivePhotoRequestOptions *options = [[PHLivePhotoRequestOptions alloc]init];
+    options.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
+    options.networkAccessAllowed = YES;
+    PHImageManager * manager = [PHImageManager defaultManager];
+    [manager requestLivePhotoForAsset:assetData targetSize:liveSize contentMode:PHImageContentModeAspectFill options:options resultHandler:^(PHLivePhoto *livePhoto,NSDictionary* info) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completiont(livePhoto);
+        });
+    }];
+}
+
 /** 取消 */
 - (void)cancelRequestWithID:(int32_t)requestID {
     [[PHCachingImageManager defaultManager] cancelImageRequest:requestID];

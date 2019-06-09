@@ -23,13 +23,13 @@
 /** 初始化 */
 - (void)setupInterface {
     _posterImageView = [[UIImageView alloc] init];
+    _posterImageView.frame = CGRectMake(15, 15, 70, 70);
     _posterImageView.contentMode = UIViewContentModeScaleAspectFill;
     _posterImageView.clipsToBounds = YES;
-    _posterImageView.frame = CGRectMake(15, 15, 70, 70);
     
     _titleLable = [[UILabel alloc] init];
-    _titleLable.font = [UIFont systemFontOfSize:16];
     _titleLable.frame = CGRectMake(105, 0, self.frame.size.width - 105 - 20, 100);
+    _titleLable.font = [UIFont systemFontOfSize:16];
     _titleLable.textColor = [UIColor lightGrayColor];
     _titleLable.textAlignment = NSTextAlignmentLeft;
     
@@ -48,17 +48,12 @@
     [atts addAttribute:NSForegroundColorAttributeName value:[UIColor blackColor] range:range];
     self.titleLable.attributedText = atts;
     
-//    if (phoneList.firstImage) self.posterImageView.image = phoneList.firstImage;
-//    if (phoneList.firstImage == nil) {
-    CGFloat w = ([UIScreen mainScreen].bounds.size.width > 400) ? 210 : 140;
-    CGSize size = CGSizeMake(w, w);
-    PHAsset *asset = self.phoneList.firstAsset;
-    WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-    [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+    [[WXMPhotoManager sharedInstance] getPictures_customSize:self.phoneList.firstAsset
+                                                 synchronous:NO
+                                                   assetSize:CGSizeMake(140, 140)
+                                                  completion:^(UIImage *image) {
         self.posterImageView.image = image;
-        /** phoneList.firstImage = image; */
     }];
-//    }
 }
 @end
 

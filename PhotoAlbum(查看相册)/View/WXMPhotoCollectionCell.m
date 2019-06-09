@@ -57,12 +57,15 @@
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     _photoAsset = photoAsset;
     [self wxm_setTypeSignInterface];
+    if (self.currentRequestID) {
+        [[WXMPhotoManager sharedInstance] cancelRequestWithID:self.currentRequestID];
+    }
     
-    PHAsset *asset = photoAsset.asset;
-    WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
     CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
-    if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
-    int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+    int32_t ids = [[WXMPhotoManager sharedInstance] getPictures_customSize:photoAsset.asset
+                                                               synchronous:NO
+                                                                 assetSize:size
+                                                                completion:^(UIImage *image) {
         photoAsset.aspectRatio = image.size.height / image.size.width * 1.0;
         self.imageView.image = image;
     }];
@@ -105,21 +108,33 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         self.typeSign.hidden = YES;
         [self.contentView bringSubviewToFront:self.typeSign];
+        
         if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo && WXMPhotoShowVideoSign) {
             self.typeSign.hidden = (!self.showVideo);
             NSString * duration = [NSString stringWithFormat:@"  %@",_photoAsset.videoDrantion];
             [self.typeSign setTitle:duration forState:UIControlStateNormal];
-            [self.typeSign setImage:[UIImage imageNamed:@"photo_videoSmall"] forState:UIControlStateNormal];
+            
+            UIImage *image = [UIImage imageNamed:@"photo_videoSmall"];
+            [self.typeSign setImage:image forState:UIControlStateNormal];
             self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
             self.typeSign.titleLabel.font = [UIFont systemFontOfSize:12];
             
         } else if (_photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && WXMPhotoShowGIFSign) {
+            
             self.typeSign.hidden = NO;
             self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:16];
             [self.typeSign setTitle:@"  GIF" forState:UIControlStateNormal];
             [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
             self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
         }
+//        else if (_photoAsset.mediaType == WXMPHAssetMediaTypeLivePhoto && WXMPhotoShowLivePhto) {
+//            
+//            self.typeSign.hidden = NO;
+//            self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:16];
+//            [self.typeSign setTitle:@"  LIVE" forState:UIControlStateNormal];
+//            [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
+//            self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+//        }
     });
 }
 
@@ -148,7 +163,9 @@
 
     /** 设置第几个选中 */
     if (self.delegate && [self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
-        NSInteger count = [self.delegate touchWXMPhotoSignView:_indexPath selected:_chooseButton.selected];
+        BOOL selected = _chooseButton.selected;
+        NSInteger count = [self.delegate touchWXMPhotoSignView:_indexPath selected:selected];
+        
         if (count >= 0 && count < WXMMultiSelectMax)  {
             [_chooseButton setTitle:@(count + 1).stringValue forState:UIControlStateSelected];
         }
@@ -170,8 +187,11 @@
 /** 提示框 */
 - (void)wxm_showAlertController {
     NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
-    [WXMPhotoAssistant showAlertViewControllerWithTitle:title message:@"" cancel:@"知道了"
-                                            otherAction:nil completeBlock:nil];
+    [WXMPhotoAssistant showAlertViewControllerWithTitle:title
+                                                message:@""
+                                                 cancel:@"知道了"
+                                            otherAction:nil
+                                          completeBlock:nil];
 }
 
 /** 刷新标号排名 */
@@ -224,3 +244,4 @@
 }
 
 @end
+

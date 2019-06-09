@@ -104,6 +104,11 @@ typedef enum {
 /** 获取视频路径 */
 - (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(NSURL * , NSData *))completiont;
 
+/** 获取livephoto 系统大于9.1 */
+- (void)getLivePhotoByAsset:(PHAsset *)assetData
+                   liveSize:(CGSize)liveSize
+                 completion:(void (^)(PHLivePhoto *))completiont;
+
 /** 取消请求 */
 - (void)cancelRequestWithID:(int32_t)requestID;
 @end

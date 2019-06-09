@@ -77,10 +77,13 @@
 
 /** 添加三个手势 */
 - (void)wxm_addTapGestureRecognizer {
-    UITapGestureRecognizer *tapSingle = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondsToTapSingle:)];
+    SEL selTap = @selector(respondsToTapSingle:);
+    UITapGestureRecognizer *tapSingle = nil;
+    tapSingle = [[UITapGestureRecognizer alloc] initWithTarget:self action:selTap];
     tapSingle.numberOfTapsRequired = 1;
     
-    _recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self  action:@selector(wxm_handlePan:)];
+    SEL handle = @selector(wxm_handlePan:);
+    _recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self action:handle];
     _recognizer->_direction = DirectionPanGestureRecognizerBottom;
     _recognizer.maximumNumberOfTouches = 1;
     

@@ -103,6 +103,9 @@
     _cropToolbar.resetButtonEnabled = NO;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     self.weakNavigationVC = self.navigationController;
@@ -126,7 +129,7 @@
     UIImage *imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
     [self.weakNavigationVC.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
 }
-
+#pragma clang diagnostic pop
 
 @end
 

@@ -69,9 +69,9 @@
     self.navigationItem.rightBarButtonItem = item;
 }
 
-/** 获取2倍像素的图片 */
+/** 获取2x像素的图片 */
 - (void)wxm_getDisplayImages {
-    PHAssetCollection *asset = _phoneList.assetCollection;
+    PHAssetCollection *asset = self.phoneList.assetCollection;
     WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
     NSArray *arrayAll = [manager wxm_getAssetsInAssetCollection:asset ascending:YES];
     [arrayAll enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
@@ -82,9 +82,9 @@
     
     /** 滚动到最后 */
     [self.collectionView reloadData];
-    if (_dataSource.count <= 1) return;
+    if (self.dataSource.count <= 1) return;
     UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredVertically;
-    NSIndexPath * index = [NSIndexPath indexPathForRow:_dataSource.count - 1 inSection:0];
+    NSIndexPath * index = [NSIndexPath indexPathForRow:self.dataSource.count - 1 inSection:0];
     [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:NO];
 }
 
@@ -93,7 +93,7 @@
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
-    return _dataSource.count;
+    return self.dataSource.count;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
@@ -120,14 +120,16 @@
 - (void)collectionView:(UICollectionView *)collectionView
 didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
-    CGSize size = CGSizeZero;
+    
     WXMPhotoManager * man = [WXMPhotoManager sharedInstance];
     WXMPhotoAsset *phsset = self.dataSource[indexPath.row];
+    WXMPhotoCollectionCell *cell = nil;
+    cell = (WXMPhotoCollectionCell *)[collectionView cellForItemAtIndexPath:indexPath];
+    
+    CGSize size = CGSizeZero;
     PHAsset *asset = phsset.asset;
     NSString *indexString = @(indexPath.row).stringValue;
     BOOL respond = (self.signObj.count < WXMMultiSelectMax);
-    WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)[collectionView cellForItemAtIndexPath:indexPath];
-    
     
     /** 单选原图 + 单选256 */
     if (_photoType == WXMPhotoDetailTypeGetPhoto || _photoType == WXMPhotoDetailTypeGetPhoto_256) {

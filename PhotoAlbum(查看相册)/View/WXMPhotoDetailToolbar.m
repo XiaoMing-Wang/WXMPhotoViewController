@@ -29,12 +29,12 @@
     if (self = [super initWithFrame:frame]) [self setupInterface];
     return self;
 }
+
 - (void)setupInterface {
     self.frame = CGRectMake(0, WXMPhoto_Height - 45, WXMPhoto_Width, 45);
     self.backgroundColor = [UIColor clearColor];
     UIToolbar *toolBar = [[UIToolbar alloc] initWithFrame:self.bounds];
     toolBar.backgroundColor = WXMPhotoDetailToolbarColor;
-    [self addSubview:toolBar];
     
     _previewButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 3, 60, self.height - 3)];
     [_previewButton setTitle:@"预览" forState:UIControlStateNormal];
@@ -62,7 +62,7 @@
     [_completeButton wxm_setEnlargeEdgeWithTop:3 left:15 right:14 bottom:5];
     
     _photoNumber = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, WXMSelectedWH, WXMSelectedWH)];
-    _photoNumber.text = @"1";
+    _photoNumber.text = @"0";
     _photoNumber.font = [UIFont systemFontOfSize:14];
     _photoNumber.textColor = [UIColor whiteColor];
     _photoNumber.numberOfLines = 1;
@@ -74,6 +74,7 @@
     _photoNumber.textAlignment = NSTextAlignmentCenter;
     _photoNumber.hidden = YES;
     
+    [self addSubview:toolBar];
     [self addSubview:_previewButton];
     [self addSubview:_completeButton];
     [self addSubview:_photoNumber];
@@ -81,7 +82,7 @@
     self.userInteractionEnabled = YES;
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(originalNoti:)
-                                                 name:WXMPhoto_originalNoti 
+                                                 name:WXMPhoto_originalNoti
                                                object:nil];
     
 }

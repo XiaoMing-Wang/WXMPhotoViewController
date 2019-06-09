@@ -12,14 +12,17 @@
 #import <objc/runtime.h>
 #import "WXMPhotoImageView.h"
 #import "WXMPhotoGIFImage.h"
+#import <Photos/Photos.h>
+#import <PhotosUI/PhotosUI.h>
 
 @interface WXMPhotoPreviewCell () <UIScrollViewDelegate,UIGestureRecognizerDelegate>
 @property (nonatomic, strong) UIView *blackView;
 @property (nonatomic, strong) UIScrollView *contentScrollView;
 @property (nonatomic, strong) WXMPhotoImageView *imageView;
+@property (nonatomic, strong) PHLivePhotoView *livePhotoView;
 @property (nonatomic, strong) WXMDirectionPanGestureRecognizer *recognizer;
-
 @property (nonatomic, assign) int32_t currentRequestID;
+@property (nonatomic, assign) BOOL isPlayLivePhoto;
 
 /** 距离原点的比例 */
 @property (nonatomic, assign) CGFloat wxm_x;
@@ -69,9 +72,10 @@
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         if (_photoAsset.aspectRatio <= 0) {
             _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / 
-            (CGFloat)photoAsset.asset.pixelWidth * 1.0;
+                                      (CGFloat)photoAsset.asset.pixelWidth * 1.0;
         }
         CGFloat imageHeight = _photoAsset.aspectRatio * screenWidth;
+        
         
         /** GIF */
         if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
@@ -82,18 +86,54 @@
         } else {
             PHAsset *asset = photoAsset.asset;
             CGSize size = CGSizeMake(screenWidth, imageHeight);
-            if (imageHeight * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
             
+            /** 很长的横图 需要获取原图 不然放大很模糊.. */
+            if (imageHeight * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
             if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
+            
+            
+            /** 自定义转场需要当前图片 */
+            /** 所以先加载图片 在上面覆盖livephoto */
             int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                photoAsset.bigImage = image;  
+                photoAsset.bigImage = image;
                 self.imageView.image = image;
                 [self setLocation:_photoAsset.aspectRatio];
-                /** NSLog(@"%@",NSStringFromCGSize(image.size)); */
             }];
+            
+            
+            /** livephoto */
+            if (_livePhotoView) _livePhotoView.hidden = YES;
+            if (photoAsset.mediaType == WXMPHAssetMediaTypeLivePhoto && WXMPhotoShowLivePhto) {
+                [self.imageView addSubview:self.livePhotoView];
+                self.livePhotoView.hidden = NO;
+                self.livePhotoView.livePhoto = nil;
+                [man getLivePhotoByAsset:asset liveSize:size completion:^(PHLivePhoto * livePhoto) {
+                    self.livePhotoView.livePhoto = livePhoto;
+                    [self setLocation:_photoAsset.aspectRatio];
+                }];
+            }
+            
             self.currentRequestID = ids;
             _photoAsset.requestID = ids;
         }
+    }
+}
+
+/** 开始播放livephoto */
+- (void)startPlayLivePhoto {
+    if (_livePhotoView && _isPlayLivePhoto == NO) {
+        _isPlayLivePhoto = YES;
+        [_livePhotoView stopPlayback];
+        [_livePhotoView startPlaybackWithStyle:PHLivePhotoViewPlaybackStyleHint];
+    }
+}
+
+/** 还原 */
+- (void)originalAppearance {
+    _isPlayLivePhoto = NO;
+    [_contentScrollView setZoomScale:1.0 animated:NO];
+    if (_livePhotoView) {
+        [_livePhotoView stopPlayback];
     }
 }
 
@@ -108,7 +148,10 @@
     CGFloat ch = self.contentScrollView.frame.size.height;
     self.imageView.frame = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Width * scale);
     self.imageView.center = CGPointMake(cw / 2, ch / 2);
-    if (self.imageView.height*self.contentScrollView.maximumZoomScale < WXMPhoto_Height) {
+    self.livePhotoView.frame = self.imageView.bounds;
+    
+    self.contentScrollView.maximumZoomScale = 2.5;
+    if (self.imageView.height * self.contentScrollView.maximumZoomScale < WXMPhoto_Height) {
         CGFloat maxZoomScale = WXMPhoto_Height / self.imageView.height;
         self.contentScrollView.maximumZoomScale = maxZoomScale;
     }
@@ -140,20 +183,20 @@
     self.imageView.frame = imageViewFrame;
 }
 
-/** 还原 */
-- (void)originalAppearance {
-    [_contentScrollView setZoomScale:1.0 animated:NO];
-}
-
 /** 添加手势 */
 - (void)addTapGestureRecognizer {
-    UITapGestureRecognizer *tapSingle = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondsToTapSingle:)];
+    SEL selTap = @selector(respondsToTapSingle:);
+    UITapGestureRecognizer *tapSingle = nil;
+    tapSingle = [[UITapGestureRecognizer alloc] initWithTarget:self action:selTap];
     tapSingle.numberOfTapsRequired = 1;
     
-    UITapGestureRecognizer *tapDouble = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondsToTapDouble:)];
+    SEL doubleTap = @selector(respondsToTapSingle:);
+    UITapGestureRecognizer *tapDouble = nil;
+    tapDouble = [[UITapGestureRecognizer alloc] initWithTarget:self action:doubleTap];
     tapDouble.numberOfTapsRequired = 2;
     
-    _recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self  action:@selector(handlePan:)];
+    SEL handle = @selector(handlePan:);
+    _recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self action:handle];
     _recognizer->_direction = DirectionPanGestureRecognizerBottom;
     _recognizer.maximumNumberOfTouches = 1;
     
@@ -195,6 +238,7 @@
 }
 
 /** 滑动 */
+/** 这里采用的判断是 在图片缩小过程中 手指的点始终距离图片的xy顶点是view真实大小(view一直在缩小)的固定比例 */
 - (void)handlePan:(UIPanGestureRecognizer *)recognizer {
     [recognizer.view.superview bringSubviewToFront:recognizer.view];
     CGPoint center = recognizer.view.center;
@@ -268,6 +312,18 @@
         objc_setAssociatedObject(_contentScrollView, @"black",_blackView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     return _blackView;
+}
+
+- (PHLivePhotoView *)livePhotoView {
+    if (@available(iOS 9.1, *)) {
+        if (!_livePhotoView) {
+            _livePhotoView = [[PHLivePhotoView alloc] init];
+            _livePhotoView.userInteractionEnabled = NO;
+            _livePhotoView.contentMode = UIViewContentModeScaleAspectFit;
+            _livePhotoView.muted = WXMPhotoShowLivePhtoMuted;
+        }
+    }
+    return _livePhotoView;
 }
 @end
 

@@ -16,4 +16,5 @@
 
 /** 获取当前image */
 - (UIImage *)currentImage;
+
 @end

@@ -36,6 +36,18 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** 多选是否支持同时选图片和视频 */
 #define WXMPhotoShooseVideo_Photo NO
 
+/** 是否支持播放livephoto */
+#define WXMPhotoShowLivePhto YES
+
+/** livephoto是否静音 */
+#define WXMPhotoShowLivePhtoMuted NO
+
+/** 是否显示GIF标志 */
+#define WXMPhotoShowGIFSign YES
+
+/** 是否显示视频标志 */
+#define WXMPhotoShowVideoSign YES
+
 /** 工具栏颜色 */
 #define WXMPhotoDetailToolbarColor [UIColor whiteColor]
 
@@ -77,12 +89,6 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 /** 手势下拉缩小最小倍数 */
 #define WXMPhotoMinification 0.3
-
-/** 是否显示GIF标志 */
-#define WXMPhotoShowGIFSign YES
-
-/** 是否显示视频标志 */
-#define WXMPhotoShowVideoSign YES
 
 /** 播放按钮大小 */
 #define WXMPhotoVideoSignSize CGSizeMake(70, 70)
