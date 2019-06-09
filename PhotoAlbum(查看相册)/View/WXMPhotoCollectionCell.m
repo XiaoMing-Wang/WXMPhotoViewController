@@ -21,7 +21,6 @@
 
 /** 勾选框  */
 @property (nonatomic, strong) UIButton *chooseButton;
-
 @property (nonatomic, assign) int32_t currentRequestID;
 @end
 
@@ -114,24 +113,16 @@
             UIImage *image = [UIImage imageNamed:@"photo_videoSmall"];
             [self.typeSign setImage:image forState:UIControlStateNormal];
             self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
-            self.typeSign.titleLabel.font = [UIFont systemFontOfSize:12];
+            self.typeSign.titleLabel.font = [UIFont systemFontOfSize:11];
             
         } else if (_photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && WXMPhotoShowGIFSign) {
             
             self.typeSign.hidden = NO;
-            self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:16];
+            self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:15];
             [self.typeSign setTitle:@"  GIF" forState:UIControlStateNormal];
             [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
             self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
         }
-//        else if (_photoAsset.mediaType == WXMPHAssetMediaTypeLivePhoto && WXMPhotoShowLivePhto) {
-//            
-//            self.typeSign.hidden = NO;
-//            self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:16];
-//            [self.typeSign setTitle:@"  LIVE" forState:UIControlStateNormal];
-//            [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
-//            self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-//        }
     });
 }
 
@@ -208,7 +199,6 @@
         _typeSign.titleLabel.font = [UIFont systemFontOfSize:12];
         [_typeSign setTitle:@"" forState:UIControlStateNormal];
         _typeSign.hidden = YES;
-        [_typeSign setImage:[UIImage imageNamed:@"photo_videoOverlay2"] forState:UIControlStateNormal];
     }
     return _typeSign;
 }

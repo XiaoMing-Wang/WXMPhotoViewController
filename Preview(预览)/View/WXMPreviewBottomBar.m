@@ -125,7 +125,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         NSString *text = [NSString stringWithFormat:@"  原图 (%@)",realImageByte];
         if (video) {
-            UIImage *veImage = [UIImage imageNamed:@"photo_videoOverlay23"];
+            UIImage *veImage = [UIImage imageNamed:@"photo_videoOverlay19"];
             [self.originalButton setImage:veImage forState:UIControlStateNormal];
             [self.originalButton setImage:veImage forState:UIControlStateSelected];
             self.originalButton.userInteractionEnabled = NO;
