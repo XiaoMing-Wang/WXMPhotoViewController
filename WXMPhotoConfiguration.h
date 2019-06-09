@@ -34,7 +34,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoShowDetailToolbar YES
 
 /** 多选是否支持同时选图片和视频 */
-#define WXMPhotoShooseVideo_Photo NO
+#define WXMPhotoChooseVideo_Photo NO
 
 /** 是否支持播放livephoto */
 #define WXMPhotoShowLivePhto YES

@@ -96,11 +96,8 @@
     [self signButtonSelected:(signModel != nil)];
     [self wxm_setTypeSignInterface];
     
-    if (showMask == NO) {
-        [self setUserCanTouch:YES animation:NO];
-    } else {
-        [self setUserCanTouch:(signModel != nil) animation:NO];
-    }
+    if (signModel) showMask = NO;
+    [self setUserCanTouch:!showMask animation:NO];
 }
 
 /** 设置显示界面效果 */

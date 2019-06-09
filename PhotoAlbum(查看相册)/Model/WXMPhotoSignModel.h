@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-@class PHAsset;
+#import "WXMPhotoManager.h"
 
 @interface WXMPhotoSignModel : NSObject
 
@@ -24,7 +24,7 @@
 /** rank是动态的 保存的不准确 */
 @property (nonatomic, assign) NSInteger rank;
 
-/** 相片媒介 */
-@property (nonatomic, strong) PHAsset *asset;
+/** 相片类型 */
+@property (nonatomic, assign) WXMPhotoMediaType mediaType;
 @end
 

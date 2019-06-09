@@ -108,10 +108,20 @@
     if (self.photoType == WXMPhotoDetailTypeMultiSelect) {
         NSString *indexString = @(indexPath.row).stringValue;
         WXMPhotoSignModel *signModel = [self.signObj objectForKey:indexString];
+        BOOL showMask = signModel ? NO : self.wxm_showWhiteMasing;
+        if ((!WXMPhotoChooseVideo_Photo &&
+             self.signObj.count < WXMMultiSelectMax
+             && self.signObj.count >= 1)) {
+            showMask = ((signModel.mediaType == WXMPHAssetMediaTypeVideo &&
+                         cell.photoAsset.mediaType != WXMPHAssetMediaTypeVideo) ||
+                        (signModel.mediaType != WXMPHAssetMediaTypeVideo &&
+                         cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo));
+        }
+        
         [cell setDelegate:self
                 indexPath:indexPath
                 signModel:signModel
-                 showMask:self.wxm_showWhiteMasing];
+                 showMask:showMask];
     }
     return cell;
 }
@@ -164,12 +174,13 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         size = CGSizeMake(WXMPhotoPreviewImageWH * 2, WXMPhotoPreviewImageWH * 2);
         [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
             WXMPhotoSignModel *signModel = [self wxm_signModel:indexPath signImage:image];
-            signModel.image = image;
+            signModel.mediaType = phsset.mediaType;
+            
             [self.signObj setObject:signModel forKey:indexString];
             self.toolbar.signObj = self.signObj;
             
             if (self.signObj.count >= WXMMultiSelectMax ||
-                (!WXMPhotoShooseVideo_Photo && self.signObj.count == 1)) {
+                (!WXMPhotoChooseVideo_Photo && self.signObj.count == 1)) {
                 [self wxm_reloadAllAvailableCell];
             }
         }];
@@ -228,16 +239,29 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 /** 刷新所有显示的cell */
 - (void)wxm_reloadAllAvailableCell {
+    self.wxm_showWhiteMasing = NO;
     self.wxm_showWhiteMasing = (self.signObj.count >= WXMMultiSelectMax);
+    if (self.signObj.count >= 1 && !WXMPhotoChooseVideo_Photo) {
+        self.wxm_showWhiteMasing = YES;
+    }
     
     /** visibleCells collectionView新的刷新机制会生成新的cell导致不能刷新 */
     [self.collectionView.subviews enumerateObjectsUsingBlock:^(UIView*obj, NSUInteger idx, BOOL*stop){
         if ([obj isKindOfClass:[WXMPhotoCollectionCell class]]) {
             WXMPhotoCollectionCell * cell = (WXMPhotoCollectionCell *)obj;
             if (self.wxm_showWhiteMasing) {
-                NSString *indexString = @(cell.indexPath.row).stringValue;
-                BOOL use = [self.signObj.allKeys containsObject:indexString];
-                [cell setUserCanTouch:use animation:YES];
+                if (self.signObj.count >= WXMMultiSelectMax) {
+                    NSString *indexString = @(cell.indexPath.row).stringValue;
+                    BOOL use = [self.signObj.allKeys containsObject:indexString];
+                    [cell setUserCanTouch:use animation:YES];
+                } else {
+                    WXMPhotoSignModel *signModel = self.signObj.firstObject;
+                    BOOL canTouch = ((signModel.mediaType == WXMPHAssetMediaTypeVideo &&
+                                      cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo) ||
+                                     (signModel.mediaType != WXMPHAssetMediaTypeVideo &&
+                                      cell.photoAsset.mediaType != WXMPHAssetMediaTypeVideo));
+                    [cell setUserCanTouch:canTouch animation:YES];
+                }
             } else {
                 [cell setUserCanTouch:YES animation:YES];
             }
@@ -287,10 +311,15 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     } else {
         WXMPhotoAsset *phsset = self.dataSource[index];
         WXMPhotoSignModel* signModel = [self wxm_signModel:indexPath signImage:phsset.bigImage];
+        signModel.mediaType = phsset.mediaType;
+        
         [self.signObj setObject:signModel forKey:indexString];
         cell.signModel = signModel;
         [cell signButtonSelected:YES];
         if (self.signObj.count >= WXMMultiSelectMax) [self wxm_reloadAllAvailableCell];
+        if (self.signObj.count == 1 && !WXMPhotoChooseVideo_Photo) {
+            [self wxm_reloadAllAvailableCell];
+        }
     }
     
     self.toolbar.signObj = self.signObj;
@@ -312,7 +341,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         self.sign = NO;
         BOOL isFull = (self.signObj.count >= WXMMultiSelectMax);
         [self.signObj removeObjectForKey:@(index.row).stringValue];
-        if (isFull) [self wxm_reloadAllAvailableCell];
+        if ((self.signObj.count == 0 && !WXMPhotoChooseVideo_Photo) || isFull) {
+            [self wxm_reloadAllAvailableCell];
+        }
         [self wxm_signDictionarySorting];
     }
     
