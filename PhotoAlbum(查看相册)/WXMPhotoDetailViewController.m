@@ -36,7 +36,6 @@
 
 @property (nonatomic, assign) BOOL sign;
 @property (nonatomic, assign) BOOL preview;
-@property (nonatomic, assign) BOOL wxm_showWhiteMasing;
 
 @end
 
@@ -106,37 +105,15 @@
     if (self.photoType == WXMPhotoDetailTypeMultiSelect) {
         NSString *indexString = @(indexPath.row).stringValue;
         WXMPhotoSignModel *signModel = [self.signObj objectForKey:indexString];
-        BOOL showMask = signModel ? NO : self.wxm_showWhiteMasing;
-        if ((!WXMPhotoChooseVideo_Photo &&
-             self.signObj.count < WXMMultiSelectMax
-             && self.signObj.count >= 1)) {
-            showMask = ((signModel.mediaType == WXMPHAssetMediaTypeVideo &&
-                         cell.photoAsset.mediaType != WXMPHAssetMediaTypeVideo) ||
-                        (signModel.mediaType != WXMPHAssetMediaTypeVideo &&
-                         cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo));
-        }
-        
-        [cell setDelegate:self
-                indexPath:indexPath
-                signModel:signModel
-                 showMask:showMask];
+        BOOL canUser = [self wxm_judgeCellCanTouch:cell index:indexPath];
+        [cell setDelegate:self indexPath:indexPath signModel:signModel canTouch:canUser];
     }
     return cell;
 }
 
-/** 是否显示maskview */
-- (BOOL)wxm_whetherMaskWithIndexPath:(NSIndexPath *)indexPath {
-    
-    
-    return NO;
-}
-
-
-
 /** 点击事件 */
 - (void)collectionView:(UICollectionView *)collectionView
 didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-    
     
     WXMPhotoManager * man = [WXMPhotoManager sharedInstance];
     WXMPhotoAsset *phsset = self.dataSource[indexPath.row];
@@ -146,7 +123,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     CGSize size = CGSizeZero;
     PHAsset *asset = phsset.asset;
     NSString *indexString = @(indexPath.row).stringValue;
-    BOOL respond = (self.signObj.count < WXMMultiSelectMax);
     
     /** 单选原图 + 单选256 */
     if (_photoType == WXMPhotoDetailTypeGetPhoto || _photoType == WXMPhotoDetailTypeGetPhoto_256) {
@@ -196,7 +172,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
     /** 先同步获取大图 否则跳界面会闪 */
     if (_photoType == WXMPhotoDetailTypeMultiSelect && !self.sign) {
-        if (respond == NO && cell.userCanTouch == NO && !self.preview) return;
+        if (cell.userCanTouch == NO && !self.preview) return;
         size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
         [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
             WXMPhotoPreviewController *preview = [self wxm_getPreviewController:indexPath];
@@ -243,49 +219,31 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 /** 刷新所有显示的cell */
 - (void)wxm_reloadAllAvailableCell {
-    self.wxm_showWhiteMasing = NO;
-    if (self.chooseType == WXMPHAssetMediaTypeImage) {
-        if (!WXMPhotoChooseVideo_Photo) self.wxm_showWhiteMasing = YES;
-        else self.wxm_showWhiteMasing = (self.signObj.count >= WXMMultiSelectMax);
-    } else if (self.chooseType == WXMPHAssetMediaTypeVideo) {
-        if (!WXMPhotoChooseVideo_Photo) self.wxm_showWhiteMasing = YES;
-        else self.wxm_showWhiteMasing = (self.signObj.count >= WXMMultiSelectVideoMax);
-    } else if (self.chooseType == WXMPHAssetMediaTypeNone) {
-        self.wxm_showWhiteMasing = NO;
-    }
-   
     /** visibleCells collectionView新的刷新机制会生成新的cell导致不能刷新 */
     [self.collectionView.subviews enumerateObjectsUsingBlock:^(UIView*obj, NSUInteger idx, BOOL*stop){
         if ([obj isKindOfClass:[WXMPhotoCollectionCell class]]) {
             WXMPhotoCollectionCell * cell = (WXMPhotoCollectionCell *)obj;
-            if (self.wxm_showWhiteMasing) {
-                if (self.signObj.count >= WXMMultiSelectMax) {
-                    NSString *indexString = @(cell.indexPath.row).stringValue;
-                    BOOL use = [self.signObj.allKeys containsObject:indexString];
-                    [cell setUserCanTouch:use animation:YES];
-                } else {
-                    WXMPhotoSignModel *signModel = self.signObj.firstObject;
-                    BOOL canTouch = ((signModel.mediaType == WXMPHAssetMediaTypeVideo &&
-                                      cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo) ||
-                                     (signModel.mediaType != WXMPHAssetMediaTypeVideo &&
-                                      cell.photoAsset.mediaType != WXMPHAssetMediaTypeVideo));
-                    [cell setUserCanTouch:canTouch animation:YES];
-                }
-            } else {
-                [cell setUserCanTouch:YES animation:YES];
-            }
+            BOOL canUse = [self wxm_judgeCellCanTouch:cell index:cell.indexPath];
+            [cell setUserCanTouch:canUse animation:YES];
         }
-    }];    
+    }];
 }
 
 /** 判断是否显示白色遮罩 */
-- (BOOL)wxm_reloadCellWithCell:(WXMPhotoCollectionCell *)cell indexPath:(NSIndexPath *)indexPath {
-    
-    
-    return NO;
+- (BOOL)wxm_judgeCellCanTouch:(WXMPhotoCollectionCell *)cell index:(NSIndexPath *)index {
+    NSInteger count = self.signObj.count;
+    NSString *indexString = @(index.row).stringValue;
+    if (count <= 0) return YES;
+    if ([self.signObj.allKeys containsObject:indexString]) return YES;
+    if (self.chooseType == WXMPHAssetMediaTypeVideo) {
+        if (count >= WXMMultiSelectVideoMax) return NO;
+        return (cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo);
+    } else {
+        if (count >= WXMMultiSelectMax) return NO;
+        return (cell.photoAsset.mediaType != WXMPHAssetMediaTypeVideo);
+    }
+    return YES;
 }
-
-
 
 /** 生成标记对象 */
 - (WXMPhotoSignModel *)wxm_signModel:(NSIndexPath *)idx signImage:(UIImage *)image {
@@ -369,6 +327,26 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     return self.signObj.allKeys.count;
 }
 
+/** 不能点击回调 */
+- (void)wxm_cantTouchWXMPhotoSignView {
+    NSString * title = @"";
+    NSInteger count = self.signObj.count;
+    if (self.chooseType == WXMPHAssetMediaTypeVideo) {
+        if (count < WXMMultiSelectVideoMax) title = @"选择视频时不能选择图片";
+        else title = [NSString stringWithFormat:@"您最多可以选择%d个视频",WXMMultiSelectVideoMax];
+    } else {
+        if (count < WXMMultiSelectMax) title = @"选择图片时不能选择视频";
+        else  title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
+    }
+    
+    if (title.length <= 1) return;
+    [WXMPhotoAssistant showAlertViewControllerWithTitle:title
+                                                message:@""
+                                                 cancel:@"知道了"
+                                            otherAction:nil
+                                          completeBlock:nil];
+}
+
 /** 取消一个后面的需要重新排序 */
 - (void)wxm_signDictionarySorting {
     [self.signObj enumerateKeysAndObjectsUsingBlock:^(NSString *key,WXMPhotoSignModel *obj,BOOL *stop) {
@@ -389,7 +367,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     }
 }
 
-/**  */
+/** 返回 */
 - (void)dismissViewController {
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }

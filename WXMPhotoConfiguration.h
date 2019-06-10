@@ -122,6 +122,7 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 /** 点击标记Sign选中view回调 WXMPhotoDetailTypeMultiSelect模式 */
 @protocol WXMPhotoSignProtocol <NSObject>
 - (NSInteger)touchWXMPhotoSignView:(NSIndexPath *)index selected:(BOOL)selected;
+- (void)wxm_cantTouchWXMPhotoSignView;
 @end
 
 /** 预览缩放cell回调 */

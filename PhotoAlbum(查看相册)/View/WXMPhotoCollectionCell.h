@@ -16,6 +16,7 @@
 @property (nonatomic, assign) BOOL showVideo;
 @property (nonatomic, assign) BOOL userCanTouch;
 @property (nonatomic, strong) NSIndexPath *indexPath;
+@property (nonatomic, strong) NSString *warningString;
 
 @property (nonatomic, strong) WXMPhotoAsset *photoAsset;
 @property (nonatomic, strong) WXMPhotoSignModel *signModel;
@@ -35,6 +36,6 @@
 - (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
           indexPath:(NSIndexPath *)indexPath
           signModel:(WXMPhotoSignModel *)signModel
-           showMask:(BOOL)showMask;
+           canTouch:(BOOL)canTouch;
 
 @end

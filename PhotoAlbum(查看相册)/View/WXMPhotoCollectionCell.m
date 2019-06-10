@@ -87,7 +87,7 @@
 - (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
           indexPath:(NSIndexPath *)indexPath
           signModel:(WXMPhotoSignModel *)signModel
-           showMask:(BOOL)showMask {
+           canTouch:(BOOL)canTouch {
     
     _delegate = delegate;
     _indexPath = indexPath;
@@ -95,35 +95,33 @@
     [self signButtonSelected:(signModel != nil)];
     [self wxm_setTypeSignInterface];
     
-    if (signModel != nil) showMask = NO;
-    [self setUserCanTouch:!showMask animation:NO];
+    if (signModel != nil) canTouch = YES;
+    [self setUserCanTouch:canTouch animation:NO];
 }
 
 /** 设置显示界面效果 */
 - (void)wxm_setTypeSignInterface {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        self.typeSign.hidden = YES;
-        [self.contentView bringSubviewToFront:self.typeSign];
+    self.typeSign.hidden = YES;
+    [self.contentView bringSubviewToFront:self.typeSign];
+    
+    if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo && WXMPhotoShowVideoSign) {
+        self.typeSign.hidden = (!self.showVideo);
+        NSString * duration = [NSString stringWithFormat:@"  %@",_photoAsset.videoDrantion];
+        [self.typeSign setTitle:duration forState:UIControlStateNormal];
         
-        if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo && WXMPhotoShowVideoSign) {
-            self.typeSign.hidden = (!self.showVideo);
-            NSString * duration = [NSString stringWithFormat:@"  %@",_photoAsset.videoDrantion];
-            [self.typeSign setTitle:duration forState:UIControlStateNormal];
-            
-            UIImage *image = [UIImage imageNamed:@"photo_videoSmall"];
-            [self.typeSign setImage:image forState:UIControlStateNormal];
-            self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
-            self.typeSign.titleLabel.font = [UIFont systemFontOfSize:11];
-            
-        } else if (_photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && WXMPhotoShowGIFSign) {
-            
-            self.typeSign.hidden = NO;
-            self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:15];
-            [self.typeSign setTitle:@"  GIF" forState:UIControlStateNormal];
-            [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
-            self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-        }
-    });
+        UIImage *image = [UIImage imageNamed:@"photo_videoSmall"];
+        [self.typeSign setImage:image forState:UIControlStateNormal];
+        self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+        self.typeSign.titleLabel.font = [UIFont systemFontOfSize:11];
+        
+    } else if (_photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && WXMPhotoShowGIFSign) {
+        
+        self.typeSign.hidden = NO;
+        self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:15];
+        [self.typeSign setTitle:@"  GIF" forState:UIControlStateNormal];
+        [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
+        self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    }
 }
 
 /** 设置button选中 */
@@ -150,7 +148,7 @@
     [self setAnimation];
 
     /** 设置第几个选中 */
-    if (self.delegate && [self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
+    if (self.delegate&&[self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
         BOOL selected = _chooseButton.selected;
         NSInteger count = [self.delegate touchWXMPhotoSignView:_indexPath selected:selected];
         
@@ -174,12 +172,9 @@
 
 /** 提示框 */
 - (void)wxm_showAlertController {
-    NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
-    [WXMPhotoAssistant showAlertViewControllerWithTitle:title
-                                                message:@""
-                                                 cancel:@"知道了"
-                                            otherAction:nil
-                                          completeBlock:nil];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_cantTouchWXMPhotoSignView)]){
+        [self.delegate wxm_cantTouchWXMPhotoSignView];
+    }
 }
 
 /** 刷新标号排名 */
