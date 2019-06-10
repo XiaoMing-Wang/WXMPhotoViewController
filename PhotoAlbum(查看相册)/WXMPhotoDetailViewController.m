@@ -160,8 +160,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             
             [self.signObj setObject:signModel forKey:indexString];
             self.toolbar.signObj = self.signObj;
-            
-            if (self.signObj.count >= WXMMultiSelectMax ||
+            NSInteger maxCount = WXMMultiSelectMax;
+            if (self.chooseType == WXMPHAssetMediaTypeVideo) maxCount = WXMMultiSelectVideoMax;
+            if (self.signObj.count >= maxCount ||
                 (!WXMPhotoChooseVideo_Photo && self.signObj.count == 1)) {
                 [self wxm_reloadAllAvailableCell];
             }
@@ -315,7 +316,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     /** 取消勾选一个 */
     } else {
         self.sign = NO;
-        BOOL isFull = (self.signObj.count >= WXMMultiSelectMax);
+        NSInteger maxCount = WXMMultiSelectMax;
+        if (self.chooseType == WXMPHAssetMediaTypeVideo) maxCount =  WXMMultiSelectVideoMax;
+        BOOL isFull = (self.signObj.count >= maxCount);
         [self.signObj removeObjectForKey:@(index.row).stringValue];
         if ((self.signObj.count == 0 && !WXMPhotoChooseVideo_Photo) || isFull) {
             [self wxm_reloadAllAvailableCell];
