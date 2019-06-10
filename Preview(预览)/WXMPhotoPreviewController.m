@@ -222,10 +222,21 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 
 /** 上工具栏回调 */
 - (void)wxm_touchTopRightItem:(WXMPhotoSignModel *)obj {
-    if (self.signObj.count >= WXMMultiSelectMax && !obj) {
-        [self wxm_showAlertController];
+    WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
+    if (asset.mediaType != self.chooseType && self.signObj.count > 0) return;
+    NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
+    NSInteger maxCount = WXMMultiSelectMax;
+    if (self.chooseType == WXMPHAssetMediaTypeVideo) {
+        maxCount = WXMMultiSelectVideoMax;
+        title = [NSString stringWithFormat:@"您最多可以选择%d个视频",WXMMultiSelectVideoMax];
+    }
+    
+    if (self.signObj.count >= maxCount && !obj) {
+        [self wxm_showAlertController:title];
         return;
     }
+    
+    
     
     /** 勾选回掉 */
     if (self.signCallback)  {
@@ -303,6 +314,18 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 /** 回调多张图片 */
 - (void)wxm_morePhotoSendImage {
     
+}
+
+/** 目前选中的资源的类型 */
+- (WXMPhotoMediaType)chooseType {
+    if (self.signObj.count == 0) return WXMPHAssetMediaTypeNone;
+    if (self.signObj.count > 0) {
+        WXMPhotoSignModel * signModel = self.signObj.firstObject;
+        if (signModel.mediaType == WXMPHAssetMediaTypeVideo) {
+            return WXMPHAssetMediaTypeVideo;
+        }
+    }
+    return WXMPHAssetMediaTypeImage;
 }
 
 #pragma mark 设置
@@ -398,8 +421,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 }
 
 /** 提示框 */
-- (void)wxm_showAlertController {
-    NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
+- (void)wxm_showAlertController:(NSString *)title {
     [WXMPhotoAssistant showAlertViewControllerWithTitle:title message:@"" cancel:@"知道了"
                                             otherAction:nil completeBlock:nil];
 }
