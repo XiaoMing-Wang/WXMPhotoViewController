@@ -274,7 +274,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 - (WXMDictionary_Array *)previewCallBack:(NSInteger)index {
     NSString *indexString = @(index).stringValue;
     NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
-    BOOL isFull = (self.signObj.count >= WXMMultiSelectMax);
+    NSInteger maxCount = WXMMultiSelectMax;
+    if (self.chooseType == WXMPHAssetMediaTypeVideo) maxCount =  WXMMultiSelectVideoMax;
+    BOOL isFull = (self.signObj.count >= maxCount);
     WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)[self.collectionView cellForItemAtIndexPath:indexPath];
     
     /** 取消选中 */
@@ -283,6 +285,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [cell signButtonSelected:NO];
         [self wxm_signDictionarySorting];              /** 重新排名 */
         if (isFull) [self wxm_reloadAllAvailableCell]; /** 刷新遮罩 */
+        if (self.signObj.count == 0 && !WXMPhotoChooseVideo_Photo) {
+            [self wxm_reloadAllAvailableCell];
+        }
         
     /** 选中 */
     } else {
@@ -293,10 +298,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [self.signObj setObject:signModel forKey:indexString];
         cell.signModel = signModel;
         [cell signButtonSelected:YES];
-        if (self.signObj.count >= WXMMultiSelectMax) [self wxm_reloadAllAvailableCell];
+        if (self.signObj.count >= maxCount) [self wxm_reloadAllAvailableCell];
         if (self.signObj.count == 1 && !WXMPhotoChooseVideo_Photo) {
             [self wxm_reloadAllAvailableCell];
         }
+        
     }
     
     self.toolbar.signObj = self.signObj;

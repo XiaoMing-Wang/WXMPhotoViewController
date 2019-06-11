@@ -229,7 +229,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
     BOOL isVideo = (self.chooseType == WXMPHAssetMediaTypeVideo);
     BOOL assetVideo = (asset.mediaType == WXMPHAssetMediaTypeVideo);
-    if ((isVideo != assetVideo)) {
+    if ((isVideo != assetVideo) && self.chooseType != WXMPHAssetMediaTypeNone) {
         return;
     }
     

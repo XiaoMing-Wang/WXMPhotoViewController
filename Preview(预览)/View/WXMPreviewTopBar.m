@@ -38,11 +38,12 @@
     _promptLabel.textColor = [UIColor whiteColor];
     _promptLabel.backgroundColor = self.backgroundColor;
     _promptLabel.numberOfLines = 1;
-    /** _promptLabel.hidden = YES; */
+    _promptLabel.hidden = YES;
     
     _line = [UIView new];
     _line.frame = CGRectMake(5, WXMPhoto_BarHeight, WXMPhoto_Width, 0.75);
     _line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.2];
+    _line.hidden = YES;
     [self addSubview:_promptLabel];
     [self addSubview:_line];
 }
@@ -62,6 +63,8 @@
 /** 目前选中的是那种资源 video image no三种 */
 - (void)setChooseType:(WXMPhotoMediaType)chooseType assetType:(WXMPhotoMediaType)assetType {
     self.line.hidden = self.promptLabel.hidden = YES;
+    if (chooseType == WXMPHAssetMediaTypeNone) return;
+    
     BOOL isVideo = (chooseType == WXMPHAssetMediaTypeVideo);
     BOOL assetVideo = (assetType == WXMPHAssetMediaTypeVideo);
     if (isVideo) {
