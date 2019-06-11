@@ -212,6 +212,10 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     NSString * indexString = @(location).stringValue;
     self.topBarView.signModel = [self.signObj objectForKey:indexString];
     self.bottomBarView.seletedIdx = location;
+    if (WXMPhotoChooseVideo_Photo == NO) {
+        WXMPhotoAsset *asset = self.dataSource[location];
+        [self.topBarView setChooseType:self.chooseType assetType:asset.mediaType];
+    }
 }
 
 /** 上工具栏回调 */
@@ -223,7 +227,12 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 /** 上工具栏回调 */
 - (void)wxm_touchTopRightItem:(WXMPhotoSignModel *)obj {
     WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
-    if (asset.mediaType != self.chooseType && self.signObj.count > 0) return;
+    BOOL isVideo = (self.chooseType == WXMPHAssetMediaTypeVideo);
+    BOOL assetVideo = (asset.mediaType == WXMPHAssetMediaTypeVideo);
+    if ((isVideo != assetVideo)) {
+        return;
+    }
+    
     NSString *title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
     NSInteger maxCount = WXMMultiSelectMax;
     if (self.chooseType == WXMPHAssetMediaTypeVideo) {
@@ -235,8 +244,6 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         [self wxm_showAlertController:title];
         return;
     }
-    
-    
     
     /** 勾选回掉 */
     if (self.signCallback)  {

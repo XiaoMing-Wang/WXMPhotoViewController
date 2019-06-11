@@ -9,8 +9,10 @@
 #import "WXMPhotoConfiguration.h"
 #import "WXMPreviewTopBar.h"
 @interface WXMPreviewTopBar ()
-@property(nonatomic, strong) UIButton *leftButton;
-@property(nonatomic, strong) UIButton *rightButton;
+@property (nonatomic, strong) UILabel *promptLabel;
+@property (nonatomic, strong) UIView * line;
+@property (nonatomic, strong) UIButton *leftButton;
+@property (nonatomic, strong) UIButton *rightButton;
 @end
 @implementation WXMPreviewTopBar
 
@@ -21,12 +23,28 @@
 
 /** 初始化界面 */
 - (void)setupInterface {
+    self.clipsToBounds = NO;
     self.userInteractionEnabled = YES;
     self.frame = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_BarHeight);
-    self.backgroundColor = WXMPhoto_RGBColor(33, 33, 33);
+    self.backgroundColor = [WXMPhoto_RGBColor(33, 33, 33) colorWithAlphaComponent:0.9];
 
     [self addSubview:self.leftButton];
     [self addSubview:self.rightButton];
+    
+    _promptLabel = [[UILabel alloc] init];
+    _promptLabel.frame = CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, 40);
+    _promptLabel.text = @"   选择视频时不能选择图片";
+    _promptLabel.font = [UIFont systemFontOfSize:12];
+    _promptLabel.textColor = [UIColor whiteColor];
+    _promptLabel.backgroundColor = self.backgroundColor;
+    _promptLabel.numberOfLines = 1;
+    /** _promptLabel.hidden = YES; */
+    
+    _line = [UIView new];
+    _line.frame = CGRectMake(5, WXMPhoto_BarHeight, WXMPhoto_Width, 0.75);
+    _line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.2];
+    [self addSubview:_promptLabel];
+    [self addSubview:_line];
 }
 
 /** 设置左按钮是否显示 */
@@ -39,6 +57,20 @@
 - (void)setShowRightButton:(BOOL)showRightButton  {
     _showRightButton = showRightButton;
     _rightButton.hidden = !_showRightButton;
+}
+
+/** 目前选中的是那种资源 video image no三种 */
+- (void)setChooseType:(WXMPhotoMediaType)chooseType assetType:(WXMPhotoMediaType)assetType {
+    self.line.hidden = self.promptLabel.hidden = YES;
+    BOOL isVideo = (chooseType == WXMPHAssetMediaTypeVideo);
+    BOOL assetVideo = (assetType == WXMPHAssetMediaTypeVideo);
+    if (isVideo) {
+        self.line.hidden = self.promptLabel.hidden = assetVideo;
+        self.promptLabel.text = @"   选择视频时不能选择图片";
+    } else {
+        self.line.hidden = self.promptLabel.hidden = !assetVideo;
+        self.promptLabel.text = @"   选择图片时不能选择视频";
+    }
 }
 
 /**  */

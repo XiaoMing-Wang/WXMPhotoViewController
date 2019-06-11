@@ -20,4 +20,6 @@
 /** 显示隐藏 */
 - (void)setAccordingState:(BOOL)state;
 
+/** 目前选中的是那种资源 video image no三种 */
+- (void)setChooseType:(WXMPhotoMediaType)chooseType assetType:(WXMPhotoMediaType)assetType;
 @end

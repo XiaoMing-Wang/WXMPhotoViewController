@@ -11,7 +11,7 @@
 
 /** 资源种类 */
 typedef enum {
-    WXMPHAssetMediaTypeImage,
+    WXMPHAssetMediaTypeImage = 0,
     WXMPHAssetMediaTypeLivePhoto,
     WXMPHAssetMediaTypePhotoGif,
     WXMPHAssetMediaTypeVideo,
