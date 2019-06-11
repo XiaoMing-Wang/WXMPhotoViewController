@@ -9,6 +9,10 @@
 #import "WXMPreviewBottomBar.h"
 #import "WXMPhotoSignModel.h"
 
+@interface WXMPhotoPreviewCollectionCell : UICollectionViewCell
+@property (nonatomic, strong) UIImageView *contontImageView;
+@property (nonatomic, strong) UIImageView *iconImageView;
+@end
 @interface WXMPreviewBottomBar ()<UICollectionViewDelegate,UICollectionViewDataSource>
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) UIView *photoView;
@@ -146,16 +150,16 @@
     NSString *title = signObj.count?[NSString stringWithFormat:@"完成(%ld)",signObj.count]:@"完成";
     [self.finishButton setTitle:title forState:UIControlStateNormal];
     [UIView animateWithDuration:((idx > 0) ? 0.5 : 0) animations:^{
-        _line.alpha = (signObj.count > 0);
-        _photoView.alpha = (signObj.count > 0);
+        self.line.alpha = (signObj.count > 0);
+        self.photoView.alpha = (signObj.count > 0);
     }];
     
     if (idx == -1) {
         [self.collectionView reloadData];
         
     } else if (idx == 0) {
-        UICollectionViewCell *lastCell = [self.collectionView cellForItemAtIndexPath:_lastIndexPath];
-        [lastCell viewWithTag:10086].layer.borderColor = [UIColor clearColor].CGColor;
+        WXMPhotoPreviewCollectionCell *lastCell = (WXMPhotoPreviewCollectionCell *)[self.collectionView cellForItemAtIndexPath:_lastIndexPath];;
+        lastCell.contontImageView.layer.borderColor = [UIColor clearColor].CGColor;
         UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
         
         NSInteger changeRow = MAX((signObj.count - 1), 0);
@@ -191,19 +195,15 @@
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
-    UIImageView * content = [cell.contentView viewWithTag:10086];
-    if (!content) {
-        content = [self createImageView];
-        [cell.contentView addSubview:content];
-    }
-    
+    WXMPhotoPreviewCollectionCell *cell = nil;
+    cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
     WXMPhotoSignModel * signModel = [self.signObj objectAtIndex:indexPath.row];
-    content.image = signModel.image;
-    content.layer.borderColor = [UIColor clearColor].CGColor;
+    
+    cell.contontImageView.image = signModel.image;
+    cell.contontImageView.layer.borderColor = [UIColor clearColor].CGColor;
     if (self.seletedIdx == signModel.indexPath.row) {
         self.lastIndexPath = indexPath;
-        content.layer.borderColor = WXMSelectedColor.CGColor;
+        cell.contontImageView.layer.borderColor = WXMSelectedColor.CGColor;
     }
     return cell;
 }
@@ -263,20 +263,38 @@
         _collectionView.alwaysBounceVertical = NO;
         _collectionView.alwaysBounceHorizontal = YES;
         _collectionView.contentInset = UIEdgeInsetsMake(0, 10, 0, 10);
-        [_collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"cell"];
+        [_collectionView registerClass:[WXMPhotoPreviewCollectionCell class] forCellWithReuseIdentifier:@"cell"];
     }
     return _collectionView;
 }
 
 /** 创建预览imageview */
-- (UIImageView *)createImageView {
-    UIImageView * imageView = [[UIImageView alloc] initWithFrame:CGRectZero];
-    imageView.clipsToBounds = YES;
-    imageView.size = CGSizeMake(WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
-    imageView.layer.borderWidth = 1.5;
-    imageView.contentMode = UIViewContentModeScaleAspectFill;
-    imageView.layer.borderColor = [UIColor clearColor].CGColor;
-    imageView.tag = 10086;
-    return imageView;
+//- (UIImageView *)createImageView {
+//    UIImageView * imageView = [[UIImageView alloc] initWithFrame:CGRectZero];
+//    imageView.clipsToBounds = YES;
+//    imageView.size = CGSizeMake(WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
+//    imageView.layer.borderWidth = 1.5;
+//    imageView.contentMode = UIViewContentModeScaleAspectFill;
+//    imageView.layer.borderColor = [UIColor clearColor].CGColor;
+//    imageView.tag = 10086;
+//    return imageView;
+//}
+@end
+
+@implementation WXMPhotoPreviewCollectionCell
+
+- (instancetype)initWithFrame:(CGRect)frame {
+    if (self = [super initWithFrame:frame]) [self setupInterface];
+    return self;
 }
+- (void)setupInterface {
+    _contontImageView = [[UIImageView alloc] initWithFrame:CGRectZero];
+    _contontImageView.clipsToBounds = YES;
+    _contontImageView.size = CGSizeMake(WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
+    _contontImageView.layer.borderWidth = 1.5;
+    _contontImageView.contentMode = UIViewContentModeScaleAspectFill;
+    _contontImageView.layer.borderColor = [UIColor clearColor].CGColor;
+    [self.contentView addSubview:_contontImageView];
+}
+
 @end
