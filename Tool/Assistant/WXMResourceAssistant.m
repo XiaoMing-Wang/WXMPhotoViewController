@@ -22,6 +22,7 @@
           coverImage:(UIImage *)coverImage
             delegate:(id<WXMPhotoProtocol>)delegate
          isShowVideo:(BOOL)isShowVideo
+          isShowLoad:(BOOL)isShowLoad
       viewController:(UIViewController *)controller {
     
     if (delegate == nil) return;
@@ -34,7 +35,7 @@
         } else {
             
             controller.view.userInteractionEnabled = NO;
-            [WXMPhotoAssistant wxm_showLoadingView:controller.view];
+            if (isShowLoad) [WXMPhotoAssistant wxm_showLoadingView:controller.view];
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0),^{
                 NSData *data = UIImageJPEGRepresentation(coverImage, 0.75);
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -51,12 +52,14 @@
            coverSize:(CGSize)coverSize
             delegate:(id<WXMPhotoProtocol>)delegate
          isShowVideo:(BOOL)isShowVideo
+          isShowLoad:(BOOL)isShowLoad
       viewController:(UIViewController *)controller {
     [WXMManager getPicturesByAsset:asset.asset  synchronous:YES original:NO assetSize:coverSize resizeMode:PHImageRequestOptionsResizeModeExact deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat completion:^(UIImage *image) {
         [self sendResource:asset
                 coverImage:image
                   delegate:delegate
                isShowVideo:isShowVideo
+                isShowLoad:isShowLoad
             viewController:controller];
     }];
 }

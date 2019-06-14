@@ -26,6 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
           coverImage:(UIImage *)coverImage
             delegate:(id<WXMPhotoProtocol>)delegate
          isShowVideo:(BOOL)isShowVideo
+          isShowLoad:(BOOL)isShowLoad
       viewController:(UIViewController *)controller;
 
 /**  */
@@ -33,6 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
            coverSize:(CGSize)coverSize
             delegate:(id<WXMPhotoProtocol>)delegate
          isShowVideo:(BOOL)isShowVideo
+          isShowLoad:(BOOL)isShowLoad
       viewController:(UIViewController *)controller;
 
 

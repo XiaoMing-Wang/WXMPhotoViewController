@@ -382,6 +382,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                             coverImage:image
                               delegate:self.delegate
                            isShowVideo:self.showVideo
+                            isShowLoad:(self.photoType == WXMPhotoDetailTypeGetPhoto)
                         viewController:self.navigationController];
 }
 

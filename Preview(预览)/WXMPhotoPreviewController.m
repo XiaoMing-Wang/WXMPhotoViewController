@@ -294,6 +294,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
                                  coverSize:size
                                   delegate:self.delegate
                                isShowVideo:self.showVideo
+                                isShowLoad:(self.photoType == WXMPhotoDetailTypeGetPhoto)
                             viewController:self.navigationController];
     }
 }
