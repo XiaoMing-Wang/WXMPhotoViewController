@@ -25,13 +25,15 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)sendResource:(WXMPhotoAsset *)asset
           coverImage:(UIImage *)coverImage
             delegate:(id<WXMPhotoProtocol>)delegate
-         isShowVideo:(BOOL)isShowVideo;
+         isShowVideo:(BOOL)isShowVideo
+      viewController:(UIViewController *)controller;
 
 /**  */
 + (void)sendResource:(WXMPhotoAsset *)asset
            coverSize:(CGSize)coverSize
             delegate:(id<WXMPhotoProtocol>)delegate
-         isShowVideo:(BOOL)isShowVideo;
+         isShowVideo:(BOOL)isShowVideo
+      viewController:(UIViewController *)controller;
 
 
 + (void)sendCoverImage:(UIImage *)coverImage delegate:(id<WXMPhotoProtocol>)delegate;

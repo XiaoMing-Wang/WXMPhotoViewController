@@ -275,7 +275,6 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     } else if (_previewType == WXMPhotoPreviewTypeMost) {
         [self wxm_morePhotoSendImage];
     }
-    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark --------------------- 回调图片
@@ -294,7 +293,8 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         [WXMResourceAssistant sendResource:asset
                                  coverSize:size
                                   delegate:self.delegate
-                               isShowVideo:self.showVideo];
+                               isShowVideo:self.showVideo
+                            viewController:self.navigationController];
     }
 }
 

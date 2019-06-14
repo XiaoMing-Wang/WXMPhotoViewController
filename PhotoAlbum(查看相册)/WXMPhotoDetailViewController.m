@@ -381,8 +381,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [WXMResourceAssistant sendResource:asset
                             coverImage:image
                               delegate:self.delegate
-                           isShowVideo:self.showVideo];
-    [self dismissViewController];
+                           isShowVideo:self.showVideo
+                        viewController:self.navigationController];
 }
 
 /** 返回 */

@@ -14,6 +14,21 @@
 @implementation WXMPhotoAssistant
 static char wxm_Photoline;
 
+/** loadingView */
++ (void)wxm_showLoadingView:(UIView *)supView {
+    UIView *hud = [UIView new];
+    hud.frame = CGRectMake(0, 0, 78, 78);
+    hud.backgroundColor = [UIColor colorWithRed:23/255. green:23/255. blue:23/255. alpha:0.90];
+    hud.clipsToBounds = YES;
+    hud.layer.cornerRadius = 6;
+    UIActivityIndicatorView *indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    [indicator startAnimating];
+    indicator.center = CGPointMake(hud.width / 2, hud.height / 2);
+    hud.center = CGPointMake(supView.width / 2, supView.height / 2);
+    [hud addSubview:indicator];
+    [supView addSubview:hud];
+}
+
 /** 根据颜色回执图片 */
 + (UIImage *)wxmPhoto_imageWithColor:(UIColor *)color {
     CGRect rect = CGRectMake(0, 0, 1, 1);

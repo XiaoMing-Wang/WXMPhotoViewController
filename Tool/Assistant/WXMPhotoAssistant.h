@@ -12,6 +12,9 @@
 
 @interface WXMPhotoAssistant : NSObject
 
+/** loadingView */
++ (void)wxm_showLoadingView:(UIView *)supView;
+
 /** 根据颜色绘制图片 */
 + (UIImage *)wxmPhoto_imageWithColor:(UIColor *)color;
 
