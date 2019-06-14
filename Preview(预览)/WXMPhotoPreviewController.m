@@ -12,6 +12,7 @@
 #import "WXMPreviewBottomBar.h"
 #import "WXMPhotoTransitions.h"
 #import "WXMPhotoVideoCell.h"
+#import "WXMResourceAssistant.h"
 
 @interface WXMPhotoPreviewController ()
 <UICollectionViewDelegate, UICollectionViewDataSource,WXMPreviewCellProtocol,
@@ -269,12 +270,12 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 
 /** 完成按钮 */
 - (void)wxm_touchButtomFinsh {
-    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
     if (_previewType == WXMPhotoPreviewTypeSingle) {
         [self wxm_singlePhotoSendImage];
     } else if (_previewType == WXMPhotoPreviewTypeMost) {
         [self wxm_morePhotoSendImage];
     }
+    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark --------------------- 回调图片
@@ -282,37 +283,18 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 /** 回调单张图片 */
 - (void)wxm_singlePhotoSendImage {
     WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
-    WXMPhotoManager * man = [WXMPhotoManager sharedInstance];
-    CGSize size = CGSizeZero;
-    if (!self.bottomBarView.isOriginalImage) {
-        size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * 2 * asset.aspectRatio);
-        if (!CGSizeEqualToSize(WXMDefaultSize, CGSizeZero)) size = WXMDefaultSize;
-    }
-    
-    void (^resultBlocks)(UIImage*) = ^(UIImage * image) {
-        SEL singleSEL = @selector(wxm_singlePhotoAlbumWithImage:);
-        if (self.results) self.results(image);
-        if (self.delegate && [self.delegate respondsToSelector:singleSEL]) {
-            [self.delegate wxm_singlePhotoAlbumWithImage:image];
-        }
-    };
-    
-    /** 256 * 256 */
-    if (_photoType == WXMPhotoDetailTypeGetPhoto_256) {
-        size = CGSizeMake(256, 256);
-        [man getPicturesByAsset:asset.asset synchronous:YES original:NO assetSize:size
-                     resizeMode:PHImageRequestOptionsResizeModeExact
-                   deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
-                     completion:^(UIImage *AssetImage) {
-                         resultBlocks(AssetImage);
-                     }];
-    }
-    
-    /** 单选大图 */
-    if (_photoType == WXMPhotoDetailTypeGetPhoto) {
-        [man wxm_synchronousGetPictures:asset.asset size:size completion:^(UIImage *image) {
-            resultBlocks(image);
-        }];
+    if (self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
+        self.photoType == WXMPhotoDetailTypeGetPhoto ||
+        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) {
+        CGSize size = CGSizeZero;
+        if (self.photoType == WXMPhotoDetailTypeGetPhoto) size = PHImageManagerMaximumSize;
+        if (self.photoType == WXMPhotoDetailTypeGetPhoto_256) size = CGSizeMake(256, 256);
+        if (self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) size = self.expectSize;
+        if (self.bottomBarView.isOriginalImage == YES) size = PHImageManagerMaximumSize;
+        [WXMResourceAssistant sendResource:asset
+                                 coverSize:size
+                                  delegate:self.delegate
+                               isShowVideo:self.showVideo];
     }
 }
 
@@ -375,9 +357,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     if (!_topBarView)  {
         _topBarView = [[WXMPreviewTopBar alloc] initWithFrame:CGRectZero];
         _topBarView.delegate = self;
-        if (_previewType == WXMPhotoPreviewTypeSingle) {
-            _topBarView.showRightButton = NO;
-        }
+        if (_previewType == WXMPhotoPreviewTypeSingle) _topBarView.showRightButton = NO;
     }
     return _topBarView;
 }
@@ -388,7 +368,8 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         [_bottomBarView setSignObj:self.signObj removeIdx:-1];
         _bottomBarView.delegate = self;
         if (self.isOriginalImage) [_bottomBarView setOriginalImage];
-        if (_photoType == WXMPhotoDetailTypeGetPhoto_256) {
+        if (_photoType == WXMPhotoDetailTypeGetPhoto_256 ||
+            _photoType == WXMPhotoDetailTypeGetPhoto) {
             _bottomBarView.showOriginalButton = NO;
         }
     }
@@ -427,10 +408,21 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     return maskBottom;
 }
 
+- (BOOL)showVideo {
+    if (self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
+        self.photoType == WXMPhotoDetailTypeTailoring) {
+        _showVideo = NO;
+    }
+    return _showVideo;
+}
+
 /** 提示框 */
 - (void)wxm_showAlertController:(NSString *)title {
-    [WXMPhotoAssistant showAlertViewControllerWithTitle:title message:@"" cancel:@"知道了"
-                                            otherAction:nil completeBlock:nil];
+    [WXMPhotoAssistant showAlertViewControllerWithTitle:title
+                                                message:@""
+                                                 cancel:@"知道了"
+                                            otherAction:nil
+                                          completeBlock:nil];
 }
 
 - (UIScrollView *)transitionScrollerView {

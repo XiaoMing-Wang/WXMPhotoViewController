@@ -43,13 +43,13 @@
     
     /** 上半部分预览 */
     _photoView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, 80)];
-    _photoView.backgroundColor = WXMPhoto_RGBColor(33, 33, 33);
+    _photoView.backgroundColor = WXMPhotoPreviewbarColor;
     _photoView.alpha = 0;
     [_photoView addSubview:self.collectionView];
     
     /** 下半部分按钮 */
     _finshView = [[UIView alloc] initWithFrame:CGRectMake(0, 80, WXMPhoto_Width, h - 80)];
-    _finshView.backgroundColor = WXMPhoto_RGBColor(33, 33, 33);
+    _finshView.backgroundColor = _photoView.backgroundColor;
     
     _line = [[UIView alloc] initWithFrame:CGRectMake(0, 80 - 0.5, WXMPhoto_Width, 0.5)];
     _line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.25];

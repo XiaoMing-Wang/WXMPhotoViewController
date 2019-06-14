@@ -21,6 +21,7 @@
 #import "WXMDictionary_Array.h"
 #import <objc/runtime.h>
 #import "WXMPhotoDetailToolbar.h"
+#import "WXMResourceAssistant.h"
 
 @interface WXMPhotoDetailViewController ()
 <UICollectionViewDelegate, UICollectionViewDataSource, WXMPhotoSignProtocol,WXMDetailToolbarProtocol>
@@ -33,7 +34,6 @@
 
 /** 存储被标记的图片model */
 @property (nonatomic, strong) WXMDictionary_Array *signObj;
-
 @property (nonatomic, assign) BOOL sign;
 @property (nonatomic, assign) BOOL preview;
 
@@ -95,11 +95,10 @@
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    WXMPhotoCollectionCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell"
-                                                                             forIndexPath:indexPath];
+    WXMPhotoCollectionCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
+    cell.showVideo = (self.showVideo);
     cell.photoType = self.photoType;
     cell.photoAsset = self.dataSource[indexPath.row];
-    cell.showVideo = self.showVideo;
     
     /** 多选模式 */
     if (self.photoType == WXMPhotoDetailTypeMultiSelect) {
@@ -125,15 +124,18 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSString *indexString = @(indexPath.row).stringValue;
     
     /** 单选原图 + 单选256 */
-    if (_photoType == WXMPhotoDetailTypeGetPhoto || _photoType == WXMPhotoDetailTypeGetPhoto_256) {
+    if (_photoType == WXMPhotoDetailTypeGetPhoto ||
+        _photoType == WXMPhotoDetailTypeGetPhoto_256 ||
+        _photoType == WXMPhotoDetailTypeGetPhotoCustomSize) {
+        
         if (self.exitPreview) {
             size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
-            CGFloat imageHeight = size.height;
-            if (imageHeight * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
+            if (size.height * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
+            if (CGSizeEqualToSize(self.expectSize, CGSizeZero)) self.expectSize = size;
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto_256 && !self.exitPreview) {
             size = CGSizeMake(256, 256);
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto && !self.exitPreview) {
-            size = CGSizeZero;
+            size = PHImageManagerMaximumSize;
         }
         
         [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
@@ -144,8 +146,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                 [self.navigationController pushViewController:preview animated:YES];
                 return;
             }
-            [self sendImage:image];
-            [self dismissViewController];
+            
+            /** 无预览回调 */
+            [self sendImage:image photoAsset:phsset];
         }];
     }
     
@@ -175,6 +178,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (_photoType == WXMPhotoDetailTypeMultiSelect && !self.sign) {
         if (cell.userCanTouch == NO && !self.preview) return;
         size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
+        
         [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
             WXMPhotoPreviewController *preview = [self wxm_getPreviewController:indexPath];
             preview.previewType = WXMPhotoPreviewTypeMost;
@@ -191,6 +195,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (_photoType == WXMPhotoDetailTypeTailoring) {
         [man getPictures_original:asset synchronous:YES completion:^(UIImage *image) {
             WXMPhotoShapeController *shape = [WXMPhotoShapeController new];
+            shape.delegate = self.delegate;
             shape.shapeImage = image;
             [self.navigationController pushViewController:shape animated:YES];
         }];
@@ -202,10 +207,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 - (WXMPhotoPreviewController *)wxm_getPreviewController:(NSIndexPath *)index {
     WXMPhotoPreviewController * preview = [WXMPhotoPreviewController new];
     preview.dataSource = self.dataSource;
+    preview.expectSize = self.expectSize;
     preview.photoType = self.photoType;
     preview.delegate = self.delegate;
-    preview.results = self.results;
-    preview.resultArray = self.resultArray;
     preview.indexPath = index;
     preview.signObj = self.signObj;
     preview.showVideo = self.showVideo;
@@ -367,13 +371,13 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     }];
 }
 
-/** 发送照片 */
-- (void)sendImage:(UIImage *)image {
-    SEL singleSEL = @selector(wxm_singlePhotoAlbumWithImage:);
-    if (self.results) self.results(image);
-    if (self.delegate && [self.delegate respondsToSelector:singleSEL]) {
-        [self.delegate wxm_singlePhotoAlbumWithImage:image];
-    }
+/** 发送资源 */
+- (void)sendImage:(UIImage *)image photoAsset:(WXMPhotoAsset *)asset {
+    [WXMResourceAssistant sendResource:asset
+                            coverImage:image
+                              delegate:self.delegate
+                           isShowVideo:self.showVideo];
+    [self dismissViewController];
 }
 
 /** 返回 */
@@ -425,6 +429,14 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         }
     }
     return WXMPHAssetMediaTypeImage;
+}
+
+- (BOOL)showVideo {
+    if (self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
+        self.photoType == WXMPhotoDetailTypeTailoring) {
+        _showVideo = NO;
+    }
+    return _showVideo;
 }
 
 - (UICollectionView *)transitionCollectionView {

@@ -255,10 +255,24 @@ static WXMPhotoManager *manager = nil;
 /** GIF */
 - (int32_t)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion {
     PHImageRequestOptions *option = [[PHImageRequestOptions alloc] init];
-    option.resizeMode = PHImageRequestOptionsResizeModeNone;//控制照片尺寸
+    option.resizeMode = PHImageRequestOptionsResizeModeFast;
     option.synchronous = NO;
     option.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
     return [[PHCachingImageManager defaultManager]  requestImageDataForAsset:asset options:option resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(imageData);
+        });
+    }];
+}
+
+/** Image */
+- (int32_t)getImageByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion {
+    PHImageRequestOptions *option = [[PHImageRequestOptions alloc] init];
+    option.resizeMode = PHImageRequestOptionsResizeModeFast;
+    option.synchronous = YES;
+    option.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
+    
+    return [[PHCachingImageManager defaultManager] requestImageDataForAsset:asset options:option resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
         dispatch_async(dispatch_get_main_queue(), ^{
             completion(imageData);
         });
@@ -314,15 +328,17 @@ static WXMPhotoManager *manager = nil;
                    liveSize:(CGSize)liveSize
                  completion:(void (^)(PHLivePhoto *))completiont {
         
-    PHLivePhotoRequestOptions *options = [[PHLivePhotoRequestOptions alloc]init];
-    options.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
-    options.networkAccessAllowed = YES;
-    PHImageManager * manager = [PHImageManager defaultManager];
-    [manager requestLivePhotoForAsset:assetData targetSize:liveSize contentMode:PHImageContentModeAspectFill options:options resultHandler:^(PHLivePhoto *livePhoto,NSDictionary* info) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completiont(livePhoto);
-        });
-    }];
+    if (@available(iOS 9.1, *)) {
+        PHLivePhotoRequestOptions *options = [[PHLivePhotoRequestOptions alloc]init];
+        options.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
+        options.networkAccessAllowed = YES;
+        PHImageManager * manager = [PHImageManager defaultManager];
+        [manager requestLivePhotoForAsset:assetData targetSize:liveSize contentMode:PHImageContentModeAspectFill options:options resultHandler:^(PHLivePhoto *livePhoto,NSDictionary* info) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completiont(livePhoto);
+            });
+        }];
+    }
 }
 
 /** 取消 */

@@ -26,7 +26,7 @@
     self.clipsToBounds = NO;
     self.userInteractionEnabled = YES;
     self.frame = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_BarHeight);
-    self.backgroundColor = [WXMPhoto_RGBColor(33, 33, 33) colorWithAlphaComponent:0.9];
+    self.backgroundColor = WXMPhotoPreviewbarColor;
 
     [self addSubview:self.leftButton];
     [self addSubview:self.rightButton];

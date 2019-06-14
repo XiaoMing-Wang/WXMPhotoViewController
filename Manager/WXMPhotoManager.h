@@ -99,8 +99,11 @@ typedef enum {
                            completion:(void (^)(UIImage *image))comple;
 
 
-/** 获取GIF */
+/** 获取GIF data */
 - (int32_t)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
+
+/** 获取Image data */
+- (int32_t)getImageByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
 
 /** 获取视频路径 */

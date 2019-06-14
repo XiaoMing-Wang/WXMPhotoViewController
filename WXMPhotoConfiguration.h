@@ -30,8 +30,20 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 #pragma mark WXMPhotoDetailViewController
 
-/** collection列表是否显示下边工具栏 */
-#define WXMPhotoShowDetailToolbar YES
+/** 图片压缩比例 0.8接近原图  0.3大小大约为0.8的  1/4 */
+#define WXMPhotoCompressionRatio 0.3
+
+/** 全局是否支持显示视频 (NO会显示视频的第一帧 且WXMPhotoViewController设置showVideo也无效)*/
+#define WXMPhotoSupportVideo YES
+
+/** 是否显示GIF标志 WXMPhotoDetailViewController */
+#define WXMPhotoShowGIFSign YES
+
+/** 裁剪是否显示GIF */
+#define WXMPhotoTailoringShowGIFSign  (WXMPhotoShowGIFSign && NO)
+
+/** 是否显示视频标志 WXMPhotoDetailViewController */
+#define WXMPhotoShowVideoSign (WXMPhotoSupportVideo && YES)
 
 /** 多选是否支持同时选图片和视频 */
 #define WXMPhotoChooseVideo_Photo NO
@@ -42,14 +54,14 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** livephoto是否静音 */
 #define WXMPhotoShowLivePhtoMuted NO
 
-/** 是否显示GIF标志 */
-#define WXMPhotoShowGIFSign YES
+/** collection列表是否显示下边工具栏 */
+#define WXMPhotoShowDetailToolbar YES
 
-/** 是否显示视频标志 */
-#define WXMPhotoShowVideoSign YES
-
-/** 工具栏颜色 */
+/** 查看相册工具栏颜色 */
 #define WXMPhotoDetailToolbarColor [UIColor whiteColor]
+
+/** 预览工具栏颜色 */
+#define WXMPhotoPreviewbarColor [WXMPhoto_RGBColor(33, 33, 33) colorWithAlphaComponent:0.9]
 
 /** 工具栏字体 */
 #define WXMPhotoDetailToolbarTextColor [UIColor blackColor]
@@ -96,26 +108,30 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** 播放按钮大小 */
 #define WXMPhotoVideoSignSize CGSizeMake(70, 70)
 
-
 /** 类型 */
 typedef NS_ENUM(NSInteger, WXMPhotoDetailType) {
-    WXMPhotoDetailTypeGetPhoto = 0,     /* 单选大图 */
-    WXMPhotoDetailTypeGetPhoto_256 = 1, /* 单选256*256 */
-    WXMPhotoDetailTypeMultiSelect = 2,  /* 多选 + 预览 */
-    WXMPhotoDetailTypeTailoring = 4,    /* 预览 + 裁剪 */
+    WXMPhotoDetailTypeGetPhoto = 0,             /* 单选原图大小 */
+    WXMPhotoDetailTypeGetPhoto_256 = 1,         /* 单选256*256 */
+    WXMPhotoDetailTypeGetPhotoCustomSize = 2,   /* 单选自定义大小 */
+    WXMPhotoDetailTypeMultiSelect = 3,          /* 多选 + 预览 */
+    WXMPhotoDetailTypeTailoring = 4,            /* 预览 + 裁剪 */
 };
 
 /** 预览类型 */
 typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
-    WXMPhotoPreviewTypeSingle = 0,     /* 单张 */
-    WXMPhotoPreviewTypeMost,           /* 多张 */
+    WXMPhotoPreviewTypeSingle = 0,     /* 单张预览 */
+    WXMPhotoPreviewTypeMost,           /* 多选预览 */
 };
 
 /** 获取相册回调协议 */
 @protocol WXMPhotoProtocol <NSObject>
 @optional;
-- (void)wxm_singlePhotoAlbumWithImage:(UIImage *)image;
-- (void)wxm_morePhotoAlbumWithImages:(NSArray<UIImage *>*)images;
+
+/** cover 封面(除256和原图外设置用户可设置返回图片大小 不设置返回预览时大小) */
+/** data 选中image时返回宏设置压缩比大小(默认大约为原图1/4大小 视频和gif返回原始data) */
+- (void)wxm_singlePhotoAlbum_Image_Gif_Video:(UIImage *)cover data:(NSData *)data;
+- (void)wxm_morePhotoAlbum_Image_Gif_Video:(NSArray<UIImage *>*)coverArray
+                                      data:(NSArray<NSData *>*)dataArray;
 @end
 
 #pragma mark _____________________________________________ 多选模式

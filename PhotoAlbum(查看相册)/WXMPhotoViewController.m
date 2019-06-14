@@ -86,8 +86,6 @@
     photoDetail.expectSize = self.expectSize;
     photoDetail.showVideo = self.showVideo;
     photoDetail.delegate = self.delegate;
-    photoDetail.results = self.results;
-    photoDetail.resultArray = self.resultArray;
     if (indexPath == nil) photoDetail.phoneList = [WXMPhotoManager sharedInstance].firstPhotoList;
     if (indexPath) photoDetail.phoneList = self.jurisdictionData[indexPath.row];
     [self.navigationController pushViewController:photoDetail animated:(indexPath != nil)];

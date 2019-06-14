@@ -49,5 +49,4 @@ int const static kDirectionPanThreshold = 5;
     _moveY = 0;
 }
 
-
 @end

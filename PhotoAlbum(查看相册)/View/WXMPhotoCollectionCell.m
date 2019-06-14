@@ -48,7 +48,7 @@
         [self.contentView addSubview:self.maskCoverView];
         [self.contentView addSubview:self.chooseButton];
     }  else if (photoType == WXMPhotoDetailTypeTailoring) {
-        [self.typeSign removeFromSuperview];
+        self.typeSign.alpha = WXMPhotoTailoringShowGIFSign;
     }
 }
 
@@ -104,8 +104,10 @@
     self.typeSign.hidden = YES;
     [self.contentView bringSubviewToFront:self.typeSign];
     
-    if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo && WXMPhotoShowVideoSign) {
-        self.typeSign.hidden = (!self.showVideo);
+    if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo &&
+        WXMPhotoShowVideoSign &&
+        WXMPhotoSupportVideo) {
+        if (self.showVideo)  self.typeSign.hidden = NO;
         NSString * duration = [NSString stringWithFormat:@"  %@",_photoAsset.videoDrantion];
         [self.typeSign setTitle:duration forState:UIControlStateNormal];
         
@@ -151,8 +153,7 @@
     if (self.delegate&&[self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
         BOOL selected = _chooseButton.selected;
         NSInteger count = [self.delegate touchWXMPhotoSignView:_indexPath selected:selected];
-        
-        if (count >= 0 && count < WXMMultiSelectMax)  {
+        if (count >= 0 && count < WXMMultiSelectMax) {
             [_chooseButton setTitle:@(count + 1).stringValue forState:UIControlStateSelected];
         }
     }

@@ -190,7 +190,7 @@
     tapSingle = [[UITapGestureRecognizer alloc] initWithTarget:self action:selTap];
     tapSingle.numberOfTapsRequired = 1;
     
-    SEL doubleTap = @selector(respondsToTapSingle:);
+    SEL doubleTap = @selector(respondsToTapDouble:);
     UITapGestureRecognizer *tapDouble = nil;
     tapDouble = [[UITapGestureRecognizer alloc] initWithTarget:self action:doubleTap];
     tapDouble.numberOfTapsRequired = 2;

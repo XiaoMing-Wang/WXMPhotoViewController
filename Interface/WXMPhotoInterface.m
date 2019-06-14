@@ -13,14 +13,14 @@
 #import "WXMPhotoManager.h"
 
 @WXMService(WXMPhotoInterFaceProtocol, WXMPhotoInterface); 
-@interface WXMPhotoInterface () <WXMPhotoInterFaceProtocol,WXMComponentFeedBack>
+@interface WXMPhotoInterface () <WXMPhotoInterFaceProtocol,WXMComponentFeedBack,WXMPhotoProtocol>
 @end
 
 @implementation WXMPhotoInterface
 
-//- (BOOL)cacheImplementer {
-//    return YES;
-//}
+- (BOOL)cacheImplementer {
+    return YES;
+}
 
 - (NSArray *)modules_events {
     return @[@"XProtocol(500-550,988-1000)"];
@@ -43,7 +43,6 @@
 - (UIViewController *)achieveWXMPhotoViewController:(void (^)(UIImage * image))results {
     WXMPhotoViewController * vc = [WXMPhotoViewController new];
     vc.photoType = WXMPhotoDetailTypeGetPhoto_256;
-    vc.results = results;
     UINavigationController * nav = [[UINavigationController alloc] initWithRootViewController:vc];
     return nav;
 }
@@ -52,7 +51,6 @@
 - (UIViewController *)routeAchieveWXMPhotoViewController:(void (^)(id obj))results {
     WXMPhotoViewController * vc = [WXMPhotoViewController new];
     vc.photoType = WXMPhotoDetailTypeMultiSelect;
-    if (results) vc.results = results;
     UINavigationController * nav = [[UINavigationController alloc] initWithRootViewController:vc];
     return nav;
 }
@@ -62,6 +60,9 @@
     NSString * typeString = [params objectForKey:@"type"];
     NSInteger typeInt = typeString.integerValue;
     WXMPhotoViewController * vc = [WXMPhotoViewController new];
+    vc.delegate = self;
+    vc.showVideo = YES;
+    vc.exitPreview = NO;
     vc.photoType = typeInt;
     UINavigationController * nav = [[UINavigationController alloc] initWithRootViewController:vc];
     return nav;
@@ -70,4 +71,6 @@
 - (void)dealloc {
     NSLog(@"dealloc------222");
 }
+
+
 @end

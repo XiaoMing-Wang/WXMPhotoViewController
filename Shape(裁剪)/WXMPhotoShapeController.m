@@ -5,12 +5,13 @@
 //  Created by edz on 2019/5/17.
 //  Copyright © 2019年 wq. All rights reserved.
 //
-
+#import "WXMResourceAssistant.h"
 #import "WXMPhotoShapeController.h"
 #import "WXMPhotoConfiguration.h"
 #import "TOCropView.h"
 #import "TOCropToolbar.h"
 #import "UIView+WXMPhoto.h"
+#import "UIImage+WXMPhoto.h"
 
 @interface WXMPhotoShapeController () <TOCropViewDelegate>
 @property (nonatomic, weak) UINavigationController *weakNavigationVC;
@@ -91,6 +92,12 @@
 }
 
 - (void)dismissViewController {
+    CGRect cropFrame = self.cropView.imageCropFrame;
+    NSInteger angle = self.cropView.angle;
+    UIImage *cropImage = [self.cropView.image croppedImageWithFrame:cropFrame
+                                                              angle:angle
+                                                       circularClip:NO];
+    [WXMResourceAssistant sendCoverImage:cropImage delegate:self.delegate];
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -102,6 +109,7 @@
 - (void)cropViewDidBecomeNonResettable:(TOCropView *)cropView {
     _cropToolbar.resetButtonEnabled = NO;
 }
+
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"

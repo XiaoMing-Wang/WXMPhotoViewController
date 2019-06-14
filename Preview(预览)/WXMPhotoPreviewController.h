@@ -14,6 +14,9 @@
 /** 相册模式 */
 @property (nonatomic, assign) WXMPhotoDetailType photoType;
 
+/** 期望获取图片大小 */
+@property (nonatomic, assign) CGSize expectSize;
+
 /** 是否显示视频 NO会显示为视频第一帧 */
 @property (nonatomic, assign) BOOL showVideo;
 @property (nonatomic, assign) BOOL isOriginalImage;
