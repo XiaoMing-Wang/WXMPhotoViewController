@@ -118,7 +118,6 @@
     _photoNumber.text = @(_signObj.count).stringValue;
 }
 
-
 /** 点击事件 */
 - (void)originalEvent:(UIButton *)sender {
     sender.selected = !sender.selected;
@@ -147,6 +146,12 @@
         [_originalImageButton setImage:seleImage forState:UIControlStateSelected];
     }
     return _originalImageButton;
+}
+
+- (void)setOriginalEnabled:(BOOL)originalEnabled {
+    _originalEnabled = originalEnabled;
+    _originalImageButton.enabled = originalEnabled;
+    if (originalEnabled == NO) _originalImageButton.selected = NO;
 }
 
 /**  */

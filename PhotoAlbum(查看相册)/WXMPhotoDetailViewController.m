@@ -224,6 +224,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 /** 刷新所有显示的cell */
 - (void)wxm_reloadAllAvailableCell {
+    self.toolbar.originalEnabled = YES;
+    if (self.chooseType == WXMPHAssetMediaTypeVideo && !WXMPhotoChooseVideo_Photo) {
+        self.toolbar.originalEnabled = NO;
+    }
+    
     /** visibleCells collectionView新的刷新机制会生成新的cell导致不能刷新 */
     [self.collectionView.subviews enumerateObjectsUsingBlock:^(UIView*obj, NSUInteger idx, BOOL*stop){
         if ([obj isKindOfClass:[WXMPhotoCollectionCell class]]) {

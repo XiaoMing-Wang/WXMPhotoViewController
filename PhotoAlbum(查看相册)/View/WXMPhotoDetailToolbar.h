@@ -18,5 +18,11 @@
 /** 是否选取原图 */
 @property (nonatomic, assign, readonly) BOOL isOriginalImage;
 
+
+@property (nonatomic, assign) BOOL originalEnabled;
+
+
 @property (nonatomic, weak) id<WXMDetailToolbarProtocol> detailDelegate;
+
+
 @end
