@@ -28,20 +28,22 @@
     if (delegate == nil) return;
     BOOL supportVideo = (isShowVideo && WXMPhotoSupportVideo);
     if ([delegate respondsToSelector:@selector(wxm_singlePhotoAlbum_Image_Gif_Video:data:)]) {
+        UIViewController *vc = controller;
+        
         if (asset.mediaType == WXMPHAssetMediaTypePhotoGif) {
-            [self sendGif:asset coverImage:coverImage delegate:delegate];
+        
+            [self sendGif:asset coverImage:coverImage delegate:delegate viewController:vc];
         } else if (asset.mediaType == WXMPHAssetMediaTypeVideo && supportVideo) {
-            [self sendVideo:asset coverImage:coverImage delegate:delegate];
+            
+            [self sendVideo:asset coverImage:coverImage delegate:delegate viewController:vc];
         } else {
             
-            controller.view.userInteractionEnabled = NO;
-            if (isShowLoad) [WXMPhotoAssistant wxm_showLoadingView:controller.view];
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0),^{
-                NSData *data = UIImageJPEGRepresentation(coverImage, 0.75);
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [controller dismissViewControllerAnimated:YES completion:nil];
-                    [delegate wxm_singlePhotoAlbum_Image_Gif_Video:coverImage data:data];
-                });
+            vc.view.userInteractionEnabled = NO;
+            if (isShowLoad) [WXMPhotoAssistant wxm_showLoadingView:vc.view];
+            NSData *data = UIImageJPEGRepresentation(coverImage, 0.75);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [delegate wxm_singlePhotoAlbum_Image_Gif_Video:coverImage data:data];
+                [vc dismissViewControllerAnimated:YES completion:nil];
             });
         }
     }
@@ -90,18 +92,22 @@
 /** Gif */
 + (void)sendGif:(WXMPhotoAsset *)asset
      coverImage:(UIImage *)coverImage
-       delegate:(id<WXMPhotoProtocol>)delegate {
+       delegate:(id<WXMPhotoProtocol>)delegate
+ viewController:(UIViewController *)controller {
     [WXMManager getGIFByAsset:asset.asset completion:^(NSData *data) {
-       [delegate wxm_singlePhotoAlbum_Image_Gif_Video:coverImage data:data];
+        [delegate wxm_singlePhotoAlbum_Image_Gif_Video:coverImage data:data];
+        [controller dismissViewControllerAnimated:YES completion:nil];
     }];
 }
 
 /** Video */
 + (void)sendVideo:(WXMPhotoAsset *)asset
        coverImage:(UIImage *)coverImage
-         delegate:(id<WXMPhotoProtocol>)delegate {
+         delegate:(id<WXMPhotoProtocol>)delegate
+   viewController:(UIViewController *)controller {
     [WXMManager getVideoByAsset:asset.asset completion:^(NSURL *url, NSData *data) {
         [delegate wxm_singlePhotoAlbum_Image_Gif_Video:coverImage data:data];
+        [controller dismissViewControllerAnimated:YES completion:nil];
     }];
 }
 
