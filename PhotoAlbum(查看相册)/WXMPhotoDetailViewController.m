@@ -136,6 +136,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             size = CGSizeMake(256, 256);
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto && !self.exitPreview) {
             size = PHImageManagerMaximumSize;
+        } else if (_photoType == WXMPhotoDetailTypeGetPhotoCustomSize && !self.exitPreview) {
+            size = self.expectSize;
+            if (CGSizeEqualToSize(size, CGSizeZero)) {
+                size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
+            }
         }
         
         [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
@@ -193,10 +198,19 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
     /** 裁剪框 */
     if (_photoType == WXMPhotoDetailTypeTailoring) {
-        [man getPictures_original:asset synchronous:YES completion:^(UIImage *image) {
+        CGFloat width = (WXMPhoto_Width - WXMPhotoCropBoxMargin * 2);
+        CGFloat height = width * phsset.aspectRatio;
+        if (phsset.aspectRatio < 1.0) {
+            height = width;
+            width = height / phsset.aspectRatio  * 1.0;
+        }
+        size = CGSizeMake(width * 4, height * 4);
+        if (WXMPhotoCropUseOriginal) size = PHImageManagerMaximumSize;
+        [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
             WXMPhotoShapeController *shape = [WXMPhotoShapeController new];
             shape.delegate = self.delegate;
             shape.shapeImage = image;
+            shape.expectSize = self.expectSize;
             [self.navigationController pushViewController:shape animated:YES];
         }];
     }
@@ -378,11 +392,13 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 /** 发送资源 */
 - (void)sendImage:(UIImage *)image photoAsset:(WXMPhotoAsset *)asset {
+    BOOL showLoad = (self.photoType == WXMPhotoDetailTypeGetPhoto);
+    if (self.toolbar.isOriginalImage) showLoad = YES;
     [WXMResourceAssistant sendResource:asset
                             coverImage:image
                               delegate:self.delegate
                            isShowVideo:self.showVideo
-                            isShowLoad:(self.photoType == WXMPhotoDetailTypeGetPhoto)
+                            isShowLoad:showLoad
                         viewController:self.navigationController];
 }
 

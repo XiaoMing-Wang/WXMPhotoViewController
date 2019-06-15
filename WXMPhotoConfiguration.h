@@ -30,7 +30,8 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 #pragma mark WXMPhotoDetailViewController
 
-/** 图片压缩比例 0.8接近原图  0.3大小大约为0.8的  1/4 */
+/** 图片压缩比例 0.75接近原图  0.3大小大约为0.75的  1/4 */
+/** 256和原图模式默认返回0.75 修改无效 */
 #define WXMPhotoCompressionRatio 0.3
 
 /** 全局是否支持显示视频 (NO会显示视频的第一帧 且WXMPhotoViewController设置showVideo也无效)*/
@@ -54,8 +55,14 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** livephoto是否静音 */
 #define WXMPhotoShowLivePhtoMuted NO
 
+/** 选择图片时(选择GIF和视频依旧会返回)是否返回data(可自行转成合适大小的data) */
+#define WXMPhotoSelectedImageReturnData NO
+
 /** collection列表是否显示下边工具栏 */
 #define WXMPhotoShowDetailToolbar YES
+
+/** 裁剪是否使用原图 (使用原图内存会暴涨建议NO)*/
+#define WXMPhotoCropUseOriginal NO
 
 /** 查看相册工具栏颜色 */
 #define WXMPhotoDetailToolbarColor [UIColor whiteColor]
@@ -107,6 +114,9 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 /** 播放按钮大小 */
 #define WXMPhotoVideoSignSize CGSizeMake(70, 70)
+
+/** 裁剪框边距 */
+#define WXMPhotoCropBoxMargin 20
 
 /** 类型 */
 typedef NS_ENUM(NSInteger, WXMPhotoDetailType) {

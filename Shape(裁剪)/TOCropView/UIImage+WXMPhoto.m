@@ -58,4 +58,16 @@
                          orientation:UIImageOrientationUp];
 }
 
+/**  */
+- (UIImage*)scaleToSize:(CGSize)size {
+    if ([[UIScreen mainScreen] scale] == 0.0) {
+        UIGraphicsBeginImageContext(size);
+    } else {
+        UIGraphicsBeginImageContextWithOptions(size, NO, [UIScreen mainScreen].scale);
+    }
+    [self drawInRect:CGRectMake(0, 0, size.width, size.height)];
+    UIImage* scaledImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return scaledImage;
+}
 @end

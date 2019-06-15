@@ -49,6 +49,7 @@
     _cropView.resetAspectRatioEnabled = NO;
     _cropView.aspectRatio = CGSizeMake(1, 1);
     _cropView.delegate = self;
+    _cropView.cropViewPadding = WXMPhotoCropBoxMargin;
     
     CGFloat y = WXMPhoto_Height - 44.0f;
     _cropToolbar = [[TOCropToolbar alloc] initWithFrame:CGRectMake(0, y, WXMPhoto_Width, 44.0f)];
@@ -74,6 +75,7 @@
 }
 
 - (void)rotateCropViewCounterclockwise {
+    NSLog(@"%@",NSStringFromCGRect(_cropView.cropBoxFrame));
     [self.cropView rotateImageNinetyDegreesAnimated:YES clockwise:NO];
 }
 
@@ -92,13 +94,21 @@
 }
 
 - (void)dismissViewController {
+    
     CGRect cropFrame = self.cropView.imageCropFrame;
     NSInteger angle = self.cropView.angle;
-    UIImage *cropImage = [self.cropView.image croppedImageWithFrame:cropFrame
-                                                              angle:angle
-                                                       circularClip:NO];
-    [WXMResourceAssistant sendCoverImage:cropImage delegate:self.delegate];
-    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+    
+    @autoreleasepool {
+        UIImage *cropImage = [self.cropView.image croppedImageWithFrame:cropFrame
+                                                                  angle:angle
+                                                           circularClip:NO];
+        
+        if (CGSizeEqualToSize(self.expectSize, CGSizeZero) == NO) {
+            cropImage = [cropImage scaleToSize:self.expectSize];
+        }
+        [WXMResourceAssistant sendCoverImage:cropImage delegate:self.delegate];
+        [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+    }
 }
 
 #pragma mark - Crop View Delegates -

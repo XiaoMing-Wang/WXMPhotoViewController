@@ -31,20 +31,20 @@
         UIViewController *vc = controller;
         
         if (asset.mediaType == WXMPHAssetMediaTypePhotoGif) {
-        
             [self sendGif:asset coverImage:coverImage delegate:delegate viewController:vc];
         } else if (asset.mediaType == WXMPHAssetMediaTypeVideo && supportVideo) {
-            
             [self sendVideo:asset coverImage:coverImage delegate:delegate viewController:vc];
         } else {
-            
             vc.view.userInteractionEnabled = NO;
-            if (isShowLoad) [WXMPhotoAssistant wxm_showLoadingView:vc.view];
-            NSData *data = UIImageJPEGRepresentation(coverImage, 0.75);
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [delegate wxm_singlePhotoAlbum_Image_Gif_Video:coverImage data:data];
-                [vc dismissViewControllerAnimated:YES completion:nil];
-            });
+            if (isShowLoad && WXMPhotoSelectedImageReturnData) {
+                [WXMPhotoAssistant wxm_showLoadingView:vc.view];
+            }
+            
+            /** 0.75接近原始图大小 */
+            NSData *data = nil;
+            if (WXMPhotoSelectedImageReturnData) data = UIImageJPEGRepresentation(coverImage, 0.75);
+            [delegate wxm_singlePhotoAlbum_Image_Gif_Video:coverImage data:data];
+            [controller dismissViewControllerAnimated:YES completion:nil];
         }
     }
 }
@@ -56,7 +56,7 @@
          isShowVideo:(BOOL)isShowVideo
           isShowLoad:(BOOL)isShowLoad
       viewController:(UIViewController *)controller {
-    [WXMManager getPicturesByAsset:asset.asset  synchronous:YES original:NO assetSize:coverSize resizeMode:PHImageRequestOptionsResizeModeExact deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat completion:^(UIImage *image) {
+    [WXMManager getPicturesByAsset:asset.asset synchronous:YES original:NO assetSize:coverSize resizeMode:PHImageRequestOptionsResizeModeExact deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat completion:^(UIImage *image) {
         [self sendResource:asset
                 coverImage:image
                   delegate:delegate
@@ -68,7 +68,8 @@
 
 + (void)sendCoverImage:(UIImage *)coverImage delegate:(id<WXMPhotoProtocol>)delegate {
     if ([delegate respondsToSelector:@selector(wxm_singlePhotoAlbum_Image_Gif_Video:data:)]) {
-        NSData *data = UIImageJPEGRepresentation(coverImage, 0.75);
+        NSData *data = nil;
+        if (WXMPhotoSelectedImageReturnData) data = UIImageJPEGRepresentation(coverImage, 0.75);
         [delegate wxm_singlePhotoAlbum_Image_Gif_Video:coverImage data:data];
     }
 }

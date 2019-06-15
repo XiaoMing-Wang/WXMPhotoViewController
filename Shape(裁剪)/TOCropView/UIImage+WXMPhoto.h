@@ -16,6 +16,8 @@ NS_ASSUME_NONNULL_BEGIN
                              angle:(NSInteger)angle
                       circularClip:(BOOL)circular;
 
+
+- (UIImage*)scaleToSize:(CGSize)size;
 @end
 
 NS_ASSUME_NONNULL_END

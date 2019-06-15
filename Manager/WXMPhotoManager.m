@@ -248,7 +248,7 @@ static WXMPhotoManager *manager = nil;
     if (CGSizeEqualToSize(size, CGSizeZero)) {
         return [self getPictures_original:asset synchronous:YES completion:comple];
     } else {
-        return [self getPictures_customSize:asset synchronous:YES assetSize:size completion:comple];
+        return [self getPicturesByAsset:asset synchronous:YES original:NO assetSize:size resizeMode:PHImageRequestOptionsResizeModeExact deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat completion:comple];
     }
 }
 
