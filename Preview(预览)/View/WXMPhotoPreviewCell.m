@@ -76,7 +76,6 @@
         }
         CGFloat imageHeight = _photoAsset.aspectRatio * screenWidth;
         
-        
         /** GIF */
         if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
             [man getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
@@ -90,7 +89,6 @@
             /** 很长的横图 需要获取原图 不然放大很模糊.. */
             if (imageHeight * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
             if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
-            
             
             /** 自定义转场需要当前图片 */
             /** 所以先加载图片 在上面覆盖livephoto */

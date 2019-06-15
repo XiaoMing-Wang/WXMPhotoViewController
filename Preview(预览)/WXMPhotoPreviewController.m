@@ -72,14 +72,14 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     if (_dataSource.count <= 1) self.collectionView.alwaysBounceHorizontal = YES;
     if (_dataSource.count <= _indexPath.row) return;
     self.selectedIndex = self.indexPath.row;
-    [self wxm_setBottomBarViewrealByte];
     NSIndexPath * index = [NSIndexPath indexPathForRow:self.indexPath.row inSection:0];
     UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
     [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:NO];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.02 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-         [self playLivePhoto];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.08 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self playLivePhoto];
+        [self wxm_setBottomBarViewrealByte];
     });
-   
+    
 }
 #pragma mark _____________________________________________UICollectionView dataSource
 
@@ -155,10 +155,24 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
     WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
     BOOL video = (asset.mediaType == WXMPHAssetMediaTypeVideo && self.showVideo);
     CGFloat bytes = asset.bytes;
-    if (bytes < 20) {
+    if (bytes < 20 && !(asset.mediaType == WXMPHAssetMediaTypeVideo && !self.showVideo)) {
         bytes = [WXMPhotoAssistant wxm_getOriginalSize:asset.asset];
         asset.bytes = bytes;
     }
+    
+    /** 资源是视频时不显示视频 */
+    if(asset.mediaType == WXMPHAssetMediaTypeVideo && !self.showVideo && bytes < 20) {
+        NSIndexPath *index = [NSIndexPath indexPathForRow:self.selectedIndex inSection:0];
+        UITableViewCell * cell = nil;
+        cell = (UITableViewCell *)[self.collectionView cellForItemAtIndexPath:index];
+        if ([cell isKindOfClass:WXMPhotoPreviewCell.class]) {
+            UIImage * image = ((WXMPhotoPreviewCell *)cell).currentImage;
+            NSData *data = UIImageJPEGRepresentation(image, 0.78);
+            bytes = data.length;
+            asset.bytes = data.length;
+        }
+    }
+    
     NSString * realByte = [NSString stringWithFormat:@"%.1fM", bytes / (1024 * 1024)];
     if (bytes / (1024 * 1024) < 0.1f) {
         realByte = [NSString stringWithFormat:@"%.0fk", (bytes / (1024))];
@@ -265,6 +279,7 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
         transition.duration = 0.175;
         transition.type = kCATransitionFade;
         [self.collectionView.layer addAnimation:transition forKey:@"animations"];
+        [self wxm_setBottomBarViewrealByte];
     });
 }
 

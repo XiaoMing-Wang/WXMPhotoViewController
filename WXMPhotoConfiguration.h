@@ -47,7 +47,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoShowVideoSign (WXMPhotoSupportVideo && YES)
 
 /** 多选是否支持同时选图片和视频 */
-#define WXMPhotoChooseVideo_Photo NO
+#define WXMPhotoChooseVideo_Photo YES
 
 /** 是否支持播放livephoto */
 #define WXMPhotoShowLivePhto NO
@@ -94,11 +94,12 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** WXMPhotoDetailViewController界面 选中图标字体大小  */
 #define WXMSelectedFont 15
 
+/** 混合的情况下以 WXMMultiSelectVideoMax为最大个数 */
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
 #define WXMMultiSelectMax 4
 
 /** WXMPhotoDetailTypeMultiSelect 支持最大视频数 */
-#define WXMMultiSelectVideoMax 3
+#define WXMMultiSelectVideoMax 4
 
 /** 默认传回的图片大小  */
 #define WXMDefaultSize CGSizeZero

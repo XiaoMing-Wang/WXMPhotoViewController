@@ -132,6 +132,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
             if (size.height * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
             if (CGSizeEqualToSize(self.expectSize, CGSizeZero)) self.expectSize = size;
+            
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto_256 && !self.exitPreview) {
             size = CGSizeMake(256, 256);
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto && !self.exitPreview) {
@@ -259,12 +260,17 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSString *indexString = @(index.row).stringValue;
     if (count <= 0) return YES;
     if ([self.signObj.allKeys containsObject:indexString]) return YES;
-    if (self.chooseType == WXMPHAssetMediaTypeVideo) {
-        if (count >= WXMMultiSelectVideoMax) return NO;
-        return (cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo);
+    if (WXMPhotoChooseVideo_Photo) {
+        if (!self.showVideo) return count < WXMMultiSelectMax;
+        return count < WXMMultiSelectVideoMax;
     } else {
-        if (count >= WXMMultiSelectMax) return NO;
-        return (cell.photoAsset.mediaType != WXMPHAssetMediaTypeVideo);
+        if (self.chooseType == WXMPHAssetMediaTypeVideo) {
+            if (count >= WXMMultiSelectVideoMax) return NO;
+            return (cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo);
+        } else {
+            if (count >= WXMMultiSelectMax) return NO;
+            return (cell.photoAsset.mediaType != WXMPHAssetMediaTypeVideo);
+        }
     }
     return YES;
 }
@@ -363,12 +369,18 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 - (void)wxm_cantTouchWXMPhotoSignView {
     NSString * title = @"";
     NSInteger count = self.signObj.count;
-    if (self.chooseType == WXMPHAssetMediaTypeVideo) {
-        if (count < WXMMultiSelectVideoMax) title = @"选择视频时不能选择图片";
-        else title = [NSString stringWithFormat:@"您最多可以选择%d个视频",WXMMultiSelectVideoMax];
+    if (WXMPhotoChooseVideo_Photo && self.showVideo) {
+        if (count >= WXMMultiSelectVideoMax) {
+            title = [NSString stringWithFormat:@"您最多可以选择%d个资源",WXMMultiSelectVideoMax];
+        }
     } else {
-        if (count < WXMMultiSelectMax) title = @"选择图片时不能选择视频";
-        else  title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
+        if (self.chooseType == WXMPHAssetMediaTypeVideo && self.showVideo) {
+            if (count < WXMMultiSelectVideoMax) title = @"选择视频时不能选择图片";
+            else title = [NSString stringWithFormat:@"您最多可以选择%d个视频",WXMMultiSelectVideoMax];
+        } else {
+            if (count < WXMMultiSelectMax) title = @"选择图片时不能选择视频";
+            else  title = [NSString stringWithFormat:@"您最多可以选择%d张图片",WXMMultiSelectMax];
+        }
     }
     
     if (title.length <= 1) return;

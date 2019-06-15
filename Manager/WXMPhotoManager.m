@@ -43,7 +43,11 @@
     drantionString = [NSString stringWithFormat:@"%02zd:%02zd",minutes,seconds];
     return drantionString;
 }
-
+- (CGFloat)aspectRatio {
+    CGFloat width = (CGFloat) self.asset.pixelWidth;
+    CGFloat height = (CGFloat) self.asset.pixelHeight;
+    return height / width * 1.0;
+}
 @end
 
 @implementation WXMPhotoManager

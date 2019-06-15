@@ -55,22 +55,27 @@
 /** 异步赋值 数量特别多异步获取 */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     _photoAsset = photoAsset;
+    self.representedAssetIdentifier = _photoAsset.asset.localIdentifier;
     [self wxm_setTypeSignInterface];
-    if (self.currentRequestID) {
-        [[WXMPhotoManager sharedInstance] cancelRequestWithID:self.currentRequestID];
-    }
     
     CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
-    int32_t ids = [[WXMPhotoManager sharedInstance] getPictures_customSize:photoAsset.asset
-                                                               synchronous:NO
-                                                                 assetSize:size
-                                                                completion:^(UIImage *image) {
-        photoAsset.aspectRatio = image.size.height / image.size.width * 1.0;
-        self.imageView.image = image;
+        
+    /** PHImageRequestOptionsResizeModeExact返回精确大小 */
+    /** PHImageRequestOptionsResizeModeExact想返回缩略图在返回需要大小 */
+    int32_t ids = [[WXMPhotoManager sharedInstance] getPicturesByAsset:photoAsset.asset synchronous:NO original:NO assetSize:size resizeMode:PHImageRequestOptionsResizeModeExact deliveryMode:PHImageRequestOptionsDeliveryModeOpportunistic completion:^(UIImage *image) {
+        if ([self.representedAssetIdentifier isEqualToString:_photoAsset.asset.localIdentifier]) {
+            self.imageView.image = image;
+        } else {
+            [[WXMPhotoManager sharedInstance] cancelRequestWithID:_currentRequestID];
+        }
     }];
-    
-    self.currentRequestID = ids;
+
+    if (ids && _currentRequestID && ids != _currentRequestID) {
+        [[WXMPhotoManager sharedInstance] cancelRequestWithID:_currentRequestID];
+    }
+    _currentRequestID = ids;
     _photoAsset.requestID = ids;
+    [self setNeedsLayout];
 }
 
 /** 设置能否响应 */

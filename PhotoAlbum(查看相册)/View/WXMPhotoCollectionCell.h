@@ -22,6 +22,7 @@
 @property (nonatomic, strong) WXMPhotoSignModel *signModel;
 @property (nonatomic, assign) WXMPhotoDetailType photoType;
 @property (nonatomic, weak) id<WXMPhotoSignProtocol> delegate;
+@property (nonatomic, copy) NSString *representedAssetIdentifier;
 
 /** 设置button选中 */
 - (void)signButtonSelected:(BOOL)selected;

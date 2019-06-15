@@ -126,6 +126,7 @@
         NSString *text = [NSString stringWithFormat:@"  原图 (%@)",realImageByte];
         if (video) {
             UIImage *veImage = [UIImage imageNamed:@"photo_videoOverlay19"];
+            text = [NSString stringWithFormat:@"  视频 (%@)",realImageByte];
             [self.originalButton setImage:veImage forState:UIControlStateNormal];
             [self.originalButton setImage:veImage forState:UIControlStateSelected];
             self.originalButton.userInteractionEnabled = NO;
