@@ -22,6 +22,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #import "WXMPhotoAssistant.h"
 #import "UIView+WXMPhoto.h"
 #import "WXMPhotoSignModel.h"
+#import "WXMPhotoResources.h"
 
 #pragma mark 查看界面
 #define WXMPhotoVCNavigationItem @"相册"
@@ -47,7 +48,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoShowVideoSign (WXMPhotoSupportVideo && YES)
 
 /** 多选是否支持同时选图片和视频 */
-#define WXMPhotoChooseVideo_Photo YES
+#define WXMPhotoChooseVideo_Photo NO
 
 /** 是否支持播放livephoto */
 #define WXMPhotoShowLivePhto NO
@@ -140,9 +141,8 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 
 /** cover 封面(除256和原图外设置用户可设置返回图片大小 不设置返回预览时大小) */
 /** data 选中image时返回宏设置压缩比大小(默认大约为原图1/4大小 视频和gif返回原始data) */
-- (void)wxm_singlePhotoAlbum_Image_Gif_Video:(UIImage *)cover data:(NSData *)data;
-- (void)wxm_morePhotoAlbum_Image_Gif_Video:(NSArray<UIImage *>*)coverArray
-                                      data:(NSArray<NSData *>*)dataArray;
+- (void)wxm_singlePhotoAlbumWithResources:(WXMPhotoResources *)resource;
+- (void)wxm_morePhotoAlbumWithResources:(NSArray<WXMPhotoResources *>*)resource;
 @end
 
 #pragma mark _____________________________________________ 多选模式

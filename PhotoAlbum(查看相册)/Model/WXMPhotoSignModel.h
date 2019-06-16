@@ -28,3 +28,5 @@
 @property (nonatomic, assign) WXMPhotoMediaType mediaType;
 @end
 
+
+

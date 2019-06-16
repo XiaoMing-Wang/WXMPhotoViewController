@@ -122,6 +122,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     CGSize size = CGSizeZero;
     PHAsset *asset = phsset.asset;
     NSString *indexString = @(indexPath.row).stringValue;
+    if (CGSizeEqualToSize(self.expectSize, CGSizeZero) && self.sign == NO) {
+        self.expectSize = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
+    }
     
     /** 单选原图 + 单选256 */
     if (_photoType == WXMPhotoDetailTypeGetPhoto ||
@@ -131,17 +134,12 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         if (self.exitPreview) {
             size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
             if (size.height * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
-            if (CGSizeEqualToSize(self.expectSize, CGSizeZero)) self.expectSize = size;
-            
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto_256 && !self.exitPreview) {
             size = CGSizeMake(256, 256);
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto && !self.exitPreview) {
             size = PHImageManagerMaximumSize;
         } else if (_photoType == WXMPhotoDetailTypeGetPhotoCustomSize && !self.exitPreview) {
             size = self.expectSize;
-            if (CGSizeEqualToSize(size, CGSizeZero)) {
-                size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
-            }
         }
         
         [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
@@ -286,6 +284,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 #pragma mark 点击toobar回调
+
 /** 预览按钮 */
 - (void)wxm_touchPreviewControl {
     self.sign = NO;
@@ -294,8 +293,22 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [self collectionView:_collectionView didSelectItemAtIndexPath:signModel.indexPath];
 }
 
+/** 回调 */
 - (void)wxm_touchDismissViewController {
-    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+    CGSize size = self.expectSize;
+    if (self.toolbar.isOriginalImage) size = PHImageManagerMaximumSize;
+    NSMutableArray * array = @[].mutableCopy;
+    [self.signObj enumerateObjectsUsingBlock:^(WXMPhotoSignModel* obj, NSUInteger idx, BOOL stop) {
+        WXMPhotoAsset *phsset = self.dataSource[obj.indexPath.row];
+        if (phsset)[array addObject:phsset];
+    }];
+    
+    [WXMResourceAssistant sendMoreResource:array
+                                 coverSize:size
+                                  delegate:self.delegate
+                               isShowVideo:self.showVideo
+                                isShowLoad:YES
+                            viewController:self.navigationController];
 }
 
 #pragma mark 在下一个界面(预览)选中取消的回调

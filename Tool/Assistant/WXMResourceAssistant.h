@@ -8,6 +8,7 @@
 #import "WXMPhotoManager.h"
 #import <Foundation/Foundation.h>
 #import "WXMPhotoConfiguration.h"
+#import "WXMDictionary_Array.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
           isShowLoad:(BOOL)isShowLoad
       viewController:(UIViewController *)controller;
 
-/**  */
+/** 固定尺寸 */
 + (void)sendResource:(WXMPhotoAsset *)asset
            coverSize:(CGSize)coverSize
             delegate:(id<WXMPhotoProtocol>)delegate
@@ -39,9 +40,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 + (void)sendCoverImage:(UIImage *)coverImage delegate:(id<WXMPhotoProtocol>)delegate;
+
 #pragma mark 多选
 
-
++ (void)sendMoreResource:(NSArray <WXMPhotoAsset *>*)array
+               coverSize:(CGSize)coverSize
+                delegate:(id<WXMPhotoProtocol>)delegate
+             isShowVideo:(BOOL)isShowVideo
+              isShowLoad:(BOOL)isShowLoad
+          viewController:(UIViewController *)controller;
 
 @end
 

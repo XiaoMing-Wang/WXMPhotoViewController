@@ -318,7 +318,19 @@ WXMPreviewToolbarProtocol,UINavigationControllerDelegate>
 
 /** 回调多张图片 */
 - (void)wxm_morePhotoSendImage {
-    
+    CGSize size = self.expectSize;
+    if (self.bottomBarView.isOriginalImage) size = PHImageManagerMaximumSize;
+    NSMutableArray * array = @[].mutableCopy;
+    [self.signObj enumerateObjectsUsingBlock:^(WXMPhotoSignModel* obj, NSUInteger idx, BOOL stop) {
+        WXMPhotoAsset *phsset = self.dataSource[obj.indexPath.row];
+        if (phsset)[array addObject:phsset];
+    }];
+    [WXMResourceAssistant sendMoreResource:array
+                                 coverSize:size
+                                  delegate:self.delegate
+                               isShowVideo:self.showVideo
+                                isShowLoad:YES
+                            viewController:self.navigationController];
 }
 
 /** 目前选中的资源的类型 */
