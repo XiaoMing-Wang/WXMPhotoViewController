@@ -41,7 +41,7 @@ static char wxm_Photoline;
     return image;
 }
 
-/** */
+/** 获取截图view */
 + (UIView *)wxmPhoto_snapViewImage:(UIView *)screenshots {
     UIView *snapView = [screenshots snapshotViewAfterScreenUpdates:YES];
     return snapView;
@@ -88,9 +88,9 @@ static char wxm_Photoline;
                                   cancel:(NSString *)cancleString
                              otherAction:(NSArray *)otherAction
                            completeBlock:(void (^)(NSInteger index))block {
-    
-    UIAlertController *a=[UIAlertController alertControllerWithTitle:title message:message preferredStyle:1];
-    UIAlertController *alert = a;
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:title
+                                                                 message:message
+                                                          preferredStyle:1];
     UIAlertAction *cancle = [UIAlertAction actionWithTitle:cancleString style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
         if (block) block(0);
     }];

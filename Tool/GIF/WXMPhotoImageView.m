@@ -17,7 +17,6 @@
 @property (nonatomic) NSUInteger loopCountdown;
 @end
 
-
 @implementation WXMPhotoImageView
 const NSTimeInterval kMaxTimeStep = 1; // note: To avoid spiral-o-death
 @synthesize runLoopMode = _runLoopMode;
@@ -55,9 +54,7 @@ const NSTimeInterval kMaxTimeStep = 1; // note: To avoid spiral-o-death
         NSRunLoop *runloop = [NSRunLoop mainRunLoop];
         [self.displayLink removeFromRunLoop:runloop forMode:_runLoopMode];
         [self.displayLink addToRunLoop:runloop forMode:runLoopMode];
-        
         _runLoopMode = runLoopMode;
-        
         [self startAnimating];
     }
 }
@@ -106,7 +103,6 @@ const NSTimeInterval kMaxTimeStep = 1; // note: To avoid spiral-o-death
     }
     
     self.loopCountdown = 0;
-    
     self.displayLink.paused = YES;
 }
 
@@ -121,7 +117,6 @@ const NSTimeInterval kMaxTimeStep = 1; // note: To avoid spiral-o-death
     }
     
     self.loopCountdown = self.animatedImage.loopCount ?: NSUIntegerMax;
-    
     self.displayLink.paused = NO;
 }
 
