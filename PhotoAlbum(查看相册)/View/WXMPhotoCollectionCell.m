@@ -57,7 +57,6 @@
     _photoAsset = photoAsset;
     self.representedAssetIdentifier = _photoAsset.asset.localIdentifier;
     [self wxm_setTypeSignInterface];
-    
     CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
         
     /** PHImageRequestOptionsResizeModeExact返回精确大小 */
