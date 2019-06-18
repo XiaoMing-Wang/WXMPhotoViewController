@@ -25,7 +25,6 @@
          isShowVideo:(BOOL)isShowVideo
           isShowLoad:(BOOL)isShowLoad
       viewController:(UIViewController *)controller {
-    
     if (delegate == nil) return;
     BOOL supportVideo = (isShowVideo && WXMPhotoSupportVideo);
     
