@@ -5,7 +5,7 @@
 //  Created by wq on 16/1/10.
 //  Copyright © 2016年 wq. All rights reserved.
 //
-
+#import <UIKit/UIKit.h>
 #import "WXMPhotoManager.h"
 #import <AssetsLibrary/ALAsset.h>
 #import <AssetsLibrary/ALAssetRepresentation.h>
@@ -101,6 +101,7 @@ static WXMPhotoManager *manager = nil;
 
 /** 获得所有的相册对象*/
 - (void)wxm_getAllPicturesListBlock:(void(^)(NSArray<WXMPhotoList *> *))block {
+    
     @autoreleasepool {
         NSMutableArray<WXMPhotoList *> *photoList = @[].mutableCopy;
         
@@ -123,15 +124,18 @@ static WXMPhotoManager *manager = nil;
                     list.photoNum = result.count;
                     list.firstAsset = result.firstObject;
                     list.assetCollection = collection;
-                    if ([list.title isEqualToString:@"相机胶卷"]) {
+                    if ([list.title isEqualToString:@"相机胶卷"] || [list.title isEqualToString:@"Live Photos"]) {
                         [photoList insertObject:list atIndex:0];
-                    } else [photoList addObject:list];
+                    } else {
+                        [photoList addObject:list];
+                    }
                     
                     if (idx == 0) self.firstPhotoList = list;
                     if ([list.title isEqualToString:@"相机胶卷"]) self.firstPhotoList = list;
                 }
             }
         }];
+        
         
         /** 用户创建的相册 */
         PHFetchResult * userAlbum = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil];
@@ -145,12 +149,15 @@ static WXMPhotoManager *manager = nil;
                 list.assetCollection = collection;
                 if ([list.title isEqualToString:@"我的照片流"] && photoList.count >= 1) {
                     [photoList insertObject:list atIndex:1];
-                } else [photoList addObject:list];
+                } else {
+                    [photoList addObject:list];
+                }
             }
         }];
         
         
         dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.firstPhotoList == nil)self.firstPhotoList = photoList.firstObject;
             self.picturesArray = photoList;
             if (block) block(photoList);
         });
