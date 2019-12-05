@@ -31,7 +31,7 @@
     }
     return WXMPHAssetMediaTypeImage;
 }
-
+     
 /** 获取视频时长 */
 - (NSString *)videoDrantion {
     if (self.mediaType != WXMPHAssetMediaTypeVideo) return @"";
