@@ -5,7 +5,6 @@
 //  Created by wq on 16/1/10.
 //  Copyright © 2016年 wq. All rights reserved.
 //
-
 #import <UIKit/UIKit.h>
 #import "WXMPhotoManager.h"
 #import <AssetsLibrary/ALAsset.h>
@@ -15,6 +14,7 @@
 
 @implementation WXMPhotoList @end
 @implementation WXMPhotoAsset
+
 - (WXMPhotoMediaType)mediaType {
     if (self.asset.mediaType == PHAssetMediaTypeVideo) return WXMPHAssetMediaTypeVideo;
     if (self.asset.mediaType == PHAssetMediaTypeAudio) return WXMPHAssetMediaTypeAudio;
