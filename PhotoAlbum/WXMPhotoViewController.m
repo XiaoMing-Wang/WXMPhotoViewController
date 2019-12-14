@@ -21,9 +21,11 @@
 
 - (instancetype)init {
     if (self = [super init]) {
+        self.expectSize = CGSizeZero;
         self.pushCamera = YES;
         self.exitPreview = YES;
         self.showVideo = YES;
+        self.canSelectedVideo = YES;
         self.jurisdictionData = @[].mutableCopy;
     }
     return self;
@@ -65,8 +67,7 @@
 }
 
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    WXMPhotoListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"
-                                                             forIndexPath:indexPath];
+    WXMPhotoListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.phoneList = [self.jurisdictionData objectAtIndex:indexPath.row];
     return cell;
@@ -81,11 +82,14 @@
 - (void)wxm_pushToPhotoListViewController:(NSIndexPath *)indexPath {
     if (self.pushCamera == NO && indexPath == nil) return;
     WXMPhotoDetailViewController *photoDetail = [WXMPhotoDetailViewController new];
+    photoDetail.multiSelectMax = self.multiSelectMax;
+    photoDetail.multiSelectVideoMax = self.multiSelectVideoMax;
     photoDetail.exitPreview = self.exitPreview;
     photoDetail.photoType = self.photoType;
     photoDetail.expectSize = self.expectSize;
     photoDetail.showVideo = self.showVideo;
     photoDetail.delegate = self.delegate;
+    photoDetail.canSelectedVideo = self.canSelectedVideo;
     if (indexPath == nil) photoDetail.phoneList = [WXMPhotoManager sharedInstance].firstPhotoList;
     if (indexPath) photoDetail.phoneList = self.jurisdictionData[indexPath.row];
     [self.navigationController pushViewController:photoDetail animated:(indexPath != nil)];
@@ -100,6 +104,7 @@
 
 /** 判断是否有权限 */
 - (void)judgeAuthority {
+    __weak __typeof(self) weakself = self;
     [self.jurisdictionData removeAllObjects];
     void(^resultsBlock)(void) = ^(void) {
         if ([WXMPhotoManager sharedInstance].picturesArray) {
@@ -108,9 +113,9 @@
             [self.listTableView reloadData];
         } else {
             [[WXMPhotoManager sharedInstance] wxm_getAllPicturesListBlock:^(NSArray *array) {
-                [self.jurisdictionData addObjectsFromArray:array];
-                [self.listTableView reloadData];
-                [self wxm_pushToPhotoListViewController:nil];
+                [weakself.jurisdictionData addObjectsFromArray:array];
+                [weakself.listTableView reloadData];
+                [weakself wxm_pushToPhotoListViewController:nil];
             }];
         }
      };
@@ -119,7 +124,7 @@
     if (PHPhotoLibrary.authorizationStatus == AVAuthorizationStatusNotDetermined) {
         [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
             if (status == AVAuthorizationStatusAuthorized) resultsBlock();
-            else [self wxm_backLastViewController];
+            else [weakself wxm_backLastViewController];
         }];
     }
 
@@ -160,7 +165,7 @@
     [super viewDidAppear:animated];
     self.navigationController.interactivePopGestureRecognizer.enabled = NO;
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleDefault;
-    UIImage * imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:WXMBarColor];
+    UIImage *imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:WXMBarColor];
     [self.navigationController.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
 }
 

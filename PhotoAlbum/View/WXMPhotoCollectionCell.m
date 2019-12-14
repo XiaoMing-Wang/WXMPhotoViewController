@@ -22,6 +22,7 @@
 /** 勾选框  */
 @property (nonatomic, strong) UIButton *chooseButton;
 @property (nonatomic, assign) int32_t currentRequestID;
+
 @end
 
 @implementation WXMPhotoCollectionCell
@@ -32,10 +33,10 @@
 }
 
 - (void)setupInterface {
-    _userCanTouch = YES;
-    _imageView = [[UIImageView alloc] initWithFrame:self.bounds];
-    _imageView.contentMode = UIViewContentModeScaleAspectFill;
-    _imageView.clipsToBounds = YES;
+    self.userCanTouch = YES;
+    self.imageView = [[UIImageView alloc] initWithFrame:self.bounds];
+    self.imageView.contentMode = UIViewContentModeScaleAspectFill;
+    self.imageView.clipsToBounds = YES;
     
     [self.contentView addSubview:self.imageView];
     [self.contentView addSubview:self.typeSign];
@@ -53,16 +54,29 @@
 }
 
 /** 异步赋值 数量特别多异步获取 */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored"-Wimplicit-retain-self"
+ 
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     _photoAsset = photoAsset;
-    self.representedAssetIdentifier = _photoAsset.asset.localIdentifier;
-    [self wxm_setTypeSignInterface];
+    _assetIdentifier = _photoAsset.asset.localIdentifier;
     CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
-        
+    
+    /** 设置界面 */
+    [self wxm_setTypeSignInterface];
+    
     /** PHImageRequestOptionsResizeModeExact返回精确大小 */
     /** PHImageRequestOptionsResizeModeExact想返回缩略图在返回需要大小 */
-    int32_t ids = [[WXMPhotoManager sharedInstance] getPicturesByAsset:photoAsset.asset synchronous:NO original:NO assetSize:size resizeMode:PHImageRequestOptionsResizeModeExact deliveryMode:PHImageRequestOptionsDeliveryModeOpportunistic completion:^(UIImage *image) {
-        if ([self.representedAssetIdentifier isEqualToString:_photoAsset.asset.localIdentifier]) {
+    int32_t ids = [[WXMPhotoManager sharedInstance]
+                   getPicturesByAsset:photoAsset.asset
+                   synchronous:NO
+                   original:NO
+                   assetSize:size
+                   resizeMode:PHImageRequestOptionsResizeModeExact
+                   deliveryMode:PHImageRequestOptionsDeliveryModeOpportunistic
+                   completion:^(UIImage *image) {
+        
+        if ([_assetIdentifier isEqualToString:_photoAsset.asset.localIdentifier]) {
             self.imageView.image = image;
         } else {
             [[WXMPhotoManager sharedInstance] cancelRequestWithID:_currentRequestID];
@@ -76,6 +90,25 @@
     _photoAsset.requestID = ids;
     [self setNeedsLayout];
 }
+#pragma clang diagnostic pop
+
+
+/** 多选模式下设置代理 */
+- (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
+          indexPath:(NSIndexPath *)indexPath
+          signModel:(WXMPhotoSignModel *)signModel
+          available:(BOOL)available {
+    
+    _delegate = delegate;
+    _indexPath = indexPath;
+    _signModel = signModel;
+    BOOL selected = (signModel != nil);
+    if (selected) available = YES;
+    
+    [self signButtonSelected:selected];
+    [self wxm_setTypeSignInterface];
+    [self setUserCanTouch:available animation:NO];
+}
 
 /** 设置能否响应 */
 - (void)setUserCanTouch:(BOOL)userCanTouch animation:(BOOL)animation {
@@ -83,24 +116,9 @@
     
     /** 用户能否点击 */
     CGFloat duration = animation ? 0.2 : 0;
-    [UIView animateWithDuration:duration animations:^{ self.maskCoverView.alpha = !userCanTouch;}];
-}
-
-
-/** 多选模式下设置代理 */
-- (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
-          indexPath:(NSIndexPath *)indexPath
-          signModel:(WXMPhotoSignModel *)signModel
-           canTouch:(BOOL)canTouch {
-    
-    _delegate = delegate;
-    _indexPath = indexPath;
-    _signModel = signModel;
-    [self signButtonSelected:(signModel != nil)];
-    [self wxm_setTypeSignInterface];
-    
-    if (signModel != nil) canTouch = YES;
-    [self setUserCanTouch:canTouch animation:NO];
+    [UIView animateWithDuration:duration animations:^{
+        self.maskCoverView.alpha = (!userCanTouch);
+    }];
 }
 
 /** 设置显示界面效果 */
@@ -108,11 +126,12 @@
     self.typeSign.hidden = YES;
     [self.contentView bringSubviewToFront:self.typeSign];
     
+    /** 视频 */
     if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo &&
         WXMPhotoShowVideoSign &&
         WXMPhotoSupportVideo) {
         if (self.showVideo)  self.typeSign.hidden = NO;
-        NSString * duration = [NSString stringWithFormat:@"  %@",_photoAsset.videoDrantion];
+        NSString *duration = [NSString stringWithFormat:@"  %@", _photoAsset.videoDrantion];
         [self.typeSign setTitle:duration forState:UIControlStateNormal];
         
         UIImage *image = [UIImage imageNamed:@"photo_videoSmall"];
@@ -120,8 +139,8 @@
         self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
         self.typeSign.titleLabel.font = [UIFont systemFontOfSize:11];
         
+    /** GIF */
     } else if (_photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && WXMPhotoShowGIFSign) {
-        
         self.typeSign.hidden = NO;
         self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:15];
         [self.typeSign setTitle:@"  GIF" forState:UIControlStateNormal];
@@ -132,29 +151,30 @@
 
 /** 设置button选中 */
 - (void)signButtonSelected:(BOOL)selected {
-    _chooseButton.selected = selected;
+    self.chooseButton.selected = selected;
+    UIControlState sele = UIControlStateSelected;
     if (selected) {
-        [_chooseButton setTitle:@(_signModel.rank).stringValue forState:UIControlStateSelected];
+        [self.chooseButton setTitle:@(_signModel.rank).stringValue forState:sele];
     } else {
-        [_chooseButton setTitle:@"" forState:UIControlStateNormal];
-        [_chooseButton setTitle:@"" forState:UIControlStateSelected];
+        [self.chooseButton setTitle:@"" forState:UIControlStateNormal];
+        [self.chooseButton setTitle:@"" forState:sele];
     }
 }
 
-/** 点击 */
+/** 勾号点击 */
 - (void)wxm_touchEvent {
     if (self.userCanTouch == NO) {
         [self wxm_showAlertController];
         return;
     }
     
-    _chooseButton.selected = !_chooseButton.selected;
-    [_chooseButton setTitle:@"" forState:UIControlStateNormal];
-    [_chooseButton setTitle:@"" forState:UIControlStateSelected];
+    self.chooseButton.selected = !_chooseButton.selected;
+    [self.chooseButton setTitle:@"" forState:UIControlStateNormal];
+    [self.chooseButton setTitle:@"" forState:UIControlStateSelected];
     [self setAnimation];
-
+    
     /** 设置第几个选中 */
-    if (self.delegate&&[self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
+    if ([self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
         BOOL selected = _chooseButton.selected;
         NSInteger count = [self.delegate touchWXMPhotoSignView:_indexPath selected:selected];
         if (count >= 0 && count < WXMMultiSelectMax) {
@@ -177,14 +197,15 @@
 
 /** 提示框 */
 - (void)wxm_showAlertController {
-    if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_cantTouchWXMPhotoSignView)]){
-        [self.delegate wxm_cantTouchWXMPhotoSignView];
+    if ([self.delegate respondsToSelector:@selector(wxm_cantTouchWXMPhotoSignView:)]){
+        [self.delegate wxm_cantTouchWXMPhotoSignView:self.photoAsset.mediaType];
     }
 }
 
 /** 刷新标号排名 */
 - (void)refreshRankingWithSignModel:(WXMPhotoSignModel *)signModel {
     _signModel = signModel;
+    _chooseButton.selected = YES;
     [_chooseButton setTitle:@(_signModel.rank).stringValue forState:UIControlStateSelected];
 }
 
@@ -197,8 +218,8 @@
         _typeSign.left = 5;
         _typeSign.userInteractionEnabled = NO;
         _typeSign.titleLabel.font = [UIFont systemFontOfSize:12];
-        [_typeSign setTitle:@"" forState:UIControlStateNormal];
         _typeSign.hidden = YES;
+        [_typeSign setTitle:@"" forState:UIControlStateNormal];
     }
     return _typeSign;
 }
@@ -216,10 +237,12 @@
 
 - (UIButton *)chooseButton {
     if (!_chooseButton) {
-        _chooseButton = [[UIButton alloc] init];
         UIImage *normal = [UIImage imageNamed:@"photo_sign_default"];
         UIImage *selected = [UIImage imageNamed:@"photo_sign_background"];
-        _chooseButton = [[UIButton alloc] initWithFrame:CGRectMake(0,3, WXMSelectedWH, WXMSelectedWH)];
+        
+        CGFloat wh = WXMSelectedWH;
+        _chooseButton = [[UIButton alloc] init];
+        _chooseButton = [[UIButton alloc] initWithFrame:CGRectMake(0,3,wh,wh)];
         _chooseButton.right = self.contentView.width - 3;
         _chooseButton.titleLabel.font = [UIFont systemFontOfSize:WXMSelectedFont];
         [_chooseButton setBackgroundImage:normal forState:UIControlStateNormal];
@@ -228,6 +251,10 @@
         [_chooseButton wxm_setEnlargeEdgeWithTop:3 left:15 right:3 bottom:15];
     }
     return _chooseButton;
+}
+
+- (void)dealloc {
+    self.imageView.image = nil;
 }
 
 @end

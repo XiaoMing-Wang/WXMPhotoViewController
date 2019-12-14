@@ -10,10 +10,8 @@
 #import <Foundation/Foundation.h>
 
 @interface WXMPhotoResources : NSObject
-
-@property (nonatomic, assign) WXMPhotoMediaType mediaType;
-
 @property (nonatomic, strong) UIImage *resourceImage;
-
 @property (nonatomic, strong) NSData *resourceData;
+@property (nonatomic, strong) NSString *resourceTag;
+@property (nonatomic, assign) WXMPhotoMediaType mediaType;
 @end

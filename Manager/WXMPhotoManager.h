@@ -6,6 +6,7 @@
 //  Copyright © 2016年 wq. All rights reserved.
 //
 
+#import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 #import <Photos/Photos.h>
 
@@ -31,11 +32,11 @@ typedef enum {
 
 /** 相片对象 */
 @interface WXMPhotoAsset : NSObject
-@property (nonatomic, strong) PHAsset *asset;         /** 相片媒介 */
-@property (nonatomic, weak) UIImage *bigImage;        /** 大相片 */
-@property (nonatomic, copy) NSURL *videoUrl;          /** video url */
-@property (nonatomic, copy) NSString *videoDrantion;  /** video 时间长度 */
-@property (nonatomic, assign) int32_t requestID;
+@property (nonatomic, strong) PHAsset *asset;              /** 相片媒介 */
+@property (nonatomic, strong) UIImage *cacheImage;
+@property (nonatomic, copy) NSURL *videoUrl;               /** video url */
+@property (nonatomic, copy) NSString *videoDrantion;       /** video 时间 */
+@property (nonatomic, assign) int32_t requestID;           /** 下载id */
 @property (nonatomic, assign) CGFloat bytes;               /** 大小 */
 @property (nonatomic, assign) CGFloat aspectRatio;         /** 高/宽比例 */
 @property (nonatomic, assign) WXMPhotoMediaType mediaType; /** 相片类型 */
@@ -99,19 +100,19 @@ typedef enum {
                            completion:(void (^)(UIImage *image))comple;
 
 
-/** 获取GIF data */
+/** 获取GIF Data */
 - (int32_t)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
-/** 获取Image data */
+/** 获取Image Data (同步) */
 - (int32_t)getImageByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
 /** 获取视频路径 */
-- (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(NSURL * , NSData *))completiont;
+- (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(NSURL *, NSData *))completiont;
 
 /** 获取livephoto 系统大于9.1 */
 - (void)getLivePhotoByAsset:(PHAsset *)assetData
                    liveSize:(CGSize)liveSize
-                 completion:(void (^)(PHLivePhoto *))completiont;
+                 completion:(void (^)(PHLivePhoto *))completiont API_AVAILABLE(ios(9.1));
 
 /** 取消请求 */
 - (void)cancelRequestWithID:(int32_t)requestID;

@@ -10,6 +10,15 @@
 
 @interface WXMPhotoViewController : UIViewController
 
+/** 可以选择多少张图片 0为WXMMultiSelectMax */
+@property (nonatomic, assign) NSInteger multiSelectMax;
+
+/** 可以选择多少个视频 0为WXMMultiSelectVideoMax */
+@property (nonatomic, assign) NSInteger multiSelectVideoMax;
+
+/** 是否可以选video (场景:已经选中图片的情况下不能再选择video) */
+@property (nonatomic, assign) BOOL canSelectedVideo;
+
 /** 是否跳转相机胶卷 默认YES */
 @property (nonatomic, assign) BOOL pushCamera;
 

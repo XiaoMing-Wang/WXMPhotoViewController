@@ -76,7 +76,6 @@
     }
 }
 
-/**  */
 - (void)setSignModel:(WXMPhotoSignModel *)signModel {
     _signModel = signModel;
     if (signModel == nil) {
@@ -90,14 +89,26 @@
 
 /** 左按钮 */
 - (void)leftItemTouchEvents {
-    if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_touchTopLeftItem)]) {
+    self.leftButton.userInteractionEnabled = NO;
+    dispatch_time_t time_t = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.35 * NSEC_PER_SEC));
+    dispatch_after(time_t, dispatch_get_main_queue(), ^{
+        self.leftButton.userInteractionEnabled = YES;
+    });
+    
+    if ([self.delegate respondsToSelector:@selector(wxm_touchTopLeftItem)]) {
         [self.delegate wxm_touchTopLeftItem];
     }
 }
 
 /** 右按钮 */
 - (void)rightItemTouchEvents {
-    if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_touchTopRightItem:)]) {
+    self.rightButton.userInteractionEnabled = NO;
+    dispatch_time_t time_t = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.35 * NSEC_PER_SEC));
+    dispatch_after(time_t, dispatch_get_main_queue(), ^{
+        self.rightButton.userInteractionEnabled = YES;
+    });
+    
+    if ([self.delegate respondsToSelector:@selector(wxm_touchTopRightItem:)]) {
         [self.delegate wxm_touchTopRightItem:self.signModel];
     }
 }

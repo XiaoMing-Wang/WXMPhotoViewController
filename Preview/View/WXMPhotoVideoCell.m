@@ -70,9 +70,18 @@
     [self.contentView addSubview:_contentScrollView];
     [self wxm_addTapGestureRecognizer];
     
-    [KNotificationCenter addObserver:self selector:@selector(wxm_runAgain) name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
-    [KNotificationCenter addObserver:self selector:@selector(enterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
-    [KNotificationCenter addObserver:self selector:@selector(enterBackground) name:UIApplicationWillResignActiveNotification object:nil];
+    [KNotificationCenter addObserver:self
+                            selector:@selector(wxm_runAgain) name:AVPlayerItemDidPlayToEndTimeNotification
+                              object:nil];
+    
+    [KNotificationCenter addObserver:self
+                            selector:@selector(enterForeground)
+                                name:UIApplicationWillEnterForegroundNotification
+                              object:nil];
+    
+    [KNotificationCenter addObserver:self
+                            selector:@selector(enterBackground) name:UIApplicationWillResignActiveNotification
+                              object:nil];
 }
 
 /** 添加三个手势 */
@@ -95,26 +104,39 @@
 
 /** 设置image位置 */
 - (void)setLocation:(CGFloat)scale {
-    self.imageView.frame = CGRectMake(0, 0, _contentScrollView.width, _contentScrollView.width * scale);
-    self.imageView.center = CGPointMake(_contentScrollView.width / 2, _contentScrollView.height / 2);
+    CGFloat width = _contentScrollView.width;
+    CGFloat height = width * scale;
+    self.imageView.frame = CGRectMake(0, 0, width, width * scale);
+    self.imageView.center = CGPointMake(width / 2, height / 2);
     self.playIcon.layoutCenterSupView = YES;
 }
 
+/** 异步赋值 数量特别多异步获取 */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored"-Wimplicit-retain-self"
+
 /** 设置图片Video */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
-    _photoAsset = photoAsset;
     @autoreleasepool {
+        
+        _photoAsset = photoAsset;
         CGFloat screenWidth  = WXMPhoto_Width * 2.0;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         if (_photoAsset.aspectRatio <= 0) {
-            _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / (CGFloat)photoAsset.asset.pixelWidth * 1.0;
+            _photoAsset.aspectRatio =
+            (CGFloat) photoAsset.asset.pixelHeight /
+            (CGFloat) photoAsset.asset.pixelWidth * 1.0;
         }
+       
         CGFloat imageHeight = photoAsset.aspectRatio * screenWidth;
-        
         PHAsset *asset = photoAsset.asset;
         CGSize size = CGSizeMake(screenWidth, imageHeight);
-        [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-            photoAsset.bigImage = image;
+        
+        [man getPictures_customSize:asset
+                        synchronous:NO
+                          assetSize:size
+                         completion:^(UIImage *image)
+         {
             self.imageView.image = image;
             [self setLocation:_photoAsset.aspectRatio];
             [self wxm_avPlayStartPlay:NO];
@@ -122,6 +144,8 @@
         }];
     }
 }
+
+#pragma clang diagnostic pop
 
 - (UIImage *)currentImage {
     return self.imageView.image;
@@ -142,7 +166,7 @@
 /** 单击 */
 - (void)respondsToTapSingle:(UITapGestureRecognizer *)tap {
     self.playIcon.hidden  ? [self wxm_avPlayStopPlay] : [self wxm_avPlayStartPlay:YES];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle)]) {
+    if ([self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle)]) {
         [self.delegate wxm_respondsToTapSingle];
     }
 }
@@ -166,12 +190,12 @@
           }
       };
       
-      if (self.photoAsset.videoUrl) playBlock(_photoAsset.videoUrl);
+      if (self.photoAsset.videoUrl) playBlock(self.photoAsset.videoUrl);
       if (!self.photoAsset.videoUrl) {
           WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-          [man getVideoByAsset:_photoAsset.asset completion:^(NSURL *url, NSData * data) {
+          [man getVideoByAsset:_photoAsset.asset completion:^(NSURL *url, NSData *data) {
               self.photoAsset.videoUrl = url;
-              playBlock(self.photoAsset.videoUrl);
+              playBlock(url);
           }];
       }
   }
@@ -197,7 +221,7 @@
         self.wxm_x = point.x / recognizer_W;
         self.wxm_y = point.y / recognizer_H;
         self.wxm_lastPoint = recognizer.view.center;
-        if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsBeginDragCell)]) {
+        if ([self.delegate respondsToSelector:@selector(wxm_respondsBeginDragCell)]) {
             [self.delegate wxm_respondsBeginDragCell];
         }
         
@@ -236,14 +260,14 @@
                 recognizer.view.center = self.wxm_lastPoint;
                 self.wxm_blackView.alpha = 1;
             } completion:^(BOOL finished) {
-                if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
+                if ([self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
                     [self.delegate wxm_respondsEndDragCell:nil];
                 }
             }];
         } else {
             [self wxm_removeAvPlayer];
             self.contentScrollView.userInteractionEnabled = NO;
-            if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
+            if ([self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
                 [self.delegate wxm_respondsEndDragCell:self.contentScrollView];
             }
         }
@@ -253,9 +277,10 @@
 /** 黑色遮罩 */
 - (UIView *)wxm_blackView {
     if (!_wxm_blackView)  {
-        _wxm_blackView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Height)];
+        CGRect rect = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Height);
+        _wxm_blackView = [[UIView alloc] initWithFrame:rect];
         _wxm_blackView.backgroundColor = [UIColor blackColor];
-        objc_setAssociatedObject(_contentScrollView, @"black",_wxm_blackView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(_contentScrollView, @"black",_wxm_blackView, 1);
     }
     return _wxm_blackView;
 }

@@ -1,2 +1,0 @@
-# WXMPhotoViewController
-相册

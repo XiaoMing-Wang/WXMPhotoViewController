@@ -96,14 +96,8 @@
 + (void)getCoverImage:(PHAsset *)asset
             coverSize:(CGSize)coverSize
            completion:(void (^)(UIImage *image))completion {
-    [WXMManager getPicturesByAsset:asset
-                       synchronous:YES
-                          original:NO
-                         assetSize:coverSize
-                        resizeMode:PHImageRequestOptionsResizeModeExact
-                      deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
-                        completion:completion];
-}
+    [WXMManager wxm_synchronousGetPictures:asset size:coverSize completion:completion];
+ }
 
 + (void)sendMoreResource:(NSArray <WXMPhotoAsset *>*)array
                coverSize:(CGSize)coverSize
@@ -118,18 +112,21 @@
     }
    
     /** 图片转化成data 建议自行转化 */
-    if (WXMPhotoSelectedImageReturnData) [WXMPhotoAssistant wxm_showLoadingView:controller.view];
     BOOL supportVideo = (isShowVideo && WXMPhotoSupportVideo);
+    if (WXMPhotoSelectedImageReturnData) {
+        [WXMPhotoAssistant wxm_showLoadingView:controller.view];
+    }
+      
     __block NSMutableDictionary *dic = @{}.mutableCopy;
     dispatch_group_t group = dispatch_group_create();
-    
     [array enumerateObjectsUsingBlock:^(WXMPhotoAsset *obj, NSUInteger idx, BOOL *stop) {
+                               
         CGSize size = CGSizeMake(coverSize.width, coverSize.height);
         if (CGSizeEqualToSize(size, CGSizeZero)) {
-            size = CGSizeMake(WXMPhoto_Width*2, WXMPhoto_Width * obj.aspectRatio * 2);
-            if (size.height * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
+            size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * obj.aspectRatio * 2);
+            if (size.height * 5 < WXMPhoto_Height) size = PHImageManagerMaximumSize;
         }
-             
+        
         dispatch_group_enter(group);
         [self getCoverImage:obj.asset coverSize:size completion:^(UIImage *image) {
             if (obj.mediaType == WXMPHAssetMediaTypePhotoGif) {
@@ -142,14 +139,17 @@
         }];
     }];
     
-    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
-        NSMutableArray * array = @[].mutableCopy;
-        for (NSInteger i = 0; i < dic.count; i++) {
-            WXMPhotoResources *resource = [dic objectForKey:@(i)];
-            if (resource != nil) [array addObject:resource];
-        }
-        [delegate wxm_morePhotoAlbumWithResources:array];
-        [controller dismissViewControllerAnimated:YES completion:nil];
+    dispatch_time_t when = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.02 * NSEC_PER_SEC));
+    dispatch_after(when, dispatch_get_main_queue(), ^{
+        dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+            NSMutableArray * array = @[].mutableCopy;
+            for (NSInteger i = 0; i < dic.count; i++) {
+                WXMPhotoResources *resource = [dic objectForKey:@(i)];
+                if (resource != nil) [array addObject:resource];
+            }
+            [delegate wxm_morePhotoAlbumWithResources:array];
+            [controller dismissViewControllerAnimated:YES completion:nil];
+        });
     });
 }
 

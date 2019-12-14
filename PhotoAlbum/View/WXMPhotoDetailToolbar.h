@@ -19,10 +19,11 @@
 @property (nonatomic, assign, readonly) BOOL isOriginalImage;
 
 
+/** 设置原图按钮是否可用 */
 @property (nonatomic, assign) BOOL originalEnabled;
 
 
+/** 代理 */
 @property (nonatomic, weak) id<WXMDetailToolbarProtocol> detailDelegate;
-
 
 @end

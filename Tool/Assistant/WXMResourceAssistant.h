@@ -30,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
           isShowLoad:(BOOL)isShowLoad
       viewController:(UIViewController *)controller;
 
+
 /** 固定尺寸 */
 + (void)sendResource:(WXMPhotoAsset *)asset
            coverSize:(CGSize)coverSize

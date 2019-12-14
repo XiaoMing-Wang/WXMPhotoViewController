@@ -16,13 +16,14 @@
 @property (nonatomic, assign) BOOL showVideo;
 @property (nonatomic, assign) BOOL userCanTouch;
 @property (nonatomic, strong) NSIndexPath *indexPath;
-@property (nonatomic, strong) NSString *warningString;
+@property (nonatomic, copy) NSString *warningString;
+@property (nonatomic, copy) NSString *assetIdentifier;
 
+@property (nonatomic, assign) WXMPhotoDetailType photoType;
 @property (nonatomic, strong) WXMPhotoAsset *photoAsset;
 @property (nonatomic, strong) WXMPhotoSignModel *signModel;
-@property (nonatomic, assign) WXMPhotoDetailType photoType;
 @property (nonatomic, weak) id<WXMPhotoSignProtocol> delegate;
-@property (nonatomic, copy) NSString *representedAssetIdentifier;
+
 
 /** 设置button选中 */
 - (void)signButtonSelected:(BOOL)selected;
@@ -37,6 +38,6 @@
 - (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
           indexPath:(NSIndexPath *)indexPath
           signModel:(WXMPhotoSignModel *)signModel
-           canTouch:(BOOL)canTouch;
+          available:(BOOL)available;
 
 @end

@@ -11,8 +11,21 @@
 
 @class WXMPhotoList;
 @interface WXMPhotoDetailViewController : UIViewController
+
+/** 相册数组 */
 @property (nonatomic, strong) WXMPhotoList *phoneList;
+
+/** 相册类型 */
 @property (nonatomic, assign) WXMPhotoDetailType photoType;
+
+/** 可以选择多少张图片 0为WXMMultiSelectMax */
+@property (nonatomic, assign) NSInteger multiSelectMax;
+
+/** 可以选择多少个视频 0为WXMMultiSelectVideoMax */
+@property (nonatomic, assign) NSInteger multiSelectVideoMax;
+
+/** 是否可以选video (场景:已经选中图片的情况下不能再选择video) */
+@property (nonatomic, assign) BOOL canSelectedVideo;
 
 /** WXMPhotoDetailTypeGetPhoto 和
     WXMPhotoDetailTypeGetPhoto_256 设置有效 */
@@ -30,4 +43,5 @@
 
 /** 自定义转场使用 */
 - (UICollectionView *)transitionCollectionView;
+
 @end

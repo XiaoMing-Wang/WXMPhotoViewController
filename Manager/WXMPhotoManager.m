@@ -5,7 +5,7 @@
 //  Created by wq on 16/1/10.
 //  Copyright © 2016年 wq. All rights reserved.
 //
-#import <UIKit/UIKit.h>
+
 #import "WXMPhotoManager.h"
 #import <AssetsLibrary/ALAsset.h>
 #import <AssetsLibrary/ALAssetRepresentation.h>
@@ -14,7 +14,6 @@
 
 @implementation WXMPhotoList @end
 @implementation WXMPhotoAsset
-
 - (WXMPhotoMediaType)mediaType {
     if (self.asset.mediaType == PHAssetMediaTypeVideo) return WXMPHAssetMediaTypeVideo;
     if (self.asset.mediaType == PHAssetMediaTypeAudio) return WXMPHAssetMediaTypeAudio;
@@ -31,7 +30,7 @@
     }
     return WXMPHAssetMediaTypeImage;
 }
-     
+
 /** 获取视频时长 */
 - (NSString *)videoDrantion {
     if (self.mediaType != WXMPHAssetMediaTypeVideo) return @"";
@@ -44,6 +43,8 @@
     drantionString = [NSString stringWithFormat:@"%02zd:%02zd",minutes,seconds];
     return drantionString;
 }
+
+/** 获取相片宽高比 */
 - (CGFloat)aspectRatio {
     CGFloat width = (CGFloat) self.asset.pixelWidth;
     CGFloat height = (CGFloat) self.asset.pixelHeight;
@@ -113,8 +114,6 @@ static WXMPhotoManager *manager = nil;
             
             /** 去掉视频和最近删除的 */
             if (!([collection.localizedTitle isEqualToString:@"Recently Deleted"] ||
-                  /**   [collection.localizedTitle isEqualToString:@"Videos"]|| */
-                  /**   [collection.localizedTitle isEqualToString:@"视频"] || */
                   [collection.localizedTitle isEqualToString:@"Hidden"]||
                   [collection.localizedTitle isEqualToString:@"最近删除"])){
                 
@@ -158,11 +157,11 @@ static WXMPhotoManager *manager = nil;
         
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (self.firstPhotoList == nil)self.firstPhotoList = photoList.firstObject;
+            if (!self.firstPhotoList) self.firstPhotoList = photoList.firstObject;
             self.picturesArray = photoList;
             if (block) block(photoList);
         });
-    }
+    } 
 }
 
 /** 获取相册结果集 */
@@ -172,7 +171,6 @@ static WXMPhotoManager *manager = nil;
     PHFetchResult *result = [PHAsset fetchAssetsInAssetCollection:assetCollection options:option];
     return result;
 }
-
 
 #pragma mark ________________________________________________________ 获取asset相对应的照片
 
@@ -207,15 +205,18 @@ static WXMPhotoManager *manager = nil;
 
     /** 是否同步获取 */
     if (synchronous == YES) option.synchronous = YES;
-
-    CGSize size = CGSizeZero;
-    if (original) size = PHImageManagerMaximumSize;
-    else size = assetSize;
+    
+    CGSize size = assetSize;
+    if (original) {
+        size = PHImageManagerMaximumSize;
+    }  else {
+        size = assetSize;
+    }
     
     /** 下载图片 */
     /** option.networkAccessAllowed = YES; */
     /**  targetSize 即你想要的图片尺寸，若想要原尺寸则可输入PHImageManagerMaximumSize */
-    int32_t requestID = [[PHCachingImageManager defaultManager] requestImageForAsset:asset targetSize:size contentMode:PHImageContentModeAspectFill options:option resultHandler:^(UIImage *image,NSDictionary *info) {
+    int32_t requestID = [[PHCachingImageManager defaultManager] requestImageForAsset:asset targetSize:size contentMode:PHImageContentModeAspectFill options:option resultHandler:^(UIImage *image, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (completion) completion(image);
         });
@@ -232,7 +233,7 @@ static WXMPhotoManager *manager = nil;
     return [self getPicturesByAsset:asset
                         synchronous:synchronous
                            original:YES
-                          assetSize:CGSizeZero
+                          assetSize:PHImageManagerMaximumSize
                          resizeMode:PHImageRequestOptionsResizeModeNone
                        deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
                          completion:completion];
@@ -257,10 +258,20 @@ static WXMPhotoManager *manager = nil;
 - (int32_t)wxm_synchronousGetPictures:(PHAsset *)asset
                                  size:(CGSize)size
                            completion:(void (^)(UIImage *image))comple {
-    if (CGSizeEqualToSize(size, CGSizeZero)) {
-        return [self getPictures_original:asset synchronous:YES completion:comple];
+    
+    if (CGSizeEqualToSize(size, CGSizeZero) ||
+        CGSizeEqualToSize(size, PHImageManagerMaximumSize)) {
+        return [self getPictures_original:asset
+                              synchronous:YES
+                               completion:comple];
     } else {
-        return [self getPicturesByAsset:asset synchronous:YES original:NO assetSize:size resizeMode:PHImageRequestOptionsResizeModeExact deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat completion:comple];
+        return [self getPicturesByAsset:asset
+                            synchronous:YES
+                               original:NO
+                              assetSize:size
+                             resizeMode:PHImageRequestOptionsResizeModeExact
+                           deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
+                             completion:comple];
     }
 }
 
@@ -328,12 +339,10 @@ static WXMPhotoManager *manager = nil;
         NSURL *url = urlAsset.URL;
         NSData *data = [NSData dataWithContentsOfURL:url];
         dispatch_async(dispatch_get_main_queue(), ^{
-            completiont(url,data);
+            completiont(url, data);
         });
     }];
 }
-
-
 
 /** 获取livePhoto */
 - (void)getLivePhotoByAsset:(PHAsset *)assetData

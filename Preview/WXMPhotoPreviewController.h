@@ -26,12 +26,14 @@
 
 /** 存储被标记的图片model */
 @property (nonatomic, strong) WXMDictionary_Array *signObj;
-@property (nonatomic, strong) NSMutableDictionary *signDictionary;
 
 /** 全部 */
 @property (nonatomic, strong) NSMutableArray *dataSource;
 
-/**  */
+/** 可以选中的个数 */
+@property (nonatomic, assign) NSInteger selectedMaxCount;
+
+/** 当前选中的index */
 @property (nonatomic, strong) NSIndexPath *indexPath;
 
 /** 回调 */
@@ -44,10 +46,6 @@
 
 /** 回调 */
 @property (nonatomic, weak) id<WXMPhotoProtocol> delegate;
-@property (nonatomic, strong) void (^results)(UIImage *image);
-@property (nonatomic, strong) void (^resultArray)(NSArray<UIImage *> *images);
-
-@property (nonatomic, strong) UIImage * (^transitions)(NSInteger index);
 
 /** 自定义转场使用 */
 - (NSInteger)transitionIndex;

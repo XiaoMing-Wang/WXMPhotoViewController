@@ -33,7 +33,7 @@
 /** 初始化界面 */
 - (void)setupInterface {
     CGFloat h = 125;
-    CGFloat y = WXMPhoto_Height - h;
+    CGFloat y = WXMPhoto_Height - h - (kDevice_Is_iPhoneX ? 35 : 0);
     self.frame = CGRectMake(0, y, WXMPhoto_Width, h);
     self.lastSeleIdx = -1;
     
@@ -44,7 +44,8 @@
     [_photoView addSubview:self.collectionView];
     
     /** 下半部分按钮 */
-    _finshView = [[UIView alloc] initWithFrame:CGRectMake(0, 80, WXMPhoto_Width, h - 80)];
+    CGFloat finH = h - 80 + (kDevice_Is_iPhoneX ? 35 : 0);
+    _finshView = [[UIView alloc] initWithFrame:CGRectMake(0, 80, WXMPhoto_Width, finH)];
     _finshView.backgroundColor = _photoView.backgroundColor;
     
     _line = [[UIView alloc] initWithFrame:CGRectMake(0, 80 - 0.5, WXMPhoto_Width, 0.5)];
@@ -62,6 +63,7 @@
 - (void)wxm_setUpFinshView {
     
     CGFloat height = 30;
+    CGFloat heightFinash = 45;
     self.originalButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 200, height)];
     self.originalButton.tag = 100;
     
@@ -73,23 +75,23 @@
     self.originalButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
     self.originalButton.titleLabel.font = [UIFont systemFontOfSize:13];
     self.originalButton.left = 15;
-    self.originalButton.centerY = _finshView.height / 2;
+    self.originalButton.hidden = !WXMPhotoSelectOriginal;
+    self.originalButton.centerY = heightFinash / 2;
     [self.originalButton wxm_setEnlargeEdgeWithTop:5 left:10 right:-120 bottom:0];
     [self.originalButton wxm_addTarget:self action:@selector(originalTouchEvents:)];
     
-    UIButton * finishButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 60, height)];
-    finishButton.layoutRight = 15;
-    finishButton.centerY = _finshView.height / 2;
-    finishButton.titleLabel.font = [UIFont systemFontOfSize:15];
-    [finishButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [finishButton setTitle:@"完成" forState:UIControlStateNormal];
-    finishButton.backgroundColor = WXMSelectedColor;
-    finishButton.layer.cornerRadius = 4;
-    [finishButton wxm_addTarget:self action:@selector(finishTouchEvents)];
-    self.finishButton = finishButton;
+    self.finishButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 60, height)];
+    self.finishButton.layoutRight = 15;
+    self.finishButton.centerY = heightFinash / 2 + 2;
+    self.finishButton.titleLabel.font = [UIFont systemFontOfSize:15];
+    [self.finishButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [self.finishButton setTitle:@"完成" forState:UIControlStateNormal];
+    self.finishButton.backgroundColor = WXMSelectedColor;
+    self.finishButton.layer.cornerRadius = 4;
+    [self.finishButton wxm_addTarget:self action:@selector(finishTouchEvents)];
     
     [self.finshView addSubview:self.originalButton];
-    [self.finshView addSubview:finishButton];
+    [self.finshView addSubview:self.finishButton];
 }
 
 
@@ -102,8 +104,8 @@
 - (void)originalTouchEvents:(UIButton *)sender {
     sender.selected = !sender.selected;
     _isOriginalImage = sender.selected;
-    [[NSNotificationCenter defaultCenter] postNotificationName:WXMPhoto_originalNoti
-                                                        object:@(_isOriginalImage).stringValue];
+    [[NSNotificationCenter defaultCenter]
+     postNotificationName:WXMPhoto_originalNoti object:@(_isOriginalImage).stringValue];
 }
 
 /** 完成按钮 */
@@ -141,10 +143,12 @@
     });
 }
 
-/** 赋值 0=增加 >0 删除 */
+/** 赋值 0=增加 >0删除 -1刷新 */
 - (void)setSignObj:(WXMDictionary_Array *)signObj removeIdx:(NSInteger)idx {
     _signObj = signObj;
-    NSString *title = signObj.count?[NSString stringWithFormat:@"完成(%ld)",signObj.count]:@"完成";
+    NSString *title = signObj.count ?
+    [NSString stringWithFormat:@"完成(%ld)",signObj.count] : @"完成";
+    
     [self.finishButton setTitle:title forState:UIControlStateNormal];
     [UIView animateWithDuration:((idx > 0) ? 0.5 : 0) animations:^{
         self.line.alpha = (signObj.count > 0);
@@ -153,16 +157,18 @@
     
     if (idx == -1) {
         [self.collectionView reloadData];
-        
     } else if (idx == 0) {
-        UICollectionViewCell *lastCell = [self.collectionView cellForItemAtIndexPath:_lastIndexPath];;
-        [lastCell.contentView viewWithTag:10086].layer.borderColor = [UIColor clearColor].CGColor;
-        UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
+        UICollectionViewCell *lastCell = nil;
+        CGColorRef black = [UIColor clearColor].CGColor;
+        UICollectionViewScrollPosition po = UICollectionViewScrollPositionCenteredHorizontally;
         
+        lastCell = [self.collectionView cellForItemAtIndexPath:_lastIndexPath];;
+        [lastCell.contentView viewWithTag:10086].layer.borderColor = black;
+                
         NSInteger changeRow = MAX((signObj.count - 1), 0);
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:changeRow inSection:0];
         [_collectionView insertItemsAtIndexPaths:@[indexPath]];
-        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:position animated:YES];
+        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:po animated:YES];
         
         UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
         cell.contentView.alpha = 0;
@@ -172,7 +178,6 @@
             cell.contentView.alpha = 1;
             cell.contentView.transform = CGAffineTransformIdentity;
         }];
-        
     } else if (idx > 0) {
         CGFloat width = _collectionView.contentSizeWidth - WXMPhotoPreviewImageWH - 12;
         if (width < WXMPhoto_Width) {
@@ -192,8 +197,8 @@
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    UICollectionViewCell *cell = nil;
-    cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
+    UICollectionViewCell *cell =
+    [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
     WXMPhotoSignModel * signModel = [self.signObj objectAtIndex:indexPath.row];
     UIImageView * imageView = [cell.contentView viewWithTag:10086];
     if (!imageView) {
@@ -226,7 +231,6 @@
     }];
 }
 
-/**  */
 - (void)setSeletedIdx:(NSInteger)seletedIdx {
     _seletedIdx = seletedIdx;
     if (self.lastSeleIdx == -1) self.lastSeleIdx = seletedIdx;
@@ -237,10 +241,10 @@
         self.lastSeleIdx = seletedIdx;
         WXMPhotoSignModel * signModel = [self.signObj objectForKey:@(seletedIdx).stringValue];
         NSInteger idx = [self.signObj indexOfObject:signModel];
+        UICollectionViewScrollPosition po= UICollectionViewScrollPositionCenteredHorizontally;
         if (idx >= 0) {
-            UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
-            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:idx inSection:0];
-            [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:position animated:YES];
+            NSIndexPath *inPath = [NSIndexPath indexPathForRow:idx inSection:0];
+            [_collectionView scrollToItemAtIndexPath:inPath atScrollPosition:po animated:YES];
         }
     }
 }
@@ -282,20 +286,3 @@
 }
 @end
 
-//@implementation WXMPhotoPreviewCollectionCell
-//
-//- (instancetype)initWithFrame:(CGRect)frame {
-//    if (self = [super initWithFrame:frame]) [self setupInterface];
-//    return self;
-//}
-//- (void)setupInterface {
-//    _contontImageView = [[UIImageView alloc] initWithFrame:CGRectZero];
-//    _contontImageView.clipsToBounds = YES;
-//    _contontImageView.size = CGSizeMake(WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
-//    _contontImageView.layer.borderWidth = 1.5;
-//    _contontImageView.contentMode = UIViewContentModeScaleAspectFill;
-//    _contontImageView.layer.borderColor = [UIColor clearColor].CGColor;
-//    [self.contentView addSubview:_contontImageView];
-//}
-//
-//@end

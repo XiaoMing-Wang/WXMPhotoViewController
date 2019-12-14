@@ -5,11 +5,18 @@
 //  Created by edz on 2019/5/12.
 //  Copyright © 2019年 wq. All rights reserved.
 //
+#define kDevice_Is_iPhoneX \
+({BOOL isPhoneX = NO;\
+if (@available(iOS 11.0, *)) {\
+isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bottom > 0.0;\
+}\
+(isPhoneX);})
+
 #define WXMPhoto_originalNoti @"WXMPhoto_originalNoti"
 #define WXMPhoto_Width [UIScreen mainScreen].bounds.size.width
 #define WXMPhoto_Height [UIScreen mainScreen].bounds.size.height
-#define WXMPhoto_IPHONEX ((WXMPhoto_Height == 812.0f) ? YES : NO)
-#define WXMPhoto_BarHeight ((WXMPhoto_IPHONEX) ? 88.0f : 64.0f)
+
+#define WXMPhoto_BarHeight ((kDevice_Is_iPhoneX) ? 88.0f : 64.0f)
 #define WXMPhoto_KWindow [[[UIApplication sharedApplication] delegate] window]
 #define WXMPhoto_SRect \
 CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_BarHeight)
@@ -25,8 +32,14 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #import "WXMPhotoResources.h"
 
 #pragma mark 查看界面
-#define WXMPhotoVCNavigationItem @"相册"
 
+/** CollectionView 边距 */
+#define kMargin 2.5
+
+/** CollectionView 一行几个 */
+#define kCount 4
+
+#define WXMPhotoVCNavigationItem @"相册"
 #define WXMPhotoVCRightItem @"取消"
 
 #pragma mark WXMPhotoDetailViewController
@@ -40,6 +53,9 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 /** 是否显示GIF标志 WXMPhotoDetailViewController */
 #define WXMPhotoShowGIFSign YES
+
+/** 是否可以选择原图 */
+#define WXMPhotoSelectOriginal YES
 
 /** 裁剪是否显示GIF */
 #define WXMPhotoTailoringShowGIFSign  (WXMPhotoShowGIFSign && NO)
@@ -57,7 +73,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoShowLivePhtoMuted NO
 
 /** 选择图片时(选择GIF和视频依旧会返回)是否返回data(可自行转成合适大小的data) */
-#define WXMPhotoSelectedImageReturnData NO
+#define WXMPhotoSelectedImageReturnData YES
 
 /** collection列表是否显示下边工具栏 */
 #define WXMPhotoShowDetailToolbar YES
@@ -97,10 +113,10 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 /** 混合的情况下以 WXMMultiSelectVideoMax为最大个数 */
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
-#define WXMMultiSelectMax 4
+#define WXMMultiSelectMax 6
 
 /** WXMPhotoDetailTypeMultiSelect 支持最大视频数 */
-#define WXMMultiSelectVideoMax 4
+#define WXMMultiSelectVideoMax 1
 
 /** 默认传回的图片大小  */
 #define WXMDefaultSize CGSizeZero
@@ -149,7 +165,7 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 /** 点击标记Sign选中view回调 WXMPhotoDetailTypeMultiSelect模式 */
 @protocol WXMPhotoSignProtocol <NSObject>
 - (NSInteger)touchWXMPhotoSignView:(NSIndexPath *)index selected:(BOOL)selected;
-- (void)wxm_cantTouchWXMPhotoSignView;
+- (void)wxm_cantTouchWXMPhotoSignView:(WXMPhotoMediaType)mediaType;
 @end
 
 /** 预览缩放cell回调 */

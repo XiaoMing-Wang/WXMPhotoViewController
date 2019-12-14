@@ -15,6 +15,9 @@
 #import <Photos/Photos.h>
 #import <PhotosUI/PhotosUI.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored"-Wunguarded-availability"
+
 @interface WXMPhotoPreviewCell () <UIScrollViewDelegate,UIGestureRecognizerDelegate>
 @property (nonatomic, strong) UIView *blackView;
 @property (nonatomic, strong) UIScrollView *contentScrollView;
@@ -30,6 +33,7 @@
 @property (nonatomic, assign) CGFloat wxm_zoomScale;
 @property (nonatomic, assign) CGPoint wxm_lastPoint;
 @end
+#pragma clang diagnostic pop
 
 @implementation WXMPhotoPreviewCell
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -41,74 +45,94 @@
 - (void)setupInterface {
     CGFloat w = [UIScreen mainScreen].bounds.size.width ;
     CGFloat h = [UIScreen mainScreen].bounds.size.height;
-    _contentScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
-    _contentScrollView.delegate = self;
-    _contentScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
-    _contentScrollView.showsHorizontalScrollIndicator = NO;
-    _contentScrollView.showsVerticalScrollIndicator = NO;
-    _contentScrollView.alwaysBounceHorizontal = NO;
-    _contentScrollView.alwaysBounceVertical = NO;
-    _contentScrollView.layer.masksToBounds = NO;
+    self.contentScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
+    self.contentScrollView.delegate = self;
+    self.contentScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
+    self.contentScrollView.showsHorizontalScrollIndicator = NO;
+    self.contentScrollView.showsVerticalScrollIndicator = NO;
+    self.contentScrollView.alwaysBounceHorizontal = NO;
+    self.contentScrollView.alwaysBounceVertical = NO;
+    self.contentScrollView.layer.masksToBounds = NO;
     
-    _imageView = [[WXMPhotoImageView alloc] initWithFrame:CGRectMake(0, 0, w, 0)];
-    _imageView.contentMode = UIViewContentModeScaleAspectFit;
-    _imageView.layer.masksToBounds = YES;
-    _imageView.backgroundColor = [UIColor blackColor];
-    _imageView.userInteractionEnabled = NO;
+    self.imageView = [[WXMPhotoImageView alloc] initWithFrame:CGRectMake(0, 0, w, 0)];
+    self.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    self.imageView.layer.masksToBounds = YES;
+    self.imageView.backgroundColor = [UIColor blackColor];
+    self.imageView.userInteractionEnabled = NO;
     
     [self.contentView addSubview:self.blackView];
     [self.contentView addSubview:_contentScrollView];
-    [_contentScrollView addSubview:_imageView];
-    [_contentScrollView setMinimumZoomScale:1.0];
-    [_contentScrollView setMaximumZoomScale:2.5f];
+    [self.contentScrollView addSubview:_imageView];
+    [self.contentScrollView setMinimumZoomScale:1.0];
+    [self.contentScrollView setMaximumZoomScale:2.5f];
     [self addTapGestureRecognizer];
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored"-Wimplicit-retain-self"
+
 /** 设置图片 GIF */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
-    _photoAsset = photoAsset;
     @autoreleasepool {
+        
+        _photoAsset = photoAsset;
+        __weak __typeof(self) self_weak = self;
         CGFloat screenWidth  = WXMPhoto_Width * 2.0;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
         if (_photoAsset.aspectRatio <= 0) {
-            _photoAsset.aspectRatio = (CGFloat)photoAsset.asset.pixelHeight / 
-                                      (CGFloat)photoAsset.asset.pixelWidth * 1.0;
+            _photoAsset.aspectRatio =
+            (CGFloat)photoAsset.asset.pixelHeight /
+            (CGFloat)photoAsset.asset.pixelWidth * 1.0;
         }
         CGFloat imageHeight = _photoAsset.aspectRatio * screenWidth;
-        
+                
         /** GIF */
         if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
             [man getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
-                [self setLocation:_photoAsset.aspectRatio];
-                self.imageView.image = [WXMPhotoGIFImage imageWithData:data];
+                [self_weak setLocation:_photoAsset.aspectRatio];
+                self_weak.imageView.image = [WXMPhotoGIFImage imageWithData:data];
             }];
         } else {
+            
+            /** 有缓存加载缓存  */
+            if (photoAsset.cacheImage) {
+                self_weak.imageView.image = photoAsset.cacheImage;
+                photoAsset.cacheImage = nil;
+                [self_weak setLocation:_photoAsset.aspectRatio];
+                return;
+            }
+            
             PHAsset *asset = photoAsset.asset;
             CGSize size = CGSizeMake(screenWidth, imageHeight);
             
             /** 很长的横图 需要获取原图 不然放大很模糊.. */
-            if (imageHeight * 2.5 < WXMPhoto_Height * 2) size = PHImageManagerMaximumSize;
+            if (imageHeight * 3 < WXMPhoto_Height) size = PHImageManagerMaximumSize;
             if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
             
             /** 自定义转场需要当前图片 */
             /** 所以先加载图片 在上面覆盖livephoto */
             int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                photoAsset.bigImage = image;
-                self.imageView.image = image;
-                [self setLocation:_photoAsset.aspectRatio];
+                self_weak.imageView.image = image;
+                [self_weak setLocation:_photoAsset.aspectRatio];
             }];
             
             
             /** livephoto */
-            if (_livePhotoView) _livePhotoView.hidden = YES;
-            if (photoAsset.mediaType == WXMPHAssetMediaTypeLivePhoto && WXMPhotoShowLivePhto) {
-                [self.imageView addSubview:self.livePhotoView];
-                self.livePhotoView.hidden = NO;
-                self.livePhotoView.livePhoto = nil;
-                [man getLivePhotoByAsset:asset liveSize:size completion:^(PHLivePhoto * livePhoto) {
-                    self.livePhotoView.livePhoto = livePhoto;
-                    [self setLocation:_photoAsset.aspectRatio];
-                }];
+            if (_livePhotoView) self.livePhotoView.hidden = YES;
+            if (photoAsset.mediaType == WXMPHAssetMediaTypeLivePhoto &&WXMPhotoShowLivePhto) {
+                if (@available(iOS 9.1, *)) {
+                    
+                    self.livePhotoView.hidden = NO;
+                    self.livePhotoView.livePhoto = nil;
+                    [self.imageView addSubview:self.livePhotoView];
+                    [man getLivePhotoByAsset:asset
+                                    liveSize:size
+                                  completion:^(PHLivePhoto *livePhoto)
+                     {
+                        self_weak.livePhotoView.livePhoto = livePhoto;
+                        [self_weak setLocation:_photoAsset.aspectRatio];
+                    }];
+                }
             }
             
             self.currentRequestID = ids;
@@ -116,6 +140,11 @@
         }
     }
 }
+
+#pragma clang diagnostic pop
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored"-Wunguarded-availability"
 
 /** 开始播放livephoto */
 - (void)startPlayLivePhoto {
@@ -130,10 +159,10 @@
 - (void)originalAppearance {
     _isPlayLivePhoto = NO;
     [_contentScrollView setZoomScale:1.0 animated:NO];
-    if (_livePhotoView) {
-        [_livePhotoView stopPlayback];
-    }
+    if (_livePhotoView)  [_livePhotoView stopPlayback];
 }
+
+#pragma clang diagnostic pop
 
 /** 获取当前image */
 - (UIImage *)currentImage {
@@ -209,7 +238,7 @@
 
 /** 单击 */
 - (void)respondsToTapSingle:(UITapGestureRecognizer *)tap {
-    if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle)]) {
+    if ([self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle)]) {
         [self.delegate wxm_respondsToTapSingle];
     }
 }
@@ -288,15 +317,13 @@
                 recognizer.view.center = self.wxm_lastPoint;
                 self.blackView.alpha = 1;
             } completion:^(BOOL finished) {
-                if (self.delegate &&
-                    [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
+                if ([self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
                     [self.delegate wxm_respondsEndDragCell:nil];
                 }
             }];
         } else {
             _contentScrollView.userInteractionEnabled = NO;
-            if (self.delegate &&
-                [self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
+            if ([self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
                 [self.delegate wxm_respondsEndDragCell:self.contentScrollView];
             }
         }
@@ -305,23 +332,26 @@
 
 - (UIView *)blackView {
     if (!_blackView)  {
-        _blackView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Height)];
+        CGRect rect = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Height);
+        _blackView = [[UIView alloc] initWithFrame:rect];
         _blackView.backgroundColor = [UIColor blackColor];
-        objc_setAssociatedObject(_contentScrollView, @"black",_blackView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(_contentScrollView, @"black",_blackView, 1);
     }
     return _blackView;
 }
 
-- (PHLivePhotoView *)livePhotoView {
-    if (@available(iOS 9.1, *)) {
-        if (!_livePhotoView) {
-            _livePhotoView = [[PHLivePhotoView alloc] init];
-            _livePhotoView.userInteractionEnabled = NO;
-            _livePhotoView.contentMode = UIViewContentModeScaleAspectFit;
-            _livePhotoView.muted = WXMPhotoShowLivePhtoMuted;
-        }
+- (PHLivePhotoView *)livePhotoView  API_AVAILABLE(ios(9.1)) {
+    if (!_livePhotoView) {
+        _livePhotoView = [[PHLivePhotoView alloc] init];
+        _livePhotoView.userInteractionEnabled = NO;
+        _livePhotoView.contentMode = UIViewContentModeScaleAspectFit;
+        _livePhotoView.muted = WXMPhotoShowLivePhtoMuted;
     }
     return _livePhotoView;
+}
+
+- (void)dealloc {
+    self.imageView.image = nil;
 }
 @end
 
