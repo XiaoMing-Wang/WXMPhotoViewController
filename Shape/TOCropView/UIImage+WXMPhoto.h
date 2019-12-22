@@ -16,8 +16,14 @@ NS_ASSUME_NONNULL_BEGIN
                              angle:(NSInteger)angle
                       circularClip:(BOOL)circular;
 
+/** 修改图片大小 */
+- (UIImage *)scaleToSize:(CGSize)size;
 
-- (UIImage*)scaleToSize:(CGSize)size;
+/** 按比例重绘图片 */
+- (UIImage *)compressionImage;
+
+/** 获取压缩后的data */
+- (NSData *)compressionImageData;
 @end
 
 NS_ASSUME_NONNULL_END

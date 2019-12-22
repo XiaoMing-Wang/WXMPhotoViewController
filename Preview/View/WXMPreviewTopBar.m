@@ -61,10 +61,22 @@
 }
 
 /** 目前选中的是那种资源 video image no三种 */
-- (void)setChooseType:(WXMPhotoMediaType)chooseType assetType:(WXMPhotoMediaType)assetType {
-    self.line.hidden = self.promptLabel.hidden = YES;
-    if (chooseType == WXMPHAssetMediaTypeNone) return;
+- (void)setChooseType:(WXMPhotoMediaType)chooseType asset:(WXMPhotoAsset *)asset {
     
+    WXMPhotoMediaType assetType = asset.mediaType;
+    self.line.hidden = self.promptLabel.hidden = YES;
+    
+    /** 视频超过时长的 */
+    if (assetType == WXMPHAssetMediaTypeVideo &&
+        asset.asset.duration > WXMPhotoLimitVideoTime &&
+        WXMPhotoLimitVideoTime > 0) {
+        NSInteger dration = WXMPhotoLimitVideoTime;
+        self.line.hidden = self.promptLabel.hidden = NO;
+        self.promptLabel.text = [NSString stringWithFormat:@"   暂时不支持超过%zd秒的视频",dration];
+        return;
+    }
+    
+    if (chooseType == WXMPHAssetMediaTypeNone) return;
     BOOL isVideo = (chooseType == WXMPHAssetMediaTypeVideo);
     BOOL assetVideo = (assetType == WXMPHAssetMediaTypeVideo);
     if (isVideo) {
@@ -74,6 +86,7 @@
         self.line.hidden = self.promptLabel.hidden = !assetVideo;
         self.promptLabel.text = @"   选择图片时不能选择视频";
     }
+    
 }
 
 - (void)setSignModel:(WXMPhotoSignModel *)signModel {

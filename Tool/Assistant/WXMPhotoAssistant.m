@@ -88,16 +88,18 @@ static char wxm_Photoline;
                                   cancel:(NSString *)cancleString
                              otherAction:(NSArray *)otherAction
                            completeBlock:(void (^)(NSInteger index))block {
+    
     UIAlertController *alert=[UIAlertController alertControllerWithTitle:title
                                                                  message:message
                                                           preferredStyle:1];
-    UIAlertAction *cancle = [UIAlertAction actionWithTitle:cancleString style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    
+    UIAlertAction *cancle = [UIAlertAction actionWithTitle:cancleString style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
         if (block) block(0);
     }];
     
     [alert addAction:cancle];
     for (int i = 0; i < otherAction.count; i++) {
-        NSString * title = otherAction[i];
+        NSString *title = otherAction[i];
         UIAlertAction *action = [UIAlertAction actionWithTitle:title style:0 handler:^(UIAlertAction *action) {
             if (block) block(i + 1);
         }];

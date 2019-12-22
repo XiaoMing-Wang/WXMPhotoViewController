@@ -23,7 +23,6 @@
 @property (strong, nonatomic) AVPlayer *wxm_avPlayer;
 @property (strong, nonatomic) AVPlayerItem *wxm_item;
 @property (strong, nonatomic) AVPlayerLayer *wxm_playerLayer;
-/** @property (nonatomic, assign) BOOL wxm_isPlaying;; */
 
 /** 距离原点的比例 */
 @property (nonatomic, assign) CGFloat wxm_x;

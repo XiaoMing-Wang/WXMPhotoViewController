@@ -48,6 +48,9 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** 256和原图模式默认返回0.75 修改无效 */
 #define WXMPhotoCompressionRatio 0.3
 
+/** 限制可选视频最大时间长度 */
+#define WXMPhotoLimitVideoTime 15
+
 /** 全局是否支持显示视频 (NO会显示视频的第一帧 且WXMPhotoViewController设置showVideo也无效)*/
 #define WXMPhotoSupportVideo YES
 
@@ -55,7 +58,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoShowGIFSign YES
 
 /** 是否可以选择原图 */
-#define WXMPhotoSelectOriginal YES
+#define WXMPhotoSelectOriginal NO
 
 /** 裁剪是否显示GIF */
 #define WXMPhotoTailoringShowGIFSign  (WXMPhotoShowGIFSign && NO)

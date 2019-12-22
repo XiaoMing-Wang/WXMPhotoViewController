@@ -106,6 +106,7 @@
         if (CGSizeEqualToSize(self.expectSize, CGSizeZero) == NO) {
             cropImage = [cropImage scaleToSize:self.expectSize];
         }
+        
         [WXMResourceAssistant sendCoverImage:cropImage delegate:self.delegate];
         [self.navigationController dismissViewControllerAnimated:YES completion:nil];
     }

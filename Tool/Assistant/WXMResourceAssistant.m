@@ -9,6 +9,7 @@
 #import "WXMResourceAssistant.h"
 #import "WXMPhotoAssistant.h"
 #import "WXMPhotoResources.h"
+#import "JJVideoCompression.h"
 
 @implementation WXMResourceAssistant
 /**
@@ -177,11 +178,13 @@
        dictionary:(NSMutableDictionary *)dictionary
               idx:(NSInteger)idx
             group:(dispatch_group_t)group {
+    
     [WXMManager getVideoByAsset:asset.asset completion:^(NSURL *url, NSData *data) {
         WXMPhotoResources *resource = [WXMPhotoResources new];
         resource.resourceImage = coverImage;
         resource.resourceData = data;
         resource.mediaType = WXMPHAssetMediaTypeVideo;
+        resource.uploadSize = coverImage.size;
         [dictionary setObject:resource forKey:@(idx)];
         dispatch_group_leave(group);
     }];
@@ -203,5 +206,42 @@
     resource.mediaType = WXMPHAssetMediaTypeImage;
     [dictionary setObject:resource forKey:@(idx)];
     dispatch_group_leave(group);
+}
+
+/// 压缩视频
+/// @param inputString 输入路径
+/// @param outString 输出路径
+/// @param callback 回调
++ (void)compressedVideo:(NSString *)inputString
+              outString:(NSString *)outString
+               callback:(void (^)(BOOL success))callback {
+    
+    JJVideoCompression *compression = [[JJVideoCompression alloc]init];
+    compression.inputURL = [NSURL URLWithString:inputString]; /**  视频输入路径 */
+    compression.exportURL = [NSURL fileURLWithPath:outString]; /**  视频输出路径 */
+    
+    JJAudioConfigurations audioConfigurations;/**  音频压缩配置 */
+    audioConfigurations.samplerate = JJAudioSampleRate_11025Hz; /**  采样率 */
+    audioConfigurations.bitrate = JJAudioBitRate_32Kbps;/** / 音频的码率 */
+    audioConfigurations.numOfChannels = 1;/**  声道数 */
+    audioConfigurations.frameSize = 8; /**  采样深度 */
+    compression.audioConfigurations = audioConfigurations;
+    
+    JJVideoConfigurations videoConfigurations;
+    videoConfigurations.fps = 25; /**  帧率 一秒中有多少帧 */
+    videoConfigurations.videoBitRate = JJ_VIDEO_BITRATE_HIGH; /**  视频质量 码率 */
+    videoConfigurations.videoResolution =  JJ_VIDEO_RESOLUTION_SUPER_HIGH; /** 视频尺寸 */
+    compression.videoConfigurations = videoConfigurations;
+    [compression startCompressionWithCompletionHandler:^(JJVideoCompressionState State) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (State == JJ_VIDEO_STATE_FAILURE) {
+                NSLog(@"压缩失败");
+                if (callback) callback(NO);
+            } else {
+                NSLog(@"压缩成功");
+                if (callback) callback(YES);
+            }
+        });
+    }];
 }
 @end

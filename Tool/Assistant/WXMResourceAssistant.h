@@ -44,13 +44,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark 多选
 
-+ (void)sendMoreResource:(NSArray <WXMPhotoAsset *>*)array
++ (void)sendMoreResource:(NSArray<WXMPhotoAsset *> *)array
                coverSize:(CGSize)coverSize
                 delegate:(id<WXMPhotoProtocol>)delegate
              isShowVideo:(BOOL)isShowVideo
               isShowLoad:(BOOL)isShowLoad
           viewController:(UIViewController *)controller;
 
+/// 压缩视频
+/// @param inputString 输入路径
+/// @param outString 输出路径
+/// @param callback 回调
++ (void)compressedVideo:(NSString *)inputString
+              outString:(NSString *)outString
+               callback:(void (^)(BOOL success))callback;
 @end
 
 NS_ASSUME_NONNULL_END

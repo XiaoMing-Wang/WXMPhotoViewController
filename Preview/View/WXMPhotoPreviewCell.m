@@ -21,8 +21,8 @@
 @interface WXMPhotoPreviewCell () <UIScrollViewDelegate,UIGestureRecognizerDelegate>
 @property (nonatomic, strong) UIView *blackView;
 @property (nonatomic, strong) UIScrollView *contentScrollView;
-@property (nonatomic, strong) WXMPhotoImageView *imageView;
 @property (nonatomic, strong) PHLivePhotoView *livePhotoView;
+@property (nonatomic, strong) WXMPhotoImageView *imageView;
 @property (nonatomic, strong) WXMDirectionPanGestureRecognizer *recognizer;
 @property (nonatomic, assign) int32_t currentRequestID;
 @property (nonatomic, assign) BOOL isPlayLivePhoto;

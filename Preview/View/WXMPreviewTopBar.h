@@ -21,5 +21,5 @@
 - (void)setAccordingState:(BOOL)state;
 
 /** 目前选中的是那种资源 video image no三种 */
-- (void)setChooseType:(WXMPhotoMediaType)chooseType assetType:(WXMPhotoMediaType)assetType;
+- (void)setChooseType:(WXMPhotoMediaType)chooseType asset:(WXMPhotoAsset *)asset;
 @end

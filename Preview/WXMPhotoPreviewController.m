@@ -259,7 +259,7 @@ UINavigationControllerDelegate>
     /** 不支持同时选视频图片修改显示文字 */
     if (WXMPhotoChooseVideo_Photo == NO) {
         WXMPhotoAsset *asset = self.dataSource[location];
-        [self.topBarView setChooseType:self.chooseType assetType:asset.mediaType];
+        [self.topBarView setChooseType:self.chooseType asset:asset];
     }
 }
 
@@ -281,6 +281,13 @@ UINavigationControllerDelegate>
     if ((isVideo != assetVideo) &&
         self.chooseType != WXMPHAssetMediaTypeNone &&
         WXMPhotoChooseVideo_Photo == NO) {
+        return;
+    }
+    
+    /** 视频超过时长的 */
+    if (asset.mediaType == WXMPHAssetMediaTypeVideo &&
+        asset.asset.duration > WXMPhotoLimitVideoTime &&
+        WXMPhotoLimitVideoTime > 0) {
         return;
     }
     
@@ -365,7 +372,6 @@ UINavigationControllerDelegate>
 /** 回调多张图片 */
 - (void)wxm_morePhotoSendImage {
     CGSize size = self.expectSize;
-    NSLog(@"%@",NSStringFromCGSize(size));
     
     if (self.bottomBarView.isOriginalImage) size = PHImageManagerMaximumSize;
     NSMutableArray * array = @[].mutableCopy;

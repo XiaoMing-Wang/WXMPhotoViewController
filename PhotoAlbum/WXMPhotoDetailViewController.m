@@ -174,8 +174,7 @@ WXMDetailToolbarProtocol>
         [man getPictures_customSize:asset
                         synchronous:NO
                           assetSize:size
-                         completion:^(UIImage *image)
-         {
+                         completion:^(UIImage *image) {
             WXMPhotoSignModel *signModel = [self wxm_signModel:indexPath signImage:image];
             signModel.mediaType = phsset.mediaType;
             
@@ -357,6 +356,12 @@ WXMDetailToolbarProtocol>
         return NO;
     }
         
+    /** 视频超过时长的 */
+    if (cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo &&
+        cell.photoAsset.asset.duration > WXMPhotoLimitVideoTime &&
+        WXMPhotoLimitVideoTime > 0) return NO;
+    
+    
     /** 个数不够或者已经被勾选  */
     if (count <= 0) return YES;
     if ([self.signObj.allKeys containsObject:indexString]) return YES;
@@ -438,6 +443,10 @@ WXMDetailToolbarProtocol>
         
     /** 不支持同时选 */
     } else {
+        
+        if (isVideo) {
+            title = [NSString stringWithFormat:@"暂不支持超过%d秒的视频",WXMPhotoLimitVideoTime];
+        }
         
         if (self.chooseType == WXMPHAssetMediaTypeVideo && self.showVideo && isVideo){
             NSInteger index = self.maxSelectVideoCount;

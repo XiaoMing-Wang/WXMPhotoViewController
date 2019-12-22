@@ -11,6 +11,7 @@
 #import <AssetsLibrary/ALAssetRepresentation.h>
 #import <AssetsLibrary/ALAssetsGroup.h>
 #import <AssetsLibrary/ALAssetsLibrary.h>
+#import <UIKit/UIKit.h>
 
 @implementation WXMPhotoList @end
 @implementation WXMPhotoAsset
@@ -71,15 +72,21 @@ static WXMPhotoManager *manager = nil;
     }
     
     NSString *msg = @"请在系统设置中打开“允许访问照片”，否则将无法获取照片";
-    UIAlertController*al= [UIAlertController alertControllerWithTitle:@"提示" message:msg preferredStyle:1];
+    UIAlertController*al= [UIAlertController alertControllerWithTitle:@"提示"
+                                                              message:msg
+                                                       preferredStyle:1];
+    
     UIAlertAction *cancle = [UIAlertAction actionWithTitle:@"取消" style:1 handler:nil];
     UIAlertAction *action = [UIAlertAction actionWithTitle:@"去开启" style:0 handler:^(UIAlertAction *acs) {
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+        NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+        [[UIApplication sharedApplication] openURL:url];
     }];
     [al addAction:cancle];
     [al addAction:action];
+    
     UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
-    UIViewController * root = window.rootViewController.presentedViewController?:window.rootViewController;
+    UIViewController * root = nil;
+    root = window.rootViewController.presentedViewController?:window.rootViewController;
     [root presentViewController:al animated:YES completion:nil];
     return NO;
 }
@@ -124,7 +131,8 @@ static WXMPhotoManager *manager = nil;
                     list.photoNum = result.count;
                     list.firstAsset = result.firstObject;
                     list.assetCollection = collection;
-                    if ([list.title isEqualToString:@"相机胶卷"] || [list.title isEqualToString:@"Live Photos"]) {
+                    if ([list.title isEqualToString:@"相机胶卷"] ||
+                        [list.title isEqualToString:@"Live Photos"]) {
                         [photoList insertObject:list atIndex:0];
                     } else {
                         [photoList addObject:list];
@@ -281,9 +289,9 @@ static WXMPhotoManager *manager = nil;
     option.resizeMode = PHImageRequestOptionsResizeModeFast;
     option.synchronous = NO;
     option.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
-    return [[PHCachingImageManager defaultManager]  requestImageDataForAsset:asset options:option resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
+    return [[PHCachingImageManager defaultManager] requestImageDataForAsset:asset options:option resultHandler:^(NSData *data, NSString *dataUTI, UIImageOrientation o, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion(imageData);
+            completion(data);
         });
     }];
 }
@@ -295,9 +303,9 @@ static WXMPhotoManager *manager = nil;
     option.synchronous = YES;
     option.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
     
-    return [[PHCachingImageManager defaultManager] requestImageDataForAsset:asset options:option resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
+    return [[PHCachingImageManager defaultManager] requestImageDataForAsset:asset options:option resultHandler:^(NSData *data, NSString *dataUTI, UIImageOrientation o, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion(imageData);
+            completion(data);
         });
     }];
 }
@@ -306,6 +314,7 @@ static WXMPhotoManager *manager = nil;
 - (NSArray<PHAsset *> *)wxm_getAllAssetInPhotoAblumWithAscending:(BOOL)ascending {
     NSMutableArray<PHAsset *> *assets = @[].mutableCopy;
     PHFetchOptions *option = [[PHFetchOptions alloc] init];
+    
     /** ascending 为YES时，按照照片的创建时间升序排列;为NO时，则降序排列 */
     option.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:ascending]];
     PHFetchResult *result = [PHAsset fetchAssetsWithMediaType:PHAssetMediaTypeImage options:option];
@@ -333,6 +342,7 @@ static WXMPhotoManager *manager = nil;
     options.version = PHImageRequestOptionsVersionCurrent;
     options.deliveryMode = PHVideoRequestOptionsDeliveryModeAutomatic;
     [[PHImageManager defaultManager] requestAVAssetForVideo:assetData options:options resultHandler:^(AVAsset *asset, AVAudioMix *audioMix, NSDictionary *info) {
+        
         // 获取信息 asset audioMix info
         // 上传视频时用到data
         AVURLAsset *urlAsset = (AVURLAsset *)asset;
