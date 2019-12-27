@@ -165,6 +165,7 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 @end
 
 #pragma mark _____________________________________________ 多选模式
+
 /** 点击标记Sign选中view回调 WXMPhotoDetailTypeMultiSelect模式 */
 @protocol WXMPhotoSignProtocol <NSObject>
 - (NSInteger)touchWXMPhotoSignView:(NSIndexPath *)index selected:(BOOL)selected;
