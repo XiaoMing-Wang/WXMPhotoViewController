@@ -130,6 +130,7 @@
         
         dispatch_group_enter(group);
         [self getCoverImage:obj.asset coverSize:size completion:^(UIImage *image) {
+            
             if (obj.mediaType == WXMPHAssetMediaTypePhotoGif) {
                 [self sendGif:obj coverImage:image dictionary:dic idx:idx group:group];
             } else if (obj.mediaType == WXMPHAssetMediaTypeVideo && supportVideo) {
