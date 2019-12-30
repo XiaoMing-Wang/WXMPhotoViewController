@@ -24,7 +24,6 @@
 @property (nonatomic, strong) WXMPhotoSignModel *signModel;
 @property (nonatomic, weak) id<WXMPhotoSignProtocol> delegate;
 
-
 /** 设置button选中 */
 - (void)signButtonSelected:(BOOL)selected;
 

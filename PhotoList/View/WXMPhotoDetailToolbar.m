@@ -31,12 +31,9 @@
 }
 
 - (void)setupInterface {
-    
     CGFloat height = kDevice_Is_iPhoneX ? 80 : 45;
     CGFloat coHeight = 45;
     CGFloat iconWH = WXMSelectedWH;
-    
-    
     self.frame = CGRectMake(0, WXMPhoto_Height - height, WXMPhoto_Width, height);
     self.backgroundColor = [UIColor clearColor];
     UIToolbar *toolBar = [[UIToolbar alloc] initWithFrame:self.bounds];
@@ -91,7 +88,6 @@
                                              selector:@selector(originalNoti:)
                                                  name:WXMPhoto_originalNoti
                                                object:nil];
-    
 }
 
 /** 原图通知 */

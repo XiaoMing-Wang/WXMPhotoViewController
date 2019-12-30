@@ -57,12 +57,16 @@
                 [WXMPhotoAssistant wxm_showLoadingView:controller.view];
             }
             NSData *data = nil; /** 0.75接近原始图大小 */
-            if (WXMPhotoSelectedImageReturnData) data = UIImageJPEGRepresentation(coverImage, 0.75);
+            if (WXMPhotoSelectedImageReturnData) {
+                data = UIImageJPEGRepresentation(coverImage, 0.75);
+            }
             resource.resourceData = data;
             [delegate wxm_singlePhotoAlbumWithResources:resource];
             [controller dismissViewControllerAnimated:YES completion:nil];
         }
-    } else [controller dismissViewControllerAnimated:YES completion:nil];
+    } else {
+        [controller dismissViewControllerAnimated:YES completion:nil];
+    }
 }
 
 /** 获取特定大小图片在获取data */
@@ -97,7 +101,7 @@
 + (void)getCoverImage:(PHAsset *)asset
             coverSize:(CGSize)coverSize
            completion:(void (^)(UIImage *image))completion {
-    [WXMManager wxm_synchronousGetPictures:asset size:coverSize completion:completion];
+    [WXMManager synchronousGetPictures:asset size:coverSize completion:completion];
  }
 
 + (void)sendMoreResource:(NSArray <WXMPhotoAsset *>*)array
@@ -154,7 +158,6 @@
         });
     });
 }
-
 
 /** Gif */
 + (void)sendGif:(WXMPhotoAsset *)asset

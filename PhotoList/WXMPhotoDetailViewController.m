@@ -73,7 +73,7 @@ WXMDetailToolbarProtocol>
     self.dataSource = @[].mutableCopy;
     PHAssetCollection *asset = self.phoneList.assetCollection;
     WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
-    NSArray *arrayAll = [manager wxm_getAssetsInAssetCollection:asset ascending:YES];
+    NSArray *arrayAll = [manager getAssetsInAssetCollection:asset ascending:YES];
     [arrayAll enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
         WXMPhotoAsset *asset = [WXMPhotoAsset new];
         asset.asset = obj;
@@ -154,7 +154,7 @@ WXMDetailToolbarProtocol>
             size = self.expectSize;
         }
 
-        [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
+        [man synchronousGetPictures:asset size:size completion:^(UIImage *image) {
             if (self.exitPreview) {
                 WXMPhotoPreviewController *prev=[self_weak wxm_getPreviewController:indexPath];
                 prev.previewType = WXMPhotoPreviewTypeSingle;
@@ -200,7 +200,7 @@ WXMDetailToolbarProtocol>
     if (_photoType == WXMPhotoDetailTypeMultiSelect && !self.sign) {
         if (cell.userCanTouch == NO && !self.preview) return;
         size = CGSizeMake(WXMPhoto_Width * 2.0, WXMPhoto_Width * phsset.aspectRatio * 2.0);
-        [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
+        [man synchronousGetPictures:asset size:size completion:^(UIImage *image) {
 
             self.preview = NO;
             phsset.cacheImage = image;
@@ -224,7 +224,7 @@ WXMDetailToolbarProtocol>
        
         size = CGSizeMake(width * 4, height * 4);
         if (WXMPhotoCropUseOriginal) size = PHImageManagerMaximumSize;
-        [man wxm_synchronousGetPictures:asset size:size completion:^(UIImage *image) {
+        [man synchronousGetPictures:asset size:size completion:^(UIImage *image) {
             WXMPhotoShapeController *shape = [WXMPhotoShapeController new];
             shape.delegate = self_weak.delegate;
             shape.shapeImage = image;

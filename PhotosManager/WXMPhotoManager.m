@@ -51,6 +51,7 @@
     CGFloat height = (CGFloat) self.asset.pixelHeight;
     return height / width * 1.0;
 }
+
 @end
 
 @implementation WXMPhotoManager
@@ -65,7 +66,7 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 是否有权限 */
-- (BOOL)wxm_photoPermission {
+- (BOOL)photoPermission {
     if (PHPhotoLibrary.authorizationStatus == AVAuthorizationStatusNotDetermined ||
         PHPhotoLibrary.authorizationStatus == AVAuthorizationStatusAuthorized) {
         return YES;
@@ -92,7 +93,7 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 相册名称转换 */
-- (NSString *)wxm_transformAblumTitle:(NSString *)title {
+- (NSString *)transformAblumTitle:(NSString *)title {
     if ([title isEqualToString:@"Slo-mo"]) return @"慢动作";
     else if ([title isEqualToString:@"Recently Added"])  return @"最近添加";
     else if ([title isEqualToString:@"Favorites"]) return @"个人收藏";
@@ -109,7 +110,7 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 获得所有的相册对象*/
-- (void)wxm_getAllPicturesListBlock:(void(^)(NSArray<WXMPhotoList *> *))block {
+- (void)getAllPicturesListBlock:(void(^)(NSArray<WXMPhotoList *> *))block {
     
     @autoreleasepool {
         NSMutableArray<WXMPhotoList *> *photoList = @[].mutableCopy;
@@ -127,7 +128,7 @@ static WXMPhotoManager *manager = nil;
                 PHFetchResult *result = [self fetchAssetsInAssetCollection:collection ascending:NO];
                 if (result.count > 0) {
                     WXMPhotoList *list = [[WXMPhotoList alloc] init];
-                    list.title = [self wxm_transformAblumTitle:collection.localizedTitle];
+                    list.title = [self transformAblumTitle:collection.localizedTitle];
                     list.photoNum = result.count;
                     list.firstAsset = result.firstObject;
                     list.assetCollection = collection;
@@ -151,7 +152,7 @@ static WXMPhotoManager *manager = nil;
             PHFetchResult *result = [self fetchAssetsInAssetCollection:collection ascending:NO];
             if (result.count > 0) {
                 WXMPhotoList *list = [[WXMPhotoList alloc] init];
-                list.title = [self wxm_transformAblumTitle:collection.localizedTitle];
+                list.title = [self transformAblumTitle:collection.localizedTitle];
                 list.photoNum = result.count;
                 list.firstAsset = result.firstObject;
                 list.assetCollection = collection;
@@ -263,9 +264,9 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 同步获取图片 */
-- (int32_t)wxm_synchronousGetPictures:(PHAsset *)asset
-                                 size:(CGSize)size
-                           completion:(void (^)(UIImage *image))comple {
+- (int32_t)synchronousGetPictures:(PHAsset *)asset
+                             size:(CGSize)size
+                       completion:(void (^)(UIImage *image))comple {
     
     if (CGSizeEqualToSize(size, CGSizeZero) ||
         CGSizeEqualToSize(size, PHImageManagerMaximumSize)) {
@@ -311,7 +312,7 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 取到所有相册 的所有PHAsset资源 */
-- (NSArray<PHAsset *> *)wxm_getAllAssetInPhotoAblumWithAscending:(BOOL)ascending {
+- (NSArray<PHAsset *> *)getAllAssetInPhotoAblumWithAscending:(BOOL)ascending {
     NSMutableArray<PHAsset *> *assets = @[].mutableCopy;
     PHFetchOptions *option = [[PHFetchOptions alloc] init];
     
@@ -326,8 +327,8 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 获得指定相册的PHAsset资源 */
-- (NSArray<PHAsset *> *)wxm_getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
-                                             ascending:(BOOL)ascending {
+- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
+                                         ascending:(BOOL)ascending {
     NSMutableArray<PHAsset *> *arr = @[].mutableCopy;
     PHFetchResult *result = [self fetchAssetsInAssetCollection:assetCollection ascending:ascending];
     [result enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
