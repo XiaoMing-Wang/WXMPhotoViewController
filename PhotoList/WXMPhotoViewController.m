@@ -112,7 +112,7 @@
             [self wxm_pushToPhotoListViewController:nil];
             [self.listTableView reloadData];
         } else {
-            [[WXMPhotoManager sharedInstance] wxm_getAllPicturesListBlock:^(NSArray *array) {
+            [[WXMPhotoManager sharedInstance] getAllPicturesListBlock:^(NSArray *array) {
                 [weakself.jurisdictionData addObjectsFromArray:array];
                 [weakself.listTableView reloadData];
                 [weakself wxm_pushToPhotoListViewController:nil];

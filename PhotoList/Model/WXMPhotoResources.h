@@ -28,4 +28,5 @@
 
 /** 上传保存的size */
 @property (nonatomic, assign) CGSize uploadSize;
+
 @end

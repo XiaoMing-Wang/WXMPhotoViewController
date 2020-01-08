@@ -114,7 +114,7 @@
             targetW = targetH * ratio;
         }
     }
-    return [self scaleToSize:CGSizeMake(targetW, targetW)];
+    return [self scaleToSize:CGSizeMake(targetW, targetH)];
 }
 
 /** 获取压缩后的data */

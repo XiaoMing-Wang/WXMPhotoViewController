@@ -41,7 +41,6 @@ typedef enum {
 @property (nonatomic, assign) WXMPhotoMediaType mediaType; /** 相片类型 */
 @end
 
-
 @interface WXMPhotoManager : NSObject
 @property (nonatomic, strong) NSArray *picturesArray;
 @property (nonatomic, strong) WXMPhotoList *firstPhotoList;
@@ -49,17 +48,17 @@ typedef enum {
 + (instancetype)sharedInstance;
 
 /** 是否有权限 */
-- (BOOL)wxm_photoPermission;
+- (BOOL)photoPermission;
 
 /** 获得所有的相册对象 */
-- (void)wxm_getAllPicturesListBlock:(void (^)(NSArray<WXMPhotoList *> *))block;
+- (void)getAllPicturesListBlock:(void (^)(NSArray<WXMPhotoList *> *))block;
 
 /** 取得所有相册的照片资源 */
-- (NSArray<PHAsset *> *)wxm_getAllAssetInPhotoAblumWithAscending:(BOOL)ascending;
+- (NSArray<PHAsset *> *)getAllAssetInPhotoAblumWithAscending:(BOOL)ascending;
 
 /**  获取指定相册的所有图片 */
-- (NSArray<PHAsset *> *)wxm_getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
-                                             ascending:(BOOL)ascending;
+- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
+                                         ascending:(BOOL)ascending;
 
 /**
  *  取到对应的照片实体
@@ -94,15 +93,15 @@ typedef enum {
 
 
 /** 同步获取图片 size为zero时获取原图 */
-- (int32_t)wxm_synchronousGetPictures:(PHAsset *)asset
-                                 size:(CGSize)size
-                           completion:(void (^)(UIImage *image))comple;
+- (int32_t)synchronousGetPictures:(PHAsset *)asset
+                             size:(CGSize)size
+                       completion:(void (^)(UIImage *image))comple;
 
 
-/** 获取GIF Data */
+/** 获取GIF data */
 - (int32_t)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
-/** 获取Image Data (同步) */
+/** 获取Image data (同步) */
 - (int32_t)getImageByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
 /** 获取视频路径 */
