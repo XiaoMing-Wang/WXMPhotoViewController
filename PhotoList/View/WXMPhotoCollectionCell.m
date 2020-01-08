@@ -173,14 +173,26 @@
     [self.chooseButton setTitle:@"" forState:UIControlStateSelected];
     [self setAnimation];
     
+    NSUInteger maxCount = WXMMultiSelectMax;
+    if ([self.delegate respondsToSelector:@selector(wxm_maxCountPhotoNumber)]) {
+        maxCount = [self.delegate wxm_maxCountPhotoNumber];
+    }
+    
     /** 设置第几个选中 */
     if ([self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
         BOOL selected = _chooseButton.selected;
-        NSInteger count = [self.delegate touchWXMPhotoSignView:_indexPath selected:selected];
-        if (count >= 0 && count < WXMMultiSelectMax) {
-            [_chooseButton setTitle:@(count + 1).stringValue forState:UIControlStateSelected];
+        NSInteger markNumber = [self.delegate touchWXMPhotoSignView:_indexPath selected:selected];
+        if (markNumber >= 1 && markNumber <= maxCount) {
+            [_chooseButton setTitle:@(markNumber).stringValue forState:UIControlStateSelected];
+        }
+        
+        if (markNumber > maxCount)  {
+            self.chooseButton.selected = NO;
+            [self.chooseButton setTitle:@"" forState:UIControlStateNormal];
+            [self.chooseButton setTitle:@"" forState:UIControlStateSelected];
         }
     }
+  
 }
 
 /** 设置动画 */
