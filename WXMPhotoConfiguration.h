@@ -5,7 +5,7 @@
 //  Created by edz on 2019/5/12.
 //  Copyright © 2019年 wq. All rights reserved.
 //
-#define kDevice_Is_iPhoneX \
+#define kIPhoneX \
 ({BOOL isPhoneX = NO;\
 if (@available(iOS 11.0, *)) {\
 isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bottom > 0.0;\
@@ -16,7 +16,7 @@ isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bo
 #define WXMPhoto_Width [UIScreen mainScreen].bounds.size.width
 #define WXMPhoto_Height [UIScreen mainScreen].bounds.size.height
 
-#define WXMPhoto_BarHeight ((kDevice_Is_iPhoneX) ? 88.0f : 64.0f)
+#define WXMPhoto_BarHeight ((kIPhoneX) ? 88.0f : 64.0f)
 #define WXMPhoto_KWindow [[[UIApplication sharedApplication] delegate] window]
 #define WXMPhoto_SRect \
 CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_BarHeight)

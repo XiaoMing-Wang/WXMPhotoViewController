@@ -33,7 +33,7 @@
 /** 初始化界面 */
 - (void)setupInterface {
     CGFloat h = 125;
-    CGFloat y = WXMPhoto_Height - h - (kDevice_Is_iPhoneX ? 35 : 0);
+    CGFloat y = WXMPhoto_Height - h - (kIPhoneX ? 35 : 0);
     self.frame = CGRectMake(0, y, WXMPhoto_Width, h);
     self.lastSeleIdx = -1;
     
@@ -44,7 +44,7 @@
     [_photoView addSubview:self.collectionView];
     
     /** 下半部分按钮 */
-    CGFloat finH = h - 80 + (kDevice_Is_iPhoneX ? 35 : 0);
+    CGFloat finH = h - 80 + (kIPhoneX ? 35 : 0);
     _finshView = [[UIView alloc] initWithFrame:CGRectMake(0, 80, WXMPhoto_Width, finH)];
     _finshView.backgroundColor = _photoView.backgroundColor;
     

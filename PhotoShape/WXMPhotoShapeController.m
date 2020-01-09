@@ -50,8 +50,8 @@
     _cropView.delegate = self;
     _cropView.cropViewPadding = WXMPhotoCropBoxMargin;
     
-    CGFloat y = WXMPhoto_Height - 44.0f - (kDevice_Is_iPhoneX ?  40 : 0);
-    CGFloat height = kDevice_Is_iPhoneX ? 84 : 44;
+    CGFloat y = WXMPhoto_Height - 44.0f - (kIPhoneX ?  40 : 0);
+    CGFloat height = kIPhoneX ? 84 : 44;
     _cropToolbar = [[TOCropToolbar alloc] initWithFrame:CGRectMake(0, y, WXMPhoto_Width, height)];
     _cropToolbar.clampButtonHidden = YES;
     _cropToolbar.doneTextButtonTitle = @"确定";

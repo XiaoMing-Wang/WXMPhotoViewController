@@ -31,7 +31,7 @@
 }
 
 - (void)setupInterface {
-    CGFloat height = kDevice_Is_iPhoneX ? 80 : 45;
+    CGFloat height = kIPhoneX ? 80 : 45;
     CGFloat coHeight = 45;
     CGFloat iconWH = WXMSelectedWH;
     self.frame = CGRectMake(0, WXMPhoto_Height - height, WXMPhoto_Width, height);
