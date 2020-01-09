@@ -38,6 +38,7 @@ WXMDetailToolbarProtocol>
 @property (nonatomic, strong) WXMDictionary_Array *signObj;
 @property (nonatomic, assign) BOOL sign;
 @property (nonatomic, assign) BOOL preview;
+@property (nonatomic, assign) NSUInteger markNumber;
 @end
 
 @implementation WXMPhotoDetailViewController
@@ -388,8 +389,9 @@ WXMDetailToolbarProtocol>
     
     /** 勾选一个 */
     if (selected) {
+        self.markNumber += 1;
         self.sign = YES;
-        [self collectionView:_collectionView didSelectItemAtIndexPath:index];
+        [self collectionView:self.collectionView didSelectItemAtIndexPath:index];
         
     /** 取消勾选一个 */
     } else {
@@ -406,14 +408,23 @@ WXMDetailToolbarProtocol>
         [self.signObj removeObjectForKey:key];
         [self wxm_signDictionarySorting];
         
+        self.markNumber = self.signObj.count;
         if ((self.signObj.count == 0 && !WXMPhotoChooseVideo_Photo) || isFull) {
             [self wxm_reloadAllAvailableCell];
         }
     }
     
+   
     self.toolbar.signObj = self.signObj;
-    return self.signObj.allKeys.count;
+    return self.markNumber;
 }
+
+/** 可选最大数量 */
+- (NSInteger)wxm_maxCountPhotoNumber {
+    if (self.chooseType == WXMPHAssetMediaTypeVideo) return self.maxSelectVideoCount;
+    return self.maxSelectImagesCount;
+}
+
 
 #pragma mark --------------- 取消一个后面的需要重新排序
 
