@@ -17,19 +17,22 @@ isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bo
 #define WXMPhoto_Height [UIScreen mainScreen].bounds.size.height
 
 #define WXMPhoto_BarHeight ((kIPhoneX) ? 88.0f : 64.0f)
+
 #define WXMPhoto_KWindow [[[UIApplication sharedApplication] delegate] window]
+
 #define WXMPhoto_SRect \
 CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_BarHeight)
+
 #define WXMPhoto_RGBColor(r, g, b)\
 [UIColor colorWithRed:(r)/255.0f green:(g)/255.0f blue:(b)/255.0f alpha:1]
 
 #ifndef WXMPhotoConfiguration_h
 #define WXMPhotoConfiguration_h
 #import <UIKit/UIKit.h>
-#import "WXMPhotoAssistant.h"
 #import "UIView+WXMPhoto.h"
 #import "WXMPhotoSignModel.h"
 #import "WXMPhotoResources.h"
+#import "WXMPhotoAssistant.h"
 
 #pragma mark 查看界面
 
@@ -38,6 +41,9 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 /** CollectionView 一行几个 */
 #define kCount 4
+
+/** 宽度 */
+#define kImageWidth ([UIScreen mainScreen].bounds.size.width - (kCount - 1) * kMargin) / kCount
 
 #define WXMPhotoVCNavigationItem @"相册"
 #define WXMPhotoVCRightItem @"取消"
@@ -72,8 +78,11 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** 是否支持播放livephoto */
 #define WXMPhotoShowLivePhto NO
 
+/** 自动播放视频 */
+#define WXMPhotoAutomaticVideo YES
+
 /** livephoto是否静音 */
-#define WXMPhotoShowLivePhtoMuted NO
+#define WXMPhotoShowLivePhtoMuted YES
 
 /** 选择图片时(选择GIF和视频依旧会返回)是否返回data(可自行转成合适大小的data) */
 #define WXMPhotoSelectedImageReturnData YES
@@ -165,7 +174,6 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 @end
 
 #pragma mark _____________________________________________ 多选模式
-
 /** 点击标记Sign选中view回调 WXMPhotoDetailTypeMultiSelect模式 */
 @protocol WXMPhotoSignProtocol <NSObject>
 - (NSInteger)touchWXMPhotoSignView:(NSIndexPath *)index selected:(BOOL)selected;

@@ -51,7 +51,7 @@ typedef enum {
 - (BOOL)photoPermission;
 
 /** 获得所有的相册对象 */
-- (void)getAllPicturesListBlock:(void (^)(NSArray<WXMPhotoList *> *))block;
+- (void)getAllPicturesListBlock:(void (^)(NSArray<WXMPhotoList *> *))callback;
 
 /** 取得所有相册的照片资源 */
 - (NSArray<PHAsset *> *)getAllAssetInPhotoAblumWithAscending:(BOOL)ascending;

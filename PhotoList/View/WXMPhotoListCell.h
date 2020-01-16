@@ -8,14 +8,11 @@
 
 #import <UIKit/UIKit.h>
 #import "WXMPhotoManager.h"
-#import "WXMPhotoConfiguration.h"
 #import "WXMPhotoSignModel.h"
+#import "WXMPhotoConfiguration.h"
 
-/** 相册UITableViewCell*/
 @interface WXMPhotoListCell : UITableViewCell
 
 @property (nonatomic, strong) WXMPhotoList *phoneList;
 
 @end
-
-

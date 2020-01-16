@@ -160,11 +160,6 @@ static char p_rightNameKey;
 
 @implementation UIButton (WXMPhoto)
 
-/** 点击 block */
-- (void)wxm_blockWithControlEventTouchUpInside:(void (^)(void))block {
-    objc_setAssociatedObject(self, &p_touchUpInsideKey, block, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    [self addTarget:self action:@selector(callActionBlock:) forControlEvents:UIControlEventTouchUpInside];
-}
 
 - (void)callActionBlock:(id)sender {
     void (^buttonBlock)(void) = (void (^)(void))objc_getAssociatedObject(self, &p_touchUpInsideKey);
@@ -172,7 +167,7 @@ static char p_rightNameKey;
 }
 
 /** */
-- (void)wxm_addTarget:(nullable id)target action:(SEL)action {
+- (void)wc_addTarget:(nullable id)target action:(SEL)action {
     [self addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
 }
 
@@ -182,7 +177,7 @@ static char p_rightNameKey;
 }
 
 /** 扩大点击 */
-- (void)wxm_setEnlargeEdgeWithTop:(CGFloat)top left:(CGFloat)left right:(CGFloat)right bottom:(CGFloat)bottom {
+- (void)wc_setEnlargeEdgeWithTop:(CGFloat)top left:(CGFloat)left right:(CGFloat)right bottom:(CGFloat)bottom {
     objc_setAssociatedObject(self, &p_topNameKey, @(top), OBJC_ASSOCIATION_COPY_NONATOMIC);
     objc_setAssociatedObject(self, &p_rightNameKey, @(right), OBJC_ASSOCIATION_COPY_NONATOMIC);
     objc_setAssociatedObject(self, &p_bottomNameKey, @(bottom), OBJC_ASSOCIATION_COPY_NONATOMIC);

@@ -34,48 +34,49 @@
     CGFloat height = kIPhoneX ? 80 : 45;
     CGFloat coHeight = 45;
     CGFloat iconWH = WXMSelectedWH;
+    
     self.frame = CGRectMake(0, WXMPhoto_Height - height, WXMPhoto_Width, height);
     self.backgroundColor = [UIColor clearColor];
     UIToolbar *toolBar = [[UIToolbar alloc] initWithFrame:self.bounds];
     toolBar.backgroundColor = WXMPhotoDetailToolbarColor;
     
-    _previewButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 3, 60, coHeight - 3)];
-    [_previewButton setTitle:@"预览" forState:UIControlStateNormal];
-    _previewButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-    _previewButton.titleLabel.font = [UIFont systemFontOfSize:16.5];
-    [_previewButton setTitleColor:WXMPhotoDetailToolbarTextColor forState:0];
-    [_previewButton setTitleColor:WXMPhoto_DTextColor forState:UIControlStateDisabled];
-    [_previewButton wxm_setEnlargeEdgeWithTop:3 left:14 right:10 bottom:5];
-    _previewButton.left = 14;
-    _previewButton.enabled = NO;
-    [_previewButton wxm_addTarget:self action:@selector(previewEvent)];
+    self.previewButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 3, 60, coHeight - 3)];
+    self.previewButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    self.previewButton.titleLabel.font = [UIFont systemFontOfSize:16.5];
+    self.previewButton.left = 14;
+    self.previewButton.enabled = NO;
+    [self.previewButton setTitleColor:WXMPhotoDetailToolbarTextColor forState:0];
+    [self.previewButton setTitleColor:WXMPhoto_DTextColor forState:UIControlStateDisabled];
+    [self.previewButton setTitle:@"预览" forState:UIControlStateNormal];
+    [self.previewButton wc_addTarget:self action:@selector(previewEvent)];
+    [self.previewButton wc_setEnlargeEdgeWithTop:3 left:14 right:10 bottom:5];
     
-    _completeButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 3, 0, coHeight - 3)];
-    [_completeButton setTitle:@"完成" forState:UIControlStateNormal];
-    _completeButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
-    _completeButton.titleLabel.font = [UIFont systemFontOfSize:16.5];
-    [_completeButton setTitleColor:WXMSelectedColor forState:UIControlStateNormal];
-    [_completeButton setTitleColor:WXMPhoto_DSureColor forState:UIControlStateDisabled];
-    [_completeButton sizeToFit];
-    _completeButton.right = WXMPhoto_Width - 14;
-    _completeButton.height = coHeight - 3;
-    _completeButton.top = _previewButton.top;
-    _completeButton.enabled = NO;
-    [_completeButton wxm_addTarget:self action:@selector(dismissController)];
-    [_completeButton wxm_setEnlargeEdgeWithTop:3 left:15 right:14 bottom:5];
+    self.completeButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 3, 0, coHeight - 3)];
+    self.completeButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
+    self.completeButton.titleLabel.font = [UIFont systemFontOfSize:16.5];
+    self.completeButton.enabled = NO;
+    [self.completeButton setTitleColor:WXMSelectedColor forState:UIControlStateNormal];
+    [self.completeButton setTitleColor:WXMPhoto_DSureColor forState:UIControlStateDisabled];
+    [self.completeButton setTitle:@"完成" forState:UIControlStateNormal];
+    [self.completeButton sizeToFit];
+    [self.completeButton wc_addTarget:self action:@selector(dismissController)];
+    [self.completeButton wc_setEnlargeEdgeWithTop:3 left:15 right:14 bottom:5];
+    self.completeButton.right = WXMPhoto_Width - 14;
+    self.completeButton.height = coHeight - 3;
+    self.completeButton.top = self.previewButton.top;
     
-    _photoNumber = [[UILabel alloc] initWithFrame:CGRectMake(0,0,iconWH, iconWH)];
-    _photoNumber.text = @"0";
-    _photoNumber.font = [UIFont systemFontOfSize:14];
-    _photoNumber.textColor = [UIColor whiteColor];
-    _photoNumber.numberOfLines = 1;
-    _photoNumber.layer.cornerRadius = _photoNumber.width / 2;
-    _photoNumber.layer.masksToBounds = YES;
-    _photoNumber.right = _completeButton.left - 5;
-    _photoNumber.centerY = _completeButton.centerY;
-    _photoNumber.backgroundColor = WXMSelectedColor;
-    _photoNumber.textAlignment = NSTextAlignmentCenter;
-    _photoNumber.hidden = YES;
+    self.photoNumber = [[UILabel alloc] initWithFrame:CGRectMake(0,0,iconWH, iconWH)];
+    self.photoNumber.text = @"0";
+    self.photoNumber.font = [UIFont systemFontOfSize:14];
+    self.photoNumber.textColor = [UIColor whiteColor];
+    self.photoNumber.numberOfLines = 1;
+    self.photoNumber.layer.cornerRadius = _photoNumber.width / 2;
+    self.photoNumber.layer.masksToBounds = YES;
+    self.photoNumber.right = self.completeButton.left - 5;
+    self.photoNumber.centerY = self.completeButton.centerY;
+    self.photoNumber.backgroundColor = WXMSelectedColor;
+    self.photoNumber.textAlignment = NSTextAlignmentCenter;
+    self.photoNumber.hidden = YES;
     
     [self addSubview:toolBar];
     [self addSubview:self.previewButton];
@@ -88,6 +89,7 @@
                                              selector:@selector(originalNoti:)
                                                  name:WXMPhoto_originalNoti
                                                object:nil];
+    
 }
 
 /** 原图通知 */
@@ -137,7 +139,7 @@
         _originalImageButton.size = CGSizeMake(80, 42);
         _originalImageButton.titleLabel.font = [UIFont systemFontOfSize:16];
         [_originalImageButton setTitle:@"  原图" forState:UIControlStateNormal];
-        [_originalImageButton wxm_addTarget:self action:@selector(originalEvent:)];
+        [_originalImageButton wc_addTarget:self action:@selector(originalEvent:)];
         _originalImageButton.centerX = self.width / 2;
         _originalImageButton.top = 3;
         _originalImageButton.hidden = !WXMPhotoSelectOriginal;

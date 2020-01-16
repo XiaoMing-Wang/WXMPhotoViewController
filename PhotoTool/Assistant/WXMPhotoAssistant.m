@@ -68,7 +68,12 @@ static char wxm_Photoline;
 + (UIBarButtonItem *)wxm_createButtonItem:(NSString *)title
                                    target:(id)target
                                    action:(SEL)action {
-    UIBarButtonItem *buttonItem = [[UIBarButtonItem alloc] initWithTitle:title style:UIBarButtonItemStylePlain target:target action:action];
+    UIBarButtonItem *buttonItem = [[UIBarButtonItem alloc]
+                                   initWithTitle:title
+                                   style:UIBarButtonItemStylePlain
+                                   target:target
+                                   action:action];
+    
     buttonItem.tintColor = WXMBarTitleColor;
     return buttonItem;
 }

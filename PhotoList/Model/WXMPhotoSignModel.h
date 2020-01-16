@@ -5,9 +5,8 @@
 //  Created by edz on 2019/5/12.
 //  Copyright © 2019年 wq. All rights reserved.
 //
-
-#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 #import "WXMPhotoManager.h"
 
 @interface WXMPhotoSignModel : NSObject
@@ -26,6 +25,7 @@
 
 /** 相片类型 */
 @property (nonatomic, assign) WXMPhotoMediaType mediaType;
+
 @end
 
 

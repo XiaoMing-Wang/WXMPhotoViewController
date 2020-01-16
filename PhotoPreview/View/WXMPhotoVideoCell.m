@@ -29,6 +29,8 @@
 @property (nonatomic, assign) CGFloat wxm_y;
 @property (nonatomic, assign) CGFloat wxm_zoomScale;
 @property (nonatomic, assign) CGPoint wxm_lastPoint;
+
+@property (nonatomic, assign) int32_t currentRequestID;
 @end
 
 @implementation WXMPhotoVideoCell
@@ -69,9 +71,6 @@
     [self.contentView addSubview:_contentScrollView];
     [self wxm_addTapGestureRecognizer];
     
-    [KNotificationCenter addObserver:self
-                            selector:@selector(wxm_runAgain) name:AVPlayerItemDidPlayToEndTimeNotification
-                              object:nil];
     
     [KNotificationCenter addObserver:self
                             selector:@selector(enterForeground)
@@ -79,7 +78,8 @@
                               object:nil];
     
     [KNotificationCenter addObserver:self
-                            selector:@selector(enterBackground) name:UIApplicationWillResignActiveNotification
+                            selector:@selector(enterBackground)
+                                name:UIApplicationWillResignActiveNotification
                               object:nil];
 }
 
@@ -105,8 +105,8 @@
 - (void)setLocation:(CGFloat)scale {
     CGFloat width = _contentScrollView.width;
     CGFloat height = width * scale;
-    self.imageView.frame = CGRectMake(0, 0, width, width * scale);
-    self.imageView.center = CGPointMake(width / 2, height / 2);
+    self.imageView.frame = CGRectMake(0, 0, width, height);
+    self.imageView.center = CGPointMake(width / 2, _contentScrollView.height / 2);
     self.playIcon.layoutCenterSupView = YES;
 }
 
@@ -117,7 +117,7 @@
 /** 设置图片Video */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     @autoreleasepool {
-        
+        _imageView.image = nil;
         _photoAsset = photoAsset;
         CGFloat screenWidth  = WXMPhoto_Width * 2.0;
         WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
@@ -126,21 +126,19 @@
             (CGFloat) photoAsset.asset.pixelHeight /
             (CGFloat) photoAsset.asset.pixelWidth * 1.0;
         }
-       
+        
         CGFloat imageHeight = photoAsset.aspectRatio * screenWidth;
         PHAsset *asset = photoAsset.asset;
         CGSize size = CGSizeMake(screenWidth, imageHeight);
         
-        [man getPictures_customSize:asset
-                        synchronous:NO
-                          assetSize:size
-                         completion:^(UIImage *image)
-         {
+        if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
+        int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
             self.imageView.image = image;
             [self setLocation:_photoAsset.aspectRatio];
-            [self wxm_avPlayStartPlay:NO];
-            [self.wxm_avPlayer pause];
         }];
+        
+        self.currentRequestID = ids;
+        _photoAsset.requestID = ids;
     }
 }
 
@@ -172,32 +170,36 @@
 
 /** 开始播放视频 */
 - (void)wxm_avPlayStartPlay:(bool)playImmediately {
-  @autoreleasepool {
-      
-      void (^playBlock)(NSURL *url) = ^(NSURL *url) {
-          if (!self.wxm_avPlayer) {
-              self.wxm_item = [AVPlayerItem playerItemWithURL:url];
-              self.wxm_avPlayer = [AVPlayer playerWithPlayerItem:self.wxm_item];
-              self.wxm_playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.wxm_avPlayer];
-              self.wxm_playerLayer.frame = self.contentScrollView.frame;
-              [self.imageView.layer insertSublayer:self.wxm_playerLayer atIndex:0];
-          }
-          
-          if (playImmediately) {
-              self.playIcon.hidden = YES;
-              [self.wxm_avPlayer play];
-          }
-      };
-      
-      if (self.photoAsset.videoUrl) playBlock(self.photoAsset.videoUrl);
-      if (!self.photoAsset.videoUrl) {
-          WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-          [man getVideoByAsset:_photoAsset.asset completion:^(NSURL *url, NSData *data) {
-              self.photoAsset.videoUrl = url;
-              playBlock(url);
-          }];
-      }
-  }
+    if (self.photoAsset.videoUrl) [self playVideos:playImmediately];
+    if (!self.photoAsset.videoUrl) {
+        WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
+        [man getVideoByAsset:self.photoAsset.asset completion:^(NSURL *url, NSData *data) {
+            self.photoAsset.videoUrl = url;
+            [self playVideos:playImmediately];
+        }];
+    }
+}
+
+- (void)playVideos:(bool)playImmediately {
+    if (!self.wxm_avPlayer) {
+        self.wxm_item = [AVPlayerItem playerItemWithURL:self.photoAsset.videoUrl];
+        self.wxm_avPlayer = [AVPlayer playerWithPlayerItem:self.wxm_item];
+        self.wxm_playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.wxm_avPlayer];
+        self.wxm_playerLayer.frame = self.contentScrollView.frame;
+        [self.imageView.layer insertSublayer:self.wxm_playerLayer atIndex:0];
+        self.wxm_playerLayer.hidden = YES;
+        
+        [KNotificationCenter addObserver:self
+                                selector:@selector(wxm_runAgain)
+                                    name:AVPlayerItemDidPlayToEndTimeNotification
+                                  object:nil];
+    }
+    
+    if (playImmediately) {
+        self.playIcon.hidden = YES;
+        self.wxm_playerLayer.hidden = NO;
+        [self.wxm_avPlayer play];
+    }
 }
 
 /** 暂停 */
@@ -307,7 +309,7 @@
         self.wxm_avPlayer = nil;
         [self.wxm_playerLayer removeFromSuperlayer];
         self.playIcon.hidden = NO;
-        [KNotificationCenter removeObserver:self];
+        [KNotificationCenter removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
     } @catch (NSException *exception) { } @finally { }
 }
 

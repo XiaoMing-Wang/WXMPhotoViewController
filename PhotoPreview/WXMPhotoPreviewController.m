@@ -155,21 +155,22 @@ UINavigationControllerDelegate>
     [self wxm_setBottomBarViewrealByte];
     
     if (self.dataSource.count < self.selectedIndex) return;
-    if (WXMPhotoShowLivePhto == NO) return;
-    
+       
     /** 播放livePhoto */
     [self playLivePhoto];
 }
 
 /** 播放livephoto */
 - (void)playLivePhoto {
-    if (WXMPhotoShowLivePhto == NO) return;
     if (self.dataSource.count < self.selectedIndex) return;
     NSIndexPath *index = [NSIndexPath indexPathForRow:self.selectedIndex inSection:0];
     UITableViewCell * cell = nil;
     cell = (UITableViewCell *)[self.collectionView cellForItemAtIndexPath:index];
-    if ([cell isKindOfClass:WXMPhotoPreviewCell.class]) {
+    if ([cell isKindOfClass:WXMPhotoPreviewCell.class] && WXMPhotoShowLivePhto) {
         [((WXMPhotoPreviewCell *)cell) startPlayLivePhoto];
+    } else if ([cell isKindOfClass:WXMPhotoVideoCell.class] && WXMPhotoAutomaticVideo) {
+        [((WXMPhotoVideoCell *)cell) wxm_avPlayStartPlay:YES];
+        if (self.showToolbar) [self wxm_respondsToTapSingle];
     }
 }
 

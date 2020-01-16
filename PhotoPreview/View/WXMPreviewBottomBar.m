@@ -77,8 +77,8 @@
     self.originalButton.left = 15;
     self.originalButton.hidden = !WXMPhotoSelectOriginal;
     self.originalButton.centerY = heightFinash / 2;
-    [self.originalButton wxm_setEnlargeEdgeWithTop:5 left:10 right:-120 bottom:0];
-    [self.originalButton wxm_addTarget:self action:@selector(originalTouchEvents:)];
+    [self.originalButton wc_setEnlargeEdgeWithTop:5 left:10 right:-120 bottom:0];
+    [self.originalButton wc_addTarget:self action:@selector(originalTouchEvents:)];
     
     self.finishButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 60, height)];
     self.finishButton.layoutRight = 15;
@@ -88,7 +88,7 @@
     [self.finishButton setTitle:@"完成" forState:UIControlStateNormal];
     self.finishButton.backgroundColor = WXMSelectedColor;
     self.finishButton.layer.cornerRadius = 4;
-    [self.finishButton wxm_addTarget:self action:@selector(finishTouchEvents)];
+    [self.finishButton wc_addTarget:self action:@selector(finishTouchEvents)];
     
     [self.finshView addSubview:self.originalButton];
     [self.finshView addSubview:self.finishButton];

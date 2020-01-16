@@ -11,13 +11,13 @@
 @interface WXMPhotoCollectionCell ()
 
 /** 白色蒙版 */
-@property (nonatomic, strong) UIView *maskCoverView;
+@property(nonatomic, strong) UIView *maskCoverView;
 
 /** 图片 */
-@property (nonatomic, strong) UIImageView *imageView;
+@property(nonatomic, strong) UIImageView *imageView;
 
 /** 资源类型标记 */
-@property (nonatomic, strong) UIButton *typeSign;
+@property(nonatomic, strong) UIButton *typeSign;
 
 /** 勾选框  */
 @property (nonatomic, strong) UIButton *chooseButton;
@@ -37,7 +37,7 @@
     self.imageView = [[UIImageView alloc] initWithFrame:self.bounds];
     self.imageView.contentMode = UIViewContentModeScaleAspectFill;
     self.imageView.clipsToBounds = YES;
-
+    
     [self.contentView addSubview:self.imageView];
     [self.contentView addSubview:self.typeSign];
 }
@@ -48,7 +48,7 @@
     if (photoType == WXMPhotoDetailTypeMultiSelect) {
         [self.contentView addSubview:self.maskCoverView];
         [self.contentView addSubview:self.chooseButton];
-    } else if (photoType == WXMPhotoDetailTypeTailoring) {
+    }  else if (photoType == WXMPhotoDetailTypeTailoring) {
         self.typeSign.alpha = WXMPhotoTailoringShowGIFSign;
     }
 }
@@ -58,17 +58,17 @@
 #pragma clang diagnostic ignored"-Wimplicit-retain-self"
  
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
+    _imageView.image = nil;
     _photoAsset = photoAsset;
     _assetIdentifier = _photoAsset.asset.localIdentifier;
     CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
     
     /** 设置界面 */
-    [self setTypeSignInterface];
-    
+    [self wxm_setTypeSignInterface];
+       
     /** PHImageRequestOptionsResizeModeExact返回精确大小 */
     /** PHImageRequestOptionsResizeModeExact想返回缩略图在返回需要大小 */
     
-    __weak __typeof(self) self_weak = self;
     int32_t ids = [[WXMPhotoManager sharedInstance]
                    getPicturesByAsset:photoAsset.asset
                    synchronous:NO
@@ -78,10 +78,10 @@
                    deliveryMode:PHImageRequestOptionsDeliveryModeOpportunistic
                    completion:^(UIImage *image) {
         
-        if([self_weak.assetIdentifier isEqualToString:self_weak.photoAsset.asset.localIdentifier]) {
-            self_weak.imageView.image = image;
+        if ([_assetIdentifier isEqualToString:_photoAsset.asset.localIdentifier]) {
+            self.imageView.image = image;
         } else {
-            [[WXMPhotoManager sharedInstance] cancelRequestWithID:self_weak.currentRequestID];
+            [[WXMPhotoManager sharedInstance] cancelRequestWithID:_currentRequestID];
         }
     }];
 
@@ -92,8 +92,8 @@
     _photoAsset.requestID = ids;
     [self setNeedsLayout];
 }
-
 #pragma clang diagnostic pop
+
 
 /** 多选模式下设置代理 */
 - (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
@@ -108,7 +108,7 @@
     if (selected) available = YES;
     
     [self signButtonSelected:selected];
-    [self setTypeSignInterface];
+    [self wxm_setTypeSignInterface];
     [self setUserCanTouch:available animation:NO];
 }
 
@@ -124,7 +124,7 @@
 }
 
 /** 设置显示界面效果 */
-- (void)setTypeSignInterface {
+- (void)wxm_setTypeSignInterface {
     self.typeSign.hidden = YES;
     [self.contentView bringSubviewToFront:self.typeSign];
     
@@ -164,9 +164,9 @@
 }
 
 /** 勾号点击 */
-- (void)touchEvent {
+- (void)wxm_touchEvent {
     if (self.userCanTouch == NO) {
-        [self showAlertController];
+        [self wxm_showAlertController];
         return;
     }
     
@@ -210,7 +210,7 @@
 }
 
 /** 提示框 */
-- (void)showAlertController {
+- (void)wxm_showAlertController {
     if ([self.delegate respondsToSelector:@selector(wxm_cantTouchWXMPhotoSignView:)]){
         [self.delegate wxm_cantTouchWXMPhotoSignView:self.photoAsset.mediaType];
     }
@@ -261,8 +261,8 @@
         _chooseButton.titleLabel.font = [UIFont systemFontOfSize:WXMSelectedFont];
         [_chooseButton setBackgroundImage:normal forState:UIControlStateNormal];
         [_chooseButton setBackgroundImage:selected forState:UIControlStateSelected];
-        [_chooseButton wxm_addTarget:self action:@selector(touchEvent)];
-        [_chooseButton wxm_setEnlargeEdgeWithTop:3 left:15 right:3 bottom:15];
+        [_chooseButton wc_addTarget:self action:@selector(wxm_touchEvent)];
+        [_chooseButton wc_setEnlargeEdgeWithTop:3 left:15 right:3 bottom:15];
     }
     return _chooseButton;
 }

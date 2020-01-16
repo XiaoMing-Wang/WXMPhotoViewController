@@ -97,7 +97,8 @@ static WXMPhotoManager *manager = nil;
     if ([title isEqualToString:@"Slo-mo"]) return @"慢动作";
     else if ([title isEqualToString:@"Recently Added"])  return @"最近添加";
     else if ([title isEqualToString:@"Favorites"]) return @"个人收藏";
-    else if ([title isEqualToString:@"Recently Deleted"])         return @"最近删除";
+    else if ([title isEqualToString:@"Recently Deleted"])  return @"最近删除";
+    else if ([title isEqualToString:@"Recents"])  return @"最近项目";
     else if ([title isEqualToString:@"Videos"])  return @"视频";
     else if ([title isEqualToString:@"All Photos"]) return @"所有照片";
     else if ([title isEqualToString:@"Selfies"]) return @"自拍";
@@ -110,67 +111,79 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 获得所有的相册对象*/
-- (void)getAllPicturesListBlock:(void(^)(NSArray<WXMPhotoList *> *))block {
+- (void)getAllPicturesListBlock:(void(^)(NSArray<WXMPhotoList *> *))callback {
+    if (self.picturesArray.count > 0) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (callback) callback(self.picturesArray);
+        });
+        return;
+    }
     
-    @autoreleasepool {
-        NSMutableArray<WXMPhotoList *> *photoList = @[].mutableCopy;
+    NSMutableArray<WXMPhotoList *> *photoList = @[].mutableCopy;
+    PHFetchResult *album = [PHAssetCollection
+                            fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum
+                            subtype:PHAssetCollectionSubtypeAlbumRegular
+                            options:nil];
+    
+    [album enumerateObjectsUsingBlock:^(PHAssetCollection *colle, NSUInteger idx, BOOL *stop){
         
-        /** 获取系统相册 */
-        PHFetchResult * album = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
-        
-        [album enumerateObjectsUsingBlock:^(PHAssetCollection *collection,NSUInteger idx,BOOL*stop){
+        /** 去掉最近删除的 */
+        if (!([colle.localizedTitle isEqualToString:@"Recently Deleted"] ||
+              [colle.localizedTitle isEqualToString:@"Hidden"]||
+              [colle.localizedTitle isEqualToString:@"最近删除"])){
             
-            /** 去掉视频和最近删除的 */
-            if (!([collection.localizedTitle isEqualToString:@"Recently Deleted"] ||
-                  [collection.localizedTitle isEqualToString:@"Hidden"]||
-                  [collection.localizedTitle isEqualToString:@"最近删除"])){
-                
-                PHFetchResult *result = [self fetchAssetsInAssetCollection:collection ascending:NO];
-                if (result.count > 0) {
-                    WXMPhotoList *list = [[WXMPhotoList alloc] init];
-                    list.title = [self transformAblumTitle:collection.localizedTitle];
-                    list.photoNum = result.count;
-                    list.firstAsset = result.firstObject;
-                    list.assetCollection = collection;
-                    if ([list.title isEqualToString:@"相机胶卷"] ||
-                        [list.title isEqualToString:@"Live Photos"]) {
-                        [photoList insertObject:list atIndex:0];
-                    } else {
-                        [photoList addObject:list];
-                    }
-                    
-                    if (idx == 0) self.firstPhotoList = list;
-                    if ([list.title isEqualToString:@"相机胶卷"]) self.firstPhotoList = list;
-                }
-            }
-        }];
-        
-        
-        /** 用户创建的相册 */
-        PHFetchResult * userAlbum = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil];
-        [userAlbum enumerateObjectsUsingBlock:^(PHAssetCollection *collection, NSUInteger idx, BOOL *stop) {
-            PHFetchResult *result = [self fetchAssetsInAssetCollection:collection ascending:NO];
+            PHFetchResult *result = [self fetchAssetsInAssetCollection:colle ascending:NO];
             if (result.count > 0) {
                 WXMPhotoList *list = [[WXMPhotoList alloc] init];
-                list.title = [self transformAblumTitle:collection.localizedTitle];
+                list.title = [self transformAblumTitle:colle.localizedTitle];
                 list.photoNum = result.count;
                 list.firstAsset = result.firstObject;
-                list.assetCollection = collection;
-                if ([list.title isEqualToString:@"我的照片流"] && photoList.count >= 1) {
-                    [photoList insertObject:list atIndex:1];
+                list.assetCollection = colle;
+                if ([list.title isEqualToString:@"相机胶卷"] ||
+                    [list.title isEqualToString:@"最近项目"] ||
+                    [list.title isEqualToString:@"Live Photos"]) {
+                    [photoList insertObject:list atIndex:0];
                 } else {
                     [photoList addObject:list];
                 }
+                
+                if (!idx) self.firstPhotoList = list;
+                if ([list.title isEqualToString:@"相机胶卷"] ||
+                    [list.title isEqualToString:@"最近项目"]) {
+                    self.firstPhotoList = list;
+                }
             }
-        }];
+        }
+    }];
+    
+    
+    /** 用户创建的相册 */
+    PHFetchResult * userAlbum = [PHAssetCollection
+                                 fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
+                                 subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary
+                                 options:nil];
+    
+    [userAlbum enumerateObjectsUsingBlock:^(PHAssetCollection *colle, NSUInteger idx, BOOL *stop) {
+        PHFetchResult *result = [self fetchAssetsInAssetCollection:colle ascending:NO];
+        if (result.count > 0) {
+            WXMPhotoList *list = [[WXMPhotoList alloc] init];
+            list.title = [self transformAblumTitle:colle.localizedTitle];
+            list.photoNum = result.count;
+            list.firstAsset = result.firstObject;
+            list.assetCollection = colle;
+            if ([list.title isEqualToString:@"我的照片流"] && photoList.count >= 1) {
+                [photoList insertObject:list atIndex:1];
+            } else {
+                [photoList addObject:list];
+            }
+        }
+    }];
         
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (!self.firstPhotoList) self.firstPhotoList = photoList.firstObject;
-            self.picturesArray = photoList;
-            if (block) block(photoList);
-        });
-    } 
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (!self.firstPhotoList) self.firstPhotoList = photoList.firstObject;
+        self.picturesArray = photoList;
+        if (callback) callback(photoList);
+    });
 }
 
 /** 获取相册结果集 */

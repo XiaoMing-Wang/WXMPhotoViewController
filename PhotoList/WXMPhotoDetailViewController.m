@@ -5,10 +5,7 @@
 //  Created by edz on 2019/5/6.
 //  Copyright © 2019年 wq. All rights reserved.
 //
-
-#define imageWidth ([UIScreen mainScreen].bounds.size.width - (kCount - 1) * kMargin) / kCount
-#define maxRow ceil(([UIScreen mainScreen].bounds.size.height - 64) / (imageWidth))
-#import "WXMPhotoDetailViewController.h"
+#import <objc/runtime.h>
 #import "WXMPhotoManager.h"
 #import "WXMPhotoListCell.h"
 #import "WXMPhotoCollectionCell.h"
@@ -17,18 +14,18 @@
 #import "WXMPhotoPreviewController.h"
 #import "WXMPhotoShapeController.h"
 #import "WXMDictionary_Array.h"
-#import <objc/runtime.h>
 #import "WXMPhotoDetailToolbar.h"
 #import "WXMResourceAssistant.h"
+#import "WXMPhotoNavigationbar.h"
+#import "WXMPhotoDetailViewController.h"
 
 @interface WXMPhotoDetailViewController ()
-<UICollectionViewDelegate,
-UICollectionViewDataSource,
-WXMPhotoSignProtocol,
-WXMDetailToolbarProtocol>
+<UICollectionViewDelegate, UICollectionViewDataSource,
+WXMPhotoSignProtocol, WXMDetailToolbarProtocol>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) WXMPhotoDetailToolbar *toolbar;
+@property (nonatomic, strong) WXMPhotoNavigationbar *navigationbar;
 @property (nonatomic, assign) WXMPhotoMediaType chooseType;
 
 /** 数据源 */
@@ -46,23 +43,24 @@ WXMDetailToolbarProtocol>
 - (void)viewDidLoad {
     [super viewDidLoad];
    
-    self.view.backgroundColor = [UIColor whiteColor];
+    self.navigationItem.titleView = self.navigationbar;
     self.navigationItem.leftBarButtonItem = nil;
-    self.navigationItem.title = self.phoneList.title;
     self.navigationController.navigationBar.translucent = YES;
     self.automaticallyAdjustsScrollViewInsets = NO;
     if (@available(iOS 11.0, *)) {
         self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
     }
     
+    self.view.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.collectionView];
+    
     if (WXMPhotoShowDetailToolbar && self.photoType == WXMPhotoDetailTypeMultiSelect) {
         [self.view addSubview:self.toolbar];
         self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, self.toolbar.height + 10, 0);
     }
     
     /** 获取图片 */
-    [self checkDisplayImages];
+    [self getPreviewAlbum];
     self.navigationItem.rightBarButtonItem = [WXMPhotoAssistant
                                               wxm_createButtonItem:@"取消"
                                               target:self
@@ -70,38 +68,50 @@ WXMDetailToolbarProtocol>
 }
 
 /** 获取2x像素的图片 */
-- (void)checkDisplayImages {
+- (void)getPreviewAlbum {
+    __weak __typeof(self) self_weak = self;
     self.dataSource = @[].mutableCopy;
-    PHAssetCollection *asset = self.phoneList.assetCollection;
     WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
-    NSArray *arrayAll = [manager getAssetsInAssetCollection:asset ascending:YES];
-    [arrayAll enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
-        WXMPhotoAsset *asset = [WXMPhotoAsset new];
-        asset.asset = obj;
-        [self.dataSource addObject:asset];
-    }];
     
-    /** 滚动到最后 */
-    [self.collectionView reloadData];
-    if (self.dataSource.count <= 1) return;
-    UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredVertically;
-    NSIndexPath * index = [NSIndexPath indexPathForRow:self.dataSource.count - 1 inSection:0];
-    [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:NO];
+    [manager getAllPicturesListBlock:^(NSArray<WXMPhotoList *> *photoList) {
+        WXMPhotoList *firstList = manager.firstPhotoList;
+        PHAssetCollection *asset = firstList.assetCollection;
+        NSArray <PHAsset *>*phAssets = [manager getAssetsInAssetCollection:asset ascending:YES];
+        [phAssets enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
+            WXMPhotoAsset *asset = [WXMPhotoAsset new];
+            asset.asset = obj;
+            [self_weak.dataSource addObject:asset];
+        }];
+        
+        self.navigationbar.titles = firstList.title;
+        
+        /** 滚动到最后 */
+        [self.collectionView reloadData];
+        if (self.dataSource.count <= 1) return;
+        UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredVertically;
+        NSIndexPath * index = [NSIndexPath indexPathForRow:self.dataSource.count - 1 inSection:0];
+        [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:NO];
+        
+    }];
 }
 
 
-#pragma mark _____________________________________________UICollectionView dataSource
+#pragma mark  UICollectionView
+#pragma mark  UICollectionView
+#pragma mark  UICollectionView
 
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+- (NSInteger)collectionView:(UICollectionView *)collectionView
+     numberOfItemsInSection:(NSInteger)section {
     return self.dataSource.count;
 }
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    WXMPhotoCollectionCell *cell =
-    [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
+                  cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    WXMPhotoCollectionCell *cell = nil;
+    cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
     cell.showVideo = (self.showVideo);
     cell.photoType = self.photoType;
-    cell.photoAsset = self.dataSource[indexPath.row];
+    cell.photoAsset = [self.dataSource objectAtIndex:indexPath.row];
     
     /** 多选模式 */
     if (self.photoType == WXMPhotoDetailTypeMultiSelect) {
@@ -531,7 +541,7 @@ WXMDetailToolbarProtocol>
 - (UICollectionView *)collectionView {
     if (_collectionView == nil) {
         UICollectionViewFlowLayout *flow = [[UICollectionViewFlowLayout alloc] init];
-        flow.itemSize = CGSizeMake(imageWidth, imageWidth);
+        flow.itemSize = CGSizeMake(kImageWidth, kImageWidth);
         flow.minimumLineSpacing = kMargin;
         flow.minimumInteritemSpacing = kMargin;
         
@@ -553,6 +563,13 @@ WXMDetailToolbarProtocol>
         _toolbar.detailDelegate = self;
     }
     return _toolbar;
+}
+
+- (WXMPhotoNavigationbar *)navigationbar {
+    if (!_navigationbar) {
+        _navigationbar = [[WXMPhotoNavigationbar alloc] initWithFrame:CGRectZero];
+    }
+    return _navigationbar;
 }
 
 /** 数组指点二合一 */
@@ -593,9 +610,7 @@ WXMDetailToolbarProtocol>
 }
 
 - (void)dealloc {
-#if DEBUG
     NSLog(@"释放 %@",NSStringFromClass(self.class));
-#endif
 }
 
 @end

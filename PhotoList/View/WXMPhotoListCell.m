@@ -38,7 +38,7 @@
     [self.contentView addSubview:_titleLable];
 }
 
-/** 赋值 相册界面相片少同步获取 */
+/** 相册界面相片少同步获取 */
 - (void)setPhoneList:(WXMPhotoList *)phoneList {
     _phoneList = phoneList;
     

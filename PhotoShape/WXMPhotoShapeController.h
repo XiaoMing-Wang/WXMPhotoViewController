@@ -11,10 +11,7 @@
 
 @interface WXMPhotoShapeController : UIViewController
 
-
 @property (nonatomic, strong) UIImage *shapeImage;
-
-
 @property (nonatomic, weak) id<WXMPhotoProtocol> delegate;
 
 /** 期望获取图片大小 */

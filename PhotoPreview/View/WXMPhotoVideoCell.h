@@ -17,4 +17,7 @@
 /** 获取当前image */
 - (UIImage *)currentImage;
 
+/** 开始播放视频 */
+- (void)wxm_avPlayStartPlay:(bool)playImmediately;
+
 @end

@@ -140,9 +140,9 @@
         _leftButton = [[UIButton alloc] initWithFrame:(CGRect){CGPointZero, 26, 26}];
         _leftButton.left = 8;
         _leftButton.bottom = self.height - (44 - _leftButton.height) / 2;
-        [_leftButton wxm_setEnlargeEdgeWithTop:20 left:8 right:40 bottom:_leftButton.bottom];
+        [_leftButton wc_setEnlargeEdgeWithTop:20 left:8 right:40 bottom:_leftButton.bottom];
         [_leftButton wxm_setBackgroundImage:@"live_icon_back"];
-        [_leftButton wxm_addTarget:self action:@selector(leftItemTouchEvents)];
+        [_leftButton wc_addTarget:self action:@selector(leftItemTouchEvents)];
     }
     return _leftButton;
 }
@@ -158,8 +158,8 @@
         UIImage *selected = [UIImage imageNamed:@"photo_sign_background"];
         [_rightButton setBackgroundImage:normal forState:UIControlStateNormal];
         [_rightButton setBackgroundImage:selected forState:UIControlStateSelected];
-        [_rightButton wxm_setEnlargeEdgeWithTop:20 left:40 right:10 bottom:_rightButton.bottom];
-        [_rightButton wxm_addTarget:self action:@selector(rightItemTouchEvents)];
+        [_rightButton wc_setEnlargeEdgeWithTop:20 left:40 right:10 bottom:_rightButton.bottom];
+        [_rightButton wc_addTarget:self action:@selector(rightItemTouchEvents)];
     }
     return _rightButton;
 }
