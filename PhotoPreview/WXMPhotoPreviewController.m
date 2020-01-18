@@ -203,8 +203,6 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 
 /** cell回调代理 单击回调 */
 - (void)wxm_respondsToTapSingle:(BOOL)plays {
-    
-    
     if (plays && !self.showToolbar) return;
     self.showToolbar = !self.showToolbar;
     self.topBarView.hidden = self.bottomBarView.hidden = !self.showToolbar;
@@ -231,8 +229,8 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 - (void)wxm_respondsEndDragCell:(UIScrollView *)jump {
     if (jump == nil) {
         self.collectionView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:1];
-        [self.topBarView setAccordingState:YES];
-        [self.bottomBarView setAccordingState:YES];
+        if (self.showToolbar) [self.topBarView setAccordingState:YES];
+        if (self.showToolbar) [self.bottomBarView setAccordingState:YES];
         [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
         self.collectionView.scrollEnabled = YES;
         [self.wxm_contentView removeFromSuperview];
