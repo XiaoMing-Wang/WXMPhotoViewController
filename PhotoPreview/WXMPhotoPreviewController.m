@@ -162,7 +162,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
         [((WXMPhotoPreviewCell *)cell) startPlayLivePhoto];
     } else if ([cell isKindOfClass:WXMPhotoVideoCell.class] && WXMPhotoAutomaticVideo) {
         [((WXMPhotoVideoCell *)cell) wxm_avPlayStartPlay:YES];
-        if (self.showToolbar) [self wxm_respondsToTapSingle];
+        if (self.showToolbar) [self wxm_respondsToTapSingle:YES];
     }
 }
 
@@ -202,7 +202,10 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 #pragma mark  cell回调代理
 
 /** cell回调代理 单击回调 */
-- (void)wxm_respondsToTapSingle {
+- (void)wxm_respondsToTapSingle:(BOOL)plays {
+    
+    
+    if (plays && !self.showToolbar) return;
     self.showToolbar = !self.showToolbar;
     self.topBarView.hidden = self.bottomBarView.hidden = !self.showToolbar;
     if (self.topBarView.hidden == NO) self.topBarView.alpha = 1;

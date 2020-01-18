@@ -45,9 +45,8 @@
     NSString *info = [_phoneList.title stringByAppendingString:infoHelp];
     self.titleLable.text = info;
     
-    __weak __typeof(self) self_weak = self;
     [[WXMPhotoManager sharedInstance] getPictures_customSize:self.phoneList.firstAsset synchronous:NO assetSize:CGSizeMake(140, 140) completion:^(UIImage *image) {
-        self_weak.posterImageView.image = image;
+        self.posterImageView.image = image;
     }];
 }
 @end

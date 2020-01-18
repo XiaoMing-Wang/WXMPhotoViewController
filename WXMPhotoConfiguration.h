@@ -183,7 +183,7 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 
 /** 预览缩放cell回调 */
 @protocol WXMPreviewCellProtocol <NSObject>
-- (void)wxm_respondsToTapSingle;
+- (void)wxm_respondsToTapSingle:(BOOL)plays;
 - (void)wxm_respondsBeginDragCell;
 - (void)wxm_respondsEndDragCell:(UIScrollView *)jump;
 @end

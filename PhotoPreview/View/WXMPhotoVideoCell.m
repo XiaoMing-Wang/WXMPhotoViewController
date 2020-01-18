@@ -131,13 +131,10 @@
     PHAsset *asset = photoAsset.asset;
     CGSize size = CGSizeMake(screenWidth, imageHeight);
     
-    __weak __typeof(self) self_weak = self;
-    __weak __typeof(_photoAsset) asset_weak = _photoAsset;
-    
     if (self.currentRequestID) [manager cancelRequestWithID:self.currentRequestID];
     int32_t ids = [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-        self_weak.imageView.image = image;
-        [self_weak setLocation:asset_weak.aspectRatio];
+        self.imageView.image = image;
+        [self setLocation:_photoAsset.aspectRatio];
     }];
     
     self.currentRequestID = ids;
@@ -165,9 +162,10 @@
 
 /** 单击 */
 - (void)respondsToTapSingle:(UITapGestureRecognizer *)tap {
+    BOOL plays = !self.playIcon.hidden;
     self.playIcon.hidden  ? [self wxm_avPlayStopPlay] : [self wxm_avPlayStartPlay:YES];
-    if ([self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle)]) {
-        [self.delegate wxm_respondsToTapSingle];
+    if ([self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle:)]) {
+        [self.delegate wxm_respondsToTapSingle:(plays)];
     }
 }
 
@@ -175,8 +173,8 @@
 - (void)wxm_avPlayStartPlay:(bool)playImmediately {
     if (self.photoAsset.videoUrl) [self playVideos:playImmediately];
     if (!self.photoAsset.videoUrl) {
-        WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-        [man getVideoByAsset:self.photoAsset.asset completion:^(NSURL *url, NSData *data) {
+        WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
+        [manager getVideoByAsset:self.photoAsset.asset completion:^(NSURL *url, NSData *data) {
             self.photoAsset.videoUrl = url;
             [self playVideos:playImmediately];
         }];
@@ -188,7 +186,7 @@
         self.wxm_item = [AVPlayerItem playerItemWithURL:self.photoAsset.videoUrl];
         self.wxm_avPlayer = [AVPlayer playerWithPlayerItem:self.wxm_item];
         self.wxm_playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.wxm_avPlayer];
-        self.wxm_playerLayer.frame = self.contentScrollView.frame;
+        self.wxm_playerLayer.frame = self.imageView.bounds;
         [self.imageView.layer insertSublayer:self.wxm_playerLayer atIndex:0];
         self.wxm_playerLayer.hidden = YES;
         

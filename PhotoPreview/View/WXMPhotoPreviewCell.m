@@ -73,10 +73,7 @@
 /** 设置图片 GIF */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     _photoAsset = photoAsset;
-    
-    __weak __typeof(self) self_weak = self;
-    __weak __typeof(_photoAsset) asset_weak = _photoAsset;
-    
+     
     CGFloat screenWidth  = WXMPhoto_Width * 2.0;
     WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
     if (_photoAsset.aspectRatio <= 0) {
@@ -90,8 +87,8 @@
     if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
         
         [manager getGIFByAsset:photoAsset.asset completion:^(NSData *imageData) {
-            [self_weak setLocation:asset_weak.aspectRatio];
-            self_weak.imageView.image = [WXMPhotoGIFImage imageWithData:imageData];
+            [self setLocation:_photoAsset.aspectRatio];
+            self.imageView.image = [WXMPhotoGIFImage imageWithData:imageData];
         }];
         
     } else {
@@ -114,8 +111,8 @@
         /** 自定义转场需要当前图片 */
         /** 所以先加载图片 在上面覆盖livephoto */
         int32_t ids = [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-            self_weak.imageView.image = image;
-            [self_weak setLocation:asset_weak.aspectRatio];
+            self.imageView.image = image;
+            [self setLocation:_photoAsset.aspectRatio];
         }];
         
         
@@ -127,8 +124,8 @@
             self.livePhotoView.livePhoto = nil;
             [self.imageView addSubview:self.livePhotoView];
             [manager getLivePhotoByAsset:asset liveSize:size completion:^(PHLivePhoto *livePhoto) {
-                self_weak.livePhotoView.livePhoto = livePhoto;
-                [self_weak setLocation:asset_weak.aspectRatio];
+                self.livePhotoView.livePhoto = livePhoto;
+                [self setLocation:_photoAsset.aspectRatio];
             }];
         }
         
@@ -233,8 +230,8 @@
 
 /** 单击 */
 - (void)respondsToTapSingle:(UITapGestureRecognizer *)tap {
-    if ([self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle)]) {
-        [self.delegate wxm_respondsToTapSingle];
+    if ([self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle:)]) {
+        [self.delegate wxm_respondsToTapSingle:NO];
     }
 }
 
