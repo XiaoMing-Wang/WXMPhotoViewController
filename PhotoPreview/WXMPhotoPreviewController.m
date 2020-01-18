@@ -162,7 +162,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
         [((WXMPhotoPreviewCell *)cell) startPlayLivePhoto];
     } else if ([cell isKindOfClass:WXMPhotoVideoCell.class] && WXMPhotoAutomaticVideo) {
         [((WXMPhotoVideoCell *)cell) wxm_avPlayStartPlay:YES];
-        if (self.showToolbar) [self wxm_respondsToTapSingle:YES];
+        [self wxm_respondsToTapSingle:YES];
     }
 }
 
