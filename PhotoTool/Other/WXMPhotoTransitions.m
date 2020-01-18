@@ -25,9 +25,11 @@
     transitions.transitionsType = type;
     return transitions;
 }
+
 - (NSTimeInterval)transitionDuration:(id <UIViewControllerContextTransitioning>)transitionContext{
     return 0.35;
 }
+
 - (void)animateTransition:(id <UIViewControllerContextTransitioning>)transitionContext {
     if (self.transitionsType == WXMPhotoTransitionsTypePush) {
         [self pushWithTransitionContext:transitionContext];
@@ -42,74 +44,74 @@
 /** pop 界面层级比较复杂 所以直接从界面获取元素做动画了... */
 - (void)popWithTransitionContext:(id <UIViewControllerContextTransitioning>)transitionContext {
     id <UIViewControllerContextTransitioning> tc = transitionContext;
-    WXMPhotoDetailViewController *toVC = [tc viewControllerForKey:UITransitionContextToViewControllerKey];
-    WXMPhotoPreviewController *fromVC = [tc viewControllerForKey:UITransitionContextFromViewControllerKey];
+    WXMPhotoDetailViewController *toVC = nil;
+    WXMPhotoPreviewController *fromVC = nil;
+    
+    toVC = [tc viewControllerForKey:UITransitionContextToViewControllerKey];
+    fromVC = [tc viewControllerForKey:UITransitionContextFromViewControllerKey];
     UIView *toView = toVC.view;
     UIView *fromView = fromVC.view;
     UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
     
-    @autoreleasepool {
+    UIScrollView *scr = fromVC.transitionScrollerView;
+    NSInteger row = fromVC.transitionIndex;
+    UICollectionView *collectionView = toVC.transitionCollectionView;
+    if (collectionView) {
+        NSIndexPath * indexPath = [NSIndexPath indexPathForRow:row inSection:0];
+        WXMPhotoCollectionCell *cell = nil;
+        cell = (WXMPhotoCollectionCell *)[collectionView cellForItemAtIndexPath:indexPath];
+        CGRect aRect = [cell convertRect:cell.bounds toView:window];
         
-        UIScrollView *scr = fromVC.transitionScrollerView;
-        NSInteger row = fromVC.transitionIndex;
-        UICollectionView *collectionView = toVC.transitionCollectionView;
-        if (collectionView) {
-            NSIndexPath * indexPath = [NSIndexPath indexPathForRow:row inSection:0];
-            WXMPhotoCollectionCell *cell = nil;
-            cell = (WXMPhotoCollectionCell *)[collectionView cellForItemAtIndexPath:indexPath];
-            CGRect aRect = [cell convertRect:cell.bounds toView:window];
-            
-            /** from */
-            UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
-            UIImageView *mainImageView = [self mainImageView:scr];
-            UIImageView *blackView = objc_getAssociatedObject(scr, @"black");
-            CGRect rect_Window = [mainImageView convertRect:mainImageView.bounds toView:window];
-            CGFloat scale = mainImageView.height / mainImageView.width;
-            [mainImageView removeFromSuperview];
-            
-            CGRect rect = CGRectMake(0, 0, scr.width, scr.width * scale);
-            if (scr.zoomScale > 1) rect = rect_Window;
-            WXMPhotoImageView *wrapImageView = [[WXMPhotoImageView alloc] initWithFrame:rect];
-            if (scr.zoomScale <= 1) wrapImageView.center = scr.center;
-            wrapImageView.image = mainImageView.image;
-            wrapImageView.contentMode = UIViewContentModeScaleAspectFill;
-            wrapImageView.clipsToBounds = YES;
-            
-            /** 白色遮罩 */
-            UIView *maskCoverView = nil;
-            if (!cell.userCanTouch) {
-                maskCoverView = [[UIView alloc] initWithFrame:wrapImageView.bounds];
-                maskCoverView.alpha = 0;
-                maskCoverView.userInteractionEnabled = NO;
-                maskCoverView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.65];
-                [wrapImageView addSubview:maskCoverView];
-            }
-            
-            /** 缩放 */
-            [self setMaskview:wrapImageView.frame mRect:aRect];
-            wrapImageView.maskView = self.mask;
-            
-            [[transitionContext containerView] insertSubview:toView belowSubview:fromView];
-            [[transitionContext containerView] addSubview:wrapImageView];
-            [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
-                if (CGRectEqualToRect(aRect, CGRectZero))  wrapImageView.alpha = 0;
-                if (!CGRectEqualToRect(aRect, CGRectZero)) {
-                    wrapImageView.frame = aRect;
-                    self.mask.frame = CGRectMake(0, 0, aRect.size.width, aRect.size.height);
-                    CGRect rect = self.maskContent.frame;
-                    rect.origin.y = aRect.size.height * self.scale;
-                    rect.size.width = aRect.size.width;
-                    rect.size.height = aRect.size.height;
-                    self.maskContent.frame = rect;
-                }
-                blackView.alpha = 0;
-                if (!cell.userCanTouch) maskCoverView.alpha = 1;
-                
-            } completion:^(BOOL finished) {
-                [wrapImageView removeFromSuperview];
-                [transitionContext completeTransition:!transitionContext.transitionWasCancelled];
-            }];
+        /** from */
+        UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
+        UIImageView *mainImageView = [self mainImageView:scr];
+        UIImageView *blackView = objc_getAssociatedObject(scr, @"black");
+        CGRect rect_Window = [mainImageView convertRect:mainImageView.bounds toView:window];
+        CGFloat scale = mainImageView.height / mainImageView.width;
+        [mainImageView removeFromSuperview];
+        
+        CGRect rect = CGRectMake(0, 0, scr.width, scr.width * scale);
+        if (scr.zoomScale > 1) rect = rect_Window;
+        WXMPhotoImageView *wrapImageView = [[WXMPhotoImageView alloc] initWithFrame:rect];
+        if (scr.zoomScale <= 1) wrapImageView.center = scr.center;
+        wrapImageView.image = mainImageView.image;
+        wrapImageView.contentMode = UIViewContentModeScaleAspectFill;
+        wrapImageView.clipsToBounds = YES;
+        
+        /** 白色遮罩 */
+        UIView *maskCoverView = nil;
+        if (!cell.userCanTouch) {
+            maskCoverView = [[UIView alloc] initWithFrame:wrapImageView.bounds];
+            maskCoverView.alpha = 0;
+            maskCoverView.userInteractionEnabled = NO;
+            maskCoverView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.65];
+            [wrapImageView addSubview:maskCoverView];
         }
+        
+        /** 缩放 */
+        [self setMaskview:wrapImageView.frame mRect:aRect];
+        wrapImageView.maskView = self.mask;
+        
+        [[transitionContext containerView] insertSubview:toView belowSubview:fromView];
+        [[transitionContext containerView] addSubview:wrapImageView];
+        [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
+            if (CGRectEqualToRect(aRect, CGRectZero))  wrapImageView.alpha = 0;
+            if (!CGRectEqualToRect(aRect, CGRectZero)) {
+                wrapImageView.frame = aRect;
+                self.mask.frame = CGRectMake(0, 0, aRect.size.width, aRect.size.height);
+                CGRect rect = self.maskContent.frame;
+                rect.origin.y = aRect.size.height * self.scale;
+                rect.size.width = aRect.size.width;
+                rect.size.height = aRect.size.height;
+                self.maskContent.frame = rect;
+            }
+            blackView.alpha = 0;
+            if (!cell.userCanTouch) maskCoverView.alpha = 1;
+            
+        } completion:^(BOOL finished) {
+            [wrapImageView removeFromSuperview];
+            [transitionContext completeTransition:!transitionContext.transitionWasCancelled];
+        }];
     }
 }
 

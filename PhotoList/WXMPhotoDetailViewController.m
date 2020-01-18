@@ -16,16 +16,12 @@
 #import "WXMDictionary_Array.h"
 #import "WXMPhotoDetailToolbar.h"
 #import "WXMResourceAssistant.h"
-#import "WXMPhotoNavigationbar.h"
 #import "WXMPhotoDetailViewController.h"
 
-@interface WXMPhotoDetailViewController ()
-<UICollectionViewDelegate, UICollectionViewDataSource,
-WXMPhotoSignProtocol, WXMDetailToolbarProtocol>
+@interface WXMPhotoDetailViewController ()<UICollectionViewDelegate, UICollectionViewDataSource,WXMPhotoSignProtocol, WXMDetailToolbarProtocol>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) WXMPhotoDetailToolbar *toolbar;
-@property (nonatomic, strong) WXMPhotoNavigationbar *navigationbar;
 @property (nonatomic, assign) WXMPhotoMediaType chooseType;
 
 /** 数据源 */
@@ -36,20 +32,17 @@ WXMPhotoSignProtocol, WXMDetailToolbarProtocol>
 @property (nonatomic, assign) BOOL sign;
 @property (nonatomic, assign) BOOL preview;
 @property (nonatomic, assign) NSUInteger markNumber;
+
 @end
 
 @implementation WXMPhotoDetailViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-   
-    self.navigationItem.titleView = self.navigationbar;
-    self.navigationItem.leftBarButtonItem = nil;
+    
+    self.navigationItem.title = self.phoneList.title;
     self.navigationController.navigationBar.translucent = YES;
     self.automaticallyAdjustsScrollViewInsets = NO;
-    if (@available(iOS 11.0, *)) {
-        self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-    }
     
     self.view.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.collectionView];
@@ -69,30 +62,23 @@ WXMPhotoSignProtocol, WXMDetailToolbarProtocol>
 
 /** 获取2x像素的图片 */
 - (void)getPreviewAlbum {
-    __weak __typeof(self) self_weak = self;
+    
     self.dataSource = @[].mutableCopy;
     WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
-    
-    [manager getAllPicturesListBlock:^(NSArray<WXMPhotoList *> *photoList) {
-        WXMPhotoList *firstList = manager.firstPhotoList;
-        PHAssetCollection *asset = firstList.assetCollection;
-        NSArray <PHAsset *>*phAssets = [manager getAssetsInAssetCollection:asset ascending:YES];
-        [phAssets enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
-            WXMPhotoAsset *asset = [WXMPhotoAsset new];
-            asset.asset = obj;
-            [self_weak.dataSource addObject:asset];
-        }];
-        
-        self.navigationbar.titles = firstList.title;
-        
-        /** 滚动到最后 */
-        [self.collectionView reloadData];
-        if (self.dataSource.count <= 1) return;
-        UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredVertically;
-        NSIndexPath * index = [NSIndexPath indexPathForRow:self.dataSource.count - 1 inSection:0];
-        [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:NO];
-        
+    PHAssetCollection *asset = self.phoneList.assetCollection;
+    NSArray <PHAsset *>*phAssets = [manager getAssetsInAssetCollection:asset ascending:YES];
+    [phAssets enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
+        WXMPhotoAsset *asset = [WXMPhotoAsset new];
+        asset.asset = obj;
+        [self.dataSource addObject:asset];
     }];
+        
+    /** 滚动到最后 */
+    [self.collectionView reloadData];
+    if (self.dataSource.count <= 1) return;
+    UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredVertically;
+    NSIndexPath * index = [NSIndexPath indexPathForRow:self.dataSource.count - 1 inSection:0];
+    [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:NO];
 }
 
 
@@ -565,14 +551,6 @@ WXMPhotoSignProtocol, WXMDetailToolbarProtocol>
     return _toolbar;
 }
 
-- (WXMPhotoNavigationbar *)navigationbar {
-    if (!_navigationbar) {
-        _navigationbar = [[WXMPhotoNavigationbar alloc] initWithFrame:CGRectZero];
-    }
-    return _navigationbar;
-}
-
-/** 数组指点二合一 */
 - (WXMDictionary_Array *)signObj {
     if (!_signObj) {
         _signObj = [[WXMDictionary_Array alloc] init];
@@ -584,7 +562,6 @@ WXMPhotoSignProtocol, WXMDetailToolbarProtocol>
     return _signObj;
 }
 
-/** 目前选中的资源的类型 */
 - (WXMPhotoMediaType)chooseType {
     if (self.signObj.count == 0) return WXMPHAssetMediaTypeNone;
     if (self.signObj.count > 0) {

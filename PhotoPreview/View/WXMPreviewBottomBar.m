@@ -38,24 +38,24 @@
     self.lastSeleIdx = -1;
     
     /** 上半部分预览 */
-    _photoView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, 80)];
-    _photoView.backgroundColor = WXMPhotoPreviewbarColor;
-    _photoView.alpha = 0;
-    [_photoView addSubview:self.collectionView];
+    self.photoView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, 80)];
+    self.photoView.backgroundColor = WXMPhotoPreviewbarColor;
+    self.photoView.alpha = 0;
+    [self.photoView addSubview:self.collectionView];
     
     /** 下半部分按钮 */
     CGFloat finH = h - 80 + (kIPhoneX ? 35 : 0);
-    _finshView = [[UIView alloc] initWithFrame:CGRectMake(0, 80, WXMPhoto_Width, finH)];
-    _finshView.backgroundColor = _photoView.backgroundColor;
+    self.finshView = [[UIView alloc] initWithFrame:CGRectMake(0, 80, WXMPhoto_Width, finH)];
+    self.finshView.backgroundColor = self.photoView.backgroundColor;
     
-    _line = [[UIView alloc] initWithFrame:CGRectMake(0, 80 - 0.5, WXMPhoto_Width, 0.5)];
-    _line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.25];
-    _line.alpha = 0;
+    self.line = [[UIView alloc] initWithFrame:CGRectMake(0, 80 - 0.5, WXMPhoto_Width, 0.5)];
+    self.line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.25];
+    self.line.alpha = 0;
     
     self.collectionView.layoutCenterSupView = NO;
-    [self addSubview:_photoView];
-    [self addSubview:_finshView];
-    [self addSubview:_line];
+    [self addSubview:self.photoView];
+    [self addSubview:self.finshView];
+    [self addSubview:self.line];
     [self wxm_setUpFinshView];
 }
 

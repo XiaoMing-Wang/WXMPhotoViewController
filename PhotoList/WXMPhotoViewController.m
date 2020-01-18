@@ -41,20 +41,17 @@
     self.navigationItem.title = WXMPhotoVCNavigationItem;
     self.navigationController.navigationBar.translucent = YES;
     self.automaticallyAdjustsScrollViewInsets = NO;
-    if (@available(iOS 11.0, *)) {
-        self.listTableView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-    }
-
+    
     self.navigationController.navigationBar.shadowImage = [[UIImage alloc] init];
     self.navigationController.navigationBar.backgroundColor = [UIColor clearColor];
-    UIImage * imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:WXMBarColor];
+    UIImage *imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:WXMBarColor];
     [self.navigationController.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
     [WXMPhotoAssistant wxm_navigationLine:self.navigationController show:YES];
     
-    NSString *tl = WXMPhotoVCRightItem;
-    SEL sel = @selector(wxm_backLastViewController);
-    UIBarButtonItem *item = [WXMPhotoAssistant wxm_createButtonItem:tl target:self action:sel];
-    self.navigationItem.rightBarButtonItem = item;
+    self.navigationItem.rightBarButtonItem = [WXMPhotoAssistant
+                                              wxm_createButtonItem:WXMPhotoVCRightItem
+                                              target:self
+                                              action:@selector(wxm_backLastViewController)];
     
     /** 再次判断权限 */
     [self judgeAuthority];

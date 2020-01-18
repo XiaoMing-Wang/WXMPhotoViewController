@@ -14,8 +14,7 @@
 
 @implementation WXMPhotoListCell
 
-- (instancetype)initWithStyle:(UITableViewCellStyle)style
-              reuseIdentifier:(NSString *)reuseIdentifier {
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     [self setupInterface];
     return self;
@@ -29,31 +28,25 @@
     self.posterImageView.clipsToBounds = YES;
     
     self.titleLable = [[UILabel alloc] init];
-    self.titleLable.frame = CGRectMake(105, 0, self.frame.size.width - 105 - 20, 100);
+    self.titleLable.frame = CGRectMake(105, 0, self.frame.size.width - 125, 100);
     self.titleLable.font = [UIFont systemFontOfSize:16];
-    self.titleLable.textColor = [UIColor lightGrayColor];
+    self.titleLable.textColor = [UIColor blackColor];
     self.titleLable.textAlignment = NSTextAlignmentLeft;
     
-    [self.contentView addSubview:_posterImageView];
-    [self.contentView addSubview:_titleLable];
+    [self.contentView addSubview:self.posterImageView];
+    [self.contentView addSubview:self.titleLable];
 }
 
 /** 相册界面相片少同步获取 */
 - (void)setPhoneList:(WXMPhotoList *)phoneList {
     _phoneList = phoneList;
     
-    NSRange range = NSMakeRange(0, _phoneList.title.length);
     NSString *infoHelp = [NSString stringWithFormat:@"  (%zd)", _phoneList.photoNum];
     NSString *info = [_phoneList.title stringByAppendingString:infoHelp];
-    NSMutableAttributedString *atts = [[NSMutableAttributedString alloc] initWithString:info];
-    [atts addAttribute:NSForegroundColorAttributeName value:[UIColor blackColor] range:range];
-    self.titleLable.attributedText = atts;
+    self.titleLable.text = info;
     
     __weak __typeof(self) self_weak = self;
-    [[WXMPhotoManager sharedInstance] getPictures_customSize:self.phoneList.firstAsset
-                                                 synchronous:NO
-                                                   assetSize:CGSizeMake(140, 140)
-                                                  completion:^(UIImage *image) {
+    [[WXMPhotoManager sharedInstance] getPictures_customSize:self.phoneList.firstAsset synchronous:NO assetSize:CGSizeMake(140, 140) completion:^(UIImage *image) {
         self_weak.posterImageView.image = image;
     }];
 }

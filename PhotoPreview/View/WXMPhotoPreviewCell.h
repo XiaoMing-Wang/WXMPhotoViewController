@@ -11,8 +11,11 @@
 #import "WXMPhotoConfiguration.h"
 
 @interface WXMPhotoPreviewCell : UICollectionViewCell
+
 @property (nonatomic, strong) WXMPhotoAsset *photoAsset;
+
 @property (nonatomic, assign) id<WXMPreviewCellProtocol> delegate;
+
 @property (nonatomic, weak) UIPanGestureRecognizer *colleRecognizer;
 
 /** 还原zoom */
@@ -23,5 +26,6 @@
 
 /** 开始播放livephoto */
 - (void)startPlayLivePhoto;
+
 @end
 

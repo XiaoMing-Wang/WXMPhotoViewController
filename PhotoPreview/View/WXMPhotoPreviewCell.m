@@ -41,7 +41,6 @@
     return self;
 }
 
-/** 初始化界面 */
 - (void)setupInterface {
     CGFloat w = [UIScreen mainScreen].bounds.size.width ;
     CGFloat h = [UIScreen mainScreen].bounds.size.height;
@@ -73,71 +72,68 @@
 
 /** 设置图片 GIF */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
-    @autoreleasepool {
+    _photoAsset = photoAsset;
+    
+    __weak __typeof(self) self_weak = self;
+    __weak __typeof(_photoAsset) asset_weak = _photoAsset;
+    
+    CGFloat screenWidth  = WXMPhoto_Width * 2.0;
+    WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
+    if (_photoAsset.aspectRatio <= 0) {
+        CGFloat h = (CGFloat) photoAsset.asset.pixelHeight;
+        CGFloat w = (CGFloat) photoAsset.asset.pixelWidth;
+        _photoAsset.aspectRatio = h / w * 1.0;
+    }
+    CGFloat imageHeight = _photoAsset.aspectRatio * screenWidth;
+    
+    /** GIF */
+    if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
         
-        _photoAsset = photoAsset;
-        __weak __typeof(self) self_weak = self;
-        CGFloat screenWidth  = WXMPhoto_Width * 2.0;
-        WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-        if (_photoAsset.aspectRatio <= 0) {
-            _photoAsset.aspectRatio =
-            (CGFloat)photoAsset.asset.pixelHeight /
-            (CGFloat)photoAsset.asset.pixelWidth * 1.0;
+        [manager getGIFByAsset:photoAsset.asset completion:^(NSData *imageData) {
+            [self_weak setLocation:asset_weak.aspectRatio];
+            self_weak.imageView.image = [WXMPhotoGIFImage imageWithData:imageData];
+        }];
+        
+    } else {
+        
+        /** 有缓存加载缓存  */
+        if (photoAsset.cacheImage) {
+            self.imageView.image = photoAsset.cacheImage;
+            [self setLocation:_photoAsset.aspectRatio];
+            photoAsset.cacheImage = nil;
+            return;
         }
-        CGFloat imageHeight = _photoAsset.aspectRatio * screenWidth;
-                
-        /** GIF */
-        if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
-            [man getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
-                [self_weak setLocation:_photoAsset.aspectRatio];
-                self_weak.imageView.image = [WXMPhotoGIFImage imageWithData:data];
+        
+        PHAsset *asset = photoAsset.asset;
+        CGSize size = CGSizeMake(screenWidth, imageHeight);
+        
+        /** 很长的横图 需要获取原图 不然放大很模糊.. */
+        if (imageHeight * 3 < WXMPhoto_Height) size = PHImageManagerMaximumSize;
+        if (self.currentRequestID) [manager cancelRequestWithID:self.currentRequestID];
+        
+        /** 自定义转场需要当前图片 */
+        /** 所以先加载图片 在上面覆盖livephoto */
+        int32_t ids = [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+            self_weak.imageView.image = image;
+            [self_weak setLocation:asset_weak.aspectRatio];
+        }];
+        
+        
+        /** livephoto */
+        if (_livePhotoView) self.livePhotoView.hidden = YES;
+        if (photoAsset.mediaType == WXMPHAssetMediaTypeLivePhoto && WXMPhotoShowLivePhto) {
+            
+            self.livePhotoView.hidden = NO;
+            self.livePhotoView.livePhoto = nil;
+            [self.imageView addSubview:self.livePhotoView];
+            [manager getLivePhotoByAsset:asset liveSize:size completion:^(PHLivePhoto *livePhoto) {
+                self_weak.livePhotoView.livePhoto = livePhoto;
+                [self_weak setLocation:asset_weak.aspectRatio];
             }];
-        } else {
-            
-            /** 有缓存加载缓存  */
-            if (photoAsset.cacheImage) {
-                self_weak.imageView.image = photoAsset.cacheImage;
-                photoAsset.cacheImage = nil;
-                [self_weak setLocation:_photoAsset.aspectRatio];
-                return;
-            }
-            
-            PHAsset *asset = photoAsset.asset;
-            CGSize size = CGSizeMake(screenWidth, imageHeight);
-            
-            /** 很长的横图 需要获取原图 不然放大很模糊.. */
-            if (imageHeight * 3 < WXMPhoto_Height) size = PHImageManagerMaximumSize;
-            if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
-            
-            /** 自定义转场需要当前图片 */
-            /** 所以先加载图片 在上面覆盖livephoto */
-            int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-                self_weak.imageView.image = image;
-                [self_weak setLocation:_photoAsset.aspectRatio];
-            }];
-            
-            
-            /** livephoto */
-            if (_livePhotoView) self.livePhotoView.hidden = YES;
-            if (photoAsset.mediaType == WXMPHAssetMediaTypeLivePhoto &&WXMPhotoShowLivePhto) {
-                if (@available(iOS 9.1, *)) {
-                    
-                    self.livePhotoView.hidden = NO;
-                    self.livePhotoView.livePhoto = nil;
-                    [self.imageView addSubview:self.livePhotoView];
-                    [man getLivePhotoByAsset:asset
-                                    liveSize:size
-                                  completion:^(PHLivePhoto *livePhoto)
-                     {
-                        self_weak.livePhotoView.livePhoto = livePhoto;
-                        [self_weak setLocation:_photoAsset.aspectRatio];
-                    }];
-                }
-            }
-            
-            self.currentRequestID = ids;
-            _photoAsset.requestID = ids;
         }
+        
+        self.currentRequestID = ids;
+        _photoAsset.requestID = ids;
     }
 }
 
@@ -184,7 +180,6 @@
     }
 }
 
-/** 设置frame*/
 - (void)setFrame:(CGRect)frame {
     frame.origin.x = -WXMPhotoPreviewSpace / 2;
     frame.size.width = [UIScreen mainScreen].bounds.size.width + WXMPhotoPreviewSpace;

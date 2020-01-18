@@ -44,31 +44,31 @@
 - (void)setupInterface {
     CGFloat w = WXMPhoto_Width;
     CGFloat h = WXMPhoto_Height;
-    _contentScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
-    _contentScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
-    _contentScrollView.showsHorizontalScrollIndicator = NO;
-    _contentScrollView.showsVerticalScrollIndicator = NO;
-    _contentScrollView.alwaysBounceHorizontal = NO;
-    _contentScrollView.alwaysBounceVertical = NO;
-    _contentScrollView.layer.masksToBounds = NO;
-    _contentScrollView.scrollEnabled = NO;
+    self.contentScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
+    self.contentScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
+    self.contentScrollView.showsHorizontalScrollIndicator = NO;
+    self.contentScrollView.showsVerticalScrollIndicator = NO;
+    self.contentScrollView.alwaysBounceHorizontal = NO;
+    self.contentScrollView.alwaysBounceVertical = NO;
+    self.contentScrollView.layer.masksToBounds = NO;
+    self.contentScrollView.scrollEnabled = NO;
     
-    _imageView = [[WXMPhotoImageView alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
-    _imageView.size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height);
-    _imageView.contentMode = UIViewContentModeScaleAspectFit;
-    _imageView.layer.masksToBounds = YES;
-    _imageView.backgroundColor = [UIColor blackColor];
-    _imageView.userInteractionEnabled = YES;
-    [_contentScrollView addSubview:_imageView];
+    self.imageView = [[WXMPhotoImageView alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
+    self.imageView.size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height);
+    self.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    self.imageView.layer.masksToBounds = YES;
+    self.imageView.backgroundColor = [UIColor blackColor];
+    self.imageView.userInteractionEnabled = YES;
+    [self.contentScrollView addSubview:self.imageView];
     
-    _playIcon = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"phoro_play"]];
-    _playIcon.size = WXMPhotoVideoSignSize;
-    _playIcon.contentMode = UIViewContentModeScaleAspectFit;
-    _playIcon.userInteractionEnabled = NO;
-    [_imageView addSubview:_playIcon];
+    self.playIcon = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"phoro_play"]];
+    self.playIcon.size = WXMPhotoVideoSignSize;
+    self.playIcon.contentMode = UIViewContentModeScaleAspectFit;
+    self.playIcon.userInteractionEnabled = NO;
+    [self.imageView addSubview:self.playIcon];
     
     [self.contentView addSubview:self.wxm_blackView];
-    [self.contentView addSubview:_contentScrollView];
+    [self.contentView addSubview:self.contentScrollView];
     [self wxm_addTapGestureRecognizer];
     
     
@@ -91,22 +91,22 @@
     tapSingle.numberOfTapsRequired = 1;
     
     SEL handle = @selector(wxm_handlePan:);
-    _recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self action:handle];
-    _recognizer->_direction = DirectionPanGestureRecognizerBottom;
-    _recognizer.maximumNumberOfTouches = 1;
+    self.recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self action:handle];
+    self.recognizer->_direction = DirectionPanGestureRecognizerBottom;
+    self.recognizer.maximumNumberOfTouches = 1;
     
-    [tapSingle requireGestureRecognizerToFail:_recognizer];
-    [_contentScrollView addGestureRecognizer:tapSingle];
-    [_contentScrollView addGestureRecognizer:_recognizer];
+    [tapSingle requireGestureRecognizerToFail:self.recognizer];
+    [self.contentScrollView addGestureRecognizer:tapSingle];
+    [self.contentScrollView addGestureRecognizer:self.recognizer];
 }
 
 
 /** 设置image位置 */
 - (void)setLocation:(CGFloat)scale {
-    CGFloat width = _contentScrollView.width;
+    CGFloat width = self.contentScrollView.width;
     CGFloat height = width * scale;
     self.imageView.frame = CGRectMake(0, 0, width, height);
-    self.imageView.center = CGPointMake(width / 2, _contentScrollView.height / 2);
+    self.imageView.center = CGPointMake(width / 2, self.contentScrollView.height / 2);
     self.playIcon.layoutCenterSupView = YES;
 }
 
@@ -116,30 +116,33 @@
 
 /** 设置图片Video */
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
-    @autoreleasepool {
-        _imageView.image = nil;
-        _photoAsset = photoAsset;
-        CGFloat screenWidth  = WXMPhoto_Width * 2.0;
-        WXMPhotoManager *man = [WXMPhotoManager sharedInstance];
-        if (_photoAsset.aspectRatio <= 0) {
-            _photoAsset.aspectRatio =
-            (CGFloat) photoAsset.asset.pixelHeight /
-            (CGFloat) photoAsset.asset.pixelWidth * 1.0;
-        }
-        
-        CGFloat imageHeight = photoAsset.aspectRatio * screenWidth;
-        PHAsset *asset = photoAsset.asset;
-        CGSize size = CGSizeMake(screenWidth, imageHeight);
-        
-        if (self.currentRequestID) [man cancelRequestWithID:self.currentRequestID];
-        int32_t ids = [man getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-            self.imageView.image = image;
-            [self setLocation:_photoAsset.aspectRatio];
-        }];
-        
-        self.currentRequestID = ids;
-        _photoAsset.requestID = ids;
+    _photoAsset = photoAsset;
+    
+    self.imageView.image = nil;
+    CGFloat screenWidth  = WXMPhoto_Width * 2.0;
+    WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
+    if (_photoAsset.aspectRatio <= 0) {
+        CGFloat h = (CGFloat) photoAsset.asset.pixelHeight;
+        CGFloat w = (CGFloat) photoAsset.asset.pixelWidth;
+        _photoAsset.aspectRatio = h / w * 1.0;
     }
+    
+    CGFloat imageHeight = photoAsset.aspectRatio * screenWidth;
+    PHAsset *asset = photoAsset.asset;
+    CGSize size = CGSizeMake(screenWidth, imageHeight);
+    
+    __weak __typeof(self) self_weak = self;
+    __weak __typeof(_photoAsset) asset_weak = _photoAsset;
+    
+    if (self.currentRequestID) [manager cancelRequestWithID:self.currentRequestID];
+    int32_t ids = [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+        self_weak.imageView.image = image;
+        [self_weak setLocation:asset_weak.aspectRatio];
+    }];
+    
+    self.currentRequestID = ids;
+    _photoAsset.requestID = ids;
+    
 }
 
 #pragma clang diagnostic pop

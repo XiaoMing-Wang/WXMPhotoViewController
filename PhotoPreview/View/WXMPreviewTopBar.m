@@ -27,25 +27,25 @@
     self.userInteractionEnabled = YES;
     self.frame = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_BarHeight);
     self.backgroundColor = WXMPhotoPreviewbarColor;
-
+    
     [self addSubview:self.leftButton];
     [self addSubview:self.rightButton];
     
-    _promptLabel = [[UILabel alloc] init];
-    _promptLabel.frame = CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, 40);
-    _promptLabel.text = @"   选择视频时不能选择图片";
-    _promptLabel.font = [UIFont systemFontOfSize:12];
-    _promptLabel.textColor = [UIColor whiteColor];
-    _promptLabel.backgroundColor = self.backgroundColor;
-    _promptLabel.numberOfLines = 1;
-    _promptLabel.hidden = YES;
+    self.promptLabel = [[UILabel alloc] init];
+    self.promptLabel.frame = CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, 40);
+    self.promptLabel.text = @"   选择视频时不能选择图片";
+    self.promptLabel.font = [UIFont systemFontOfSize:12];
+    self.promptLabel.textColor = [UIColor whiteColor];
+    self.promptLabel.backgroundColor = self.backgroundColor;
+    self.promptLabel.numberOfLines = 1;
+    self.promptLabel.hidden = YES;
     
-    _line = [UIView new];
-    _line.frame = CGRectMake(5, WXMPhoto_BarHeight, WXMPhoto_Width, 0.75);
-    _line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.2];
-    _line.hidden = YES;
-    [self addSubview:_promptLabel];
-    [self addSubview:_line];
+    self.line = [UIView new];
+    self.line.frame = CGRectMake(5, WXMPhoto_BarHeight, WXMPhoto_Width, 0.75);
+    self.line.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.2];
+    self.line.hidden = YES;
+    [self addSubview:self.promptLabel];
+    [self addSubview:self.line];
 }
 
 /** 设置左按钮是否显示 */

@@ -79,7 +79,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoShowLivePhto NO
 
 /** 自动播放视频 */
-#define WXMPhotoAutomaticVideo YES
+#define WXMPhotoAutomaticVideo NO
 
 /** livephoto是否静音 */
 #define WXMPhotoShowLivePhtoMuted YES

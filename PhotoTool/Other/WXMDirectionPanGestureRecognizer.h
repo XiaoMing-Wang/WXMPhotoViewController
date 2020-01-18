@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import <UIKit/UIGestureRecognizerSubclass.h>
 typedef enum {
+    
     /** 竖向 */
     DirectionPangestureRecognizerVertical,
 
