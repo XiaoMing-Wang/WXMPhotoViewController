@@ -61,7 +61,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoSupportVideo YES
 
 /** 是否显示GIF标志 WXMPhotoDetailViewController */
-#define WXMPhotoShowGIFSign YES
+#define WXMPhotoShowGIFSign NO
 
 /** 是否可以选择原图 */
 #define WXMPhotoSelectOriginal NO
