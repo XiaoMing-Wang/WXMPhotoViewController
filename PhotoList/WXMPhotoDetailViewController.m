@@ -49,7 +49,7 @@
     
     if (WXMPhotoShowDetailToolbar && self.photoType == WXMPhotoDetailTypeMultiSelect) {
         [self.view addSubview:self.toolbar];
-        self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, self.toolbar.height + 10, 0);
+        self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, self.toolbar.height, 0);
     }
     
     /** 获取图片 */

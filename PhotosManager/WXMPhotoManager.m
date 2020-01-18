@@ -99,6 +99,8 @@ static WXMPhotoManager *manager = nil;
     else if ([title isEqualToString:@"Favorites"]) return @"个人收藏";
     else if ([title isEqualToString:@"Recently Deleted"])  return @"最近删除";
     else if ([title isEqualToString:@"Recents"])  return @"最近项目";
+    else if ([title isEqualToString:@"Animated"])  return @"动图";
+    else if ([title isEqualToString:@"Live Photos"])  return @"实况图片";
     else if ([title isEqualToString:@"Videos"])  return @"视频";
     else if ([title isEqualToString:@"All Photos"]) return @"所有照片";
     else if ([title isEqualToString:@"Selfies"]) return @"自拍";
@@ -140,9 +142,10 @@ static WXMPhotoManager *manager = nil;
                 list.firstAsset = result.firstObject;
                 list.assetCollection = colle;
                 if ([list.title isEqualToString:@"相机胶卷"] ||
-                    [list.title isEqualToString:@"最近项目"] ||
-                    [list.title isEqualToString:@"Live Photos"]) {
+                    [list.title isEqualToString:@"最近项目"]) {
                     [photoList insertObject:list atIndex:0];
+                } else if ([list.title isEqualToString:@"实况图片"] && photoList.count) {
+                    [photoList insertObject:list atIndex:1];
                 } else {
                     [photoList addObject:list];
                 }

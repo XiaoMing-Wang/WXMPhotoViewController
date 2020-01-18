@@ -36,7 +36,7 @@
     CGFloat iconWH = WXMSelectedWH;
     
     self.frame = CGRectMake(0, WXMPhoto_Height - height, WXMPhoto_Width, height);
-    self.backgroundColor = [UIColor clearColor];
+    self.backgroundColor = [UIColor whiteColor];
     UIToolbar *toolBar = [[UIToolbar alloc] initWithFrame:self.bounds];
     toolBar.backgroundColor = WXMPhotoDetailToolbarColor;
     
