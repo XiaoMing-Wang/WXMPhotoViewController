@@ -15,7 +15,6 @@
 @property (nonatomic, strong) UIButton *previewButton;
 @property (nonatomic, strong) UIButton *completeButton;
 @property (nonatomic, strong) UILabel *photoNumber;
-
 @property (nonatomic, strong) UIButton *originalImageButton;
 @property (nonatomic, assign, readwrite) BOOL isOriginalImage;
 @property (nonatomic, strong) UIView *cylindrical;
@@ -36,8 +35,8 @@
     CGFloat coHeight = 45;
     CGFloat iconWH = WXMSelectedWH;
     self.frame = CGRectMake(0, WXMPhoto_Height - height, WXMPhoto_Width, height);
-    self.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.95];
-       
+    self.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:1.0];
+    
     self.previewButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 3, 60, coHeight - 3)];
     self.previewButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
     self.previewButton.titleLabel.font = [UIFont systemFontOfSize:16];
@@ -62,7 +61,7 @@
     [self.completeButton wp_setEnlargeEdgeWithTop:3 left:15 right:14 bottom:5];
     self.completeButton.height = 30;
     self.completeButton.width = 60;
-    self.completeButton.right = WXMPhoto_Width - 14;
+    self.completeButton.right = WXMPhoto_Width - 15;
     self.completeButton.layer.cornerRadius = 4;
     self.completeButton.layer.masksToBounds = YES;
     self.completeButton.centerY = self.previewButton.centerY;

@@ -87,8 +87,11 @@
     if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
         
         [manager getGIFByAsset:photoAsset.asset completion:^(NSData *imageData) {
-            [self setLocation:_photoAsset.aspectRatio];
-            self.imageView.image = [WXMPhotoGIFImage imageWithData:imageData];
+            
+            @autoreleasepool {
+                [self setLocation:_photoAsset.aspectRatio];
+                self.imageView.image = [WXMPhotoGIFImage imageWithData:imageData];
+            }
         }];
         
     } else {
@@ -111,7 +114,10 @@
         /** 自定义转场需要当前图片 */
         /** 所以先加载图片 在上面覆盖livephoto */
         int32_t ids = [manager getPicturesCustomSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-            self.imageView.image = image;
+            
+            @autoreleasepool {
+                self.imageView.image = image.wp_redraw;
+            }
             [self setLocation:_photoAsset.aspectRatio];
         }];
         

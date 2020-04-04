@@ -66,7 +66,7 @@
     
     CGFloat h = WXMPhotoListCellCount * self.listTableView.rowHeight;
     if (WXMPhotoListCellCount == 0) h = WXMPhoto_Height - WXMPhoto_BarHeight;
-    [UIView animateWithDuration:.35 delay:0 usingSpringWithDamping:0.98 initialSpringVelocity:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+    [UIView animateWithDuration:.25 delay:0 usingSpringWithDamping:0.98 initialSpringVelocity:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
         self.listTableView.frame = CGRectMake(0, 0, WXMPhoto_Width, h);
         self.view.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.5];
     } completion:^(BOOL finished) {

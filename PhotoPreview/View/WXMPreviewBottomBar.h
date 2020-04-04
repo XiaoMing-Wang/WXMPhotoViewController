@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "WXMDictionary_Array.h"
 #import "WXMPhotoRecordModel.h"
+#import "WXMPhotoConfiguration.h"
 
 @interface WXMPreviewBottomBar : UIView
 

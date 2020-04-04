@@ -7,7 +7,6 @@
 //
 //预览模式导航栏
 #import <UIKit/UIKit.h>
-#import "WXMPhotoSignModel.h"
 #import "WXMPhotoRecordModel.h"
 
 @interface WXMPreviewTopBar : UIView

@@ -9,7 +9,6 @@
 #import "WXMPhotoManager.h"
 #import "WXMPhotoListCell.h"
 #import "WXMPhotoCollectionCell.h"
-#import "WXMPhotoSignModel.h"
 #import "WXMPhotoConfiguration.h"
 #import "WXMPhotoViewController.h"
 #import "WXMPhotoPreviewController.h"
@@ -21,8 +20,7 @@
 #import "WXMPhotoRecordModel.h"
 #import "WXMPhotoDetailViewController.h"
 
-@interface WXMPhotoDetailViewController ()
-<UICollectionViewDelegate,WXMDetailTitleBarProtocol,UICollectionViewDataSource,WXMPhotoSignProtocol, WXMDetailToolbarProtocol,WXMPhotoCollectionCellDelegate,WXMPhotoPreviewRefreshDelegate>
+@interface WXMPhotoDetailViewController () <UICollectionViewDelegate, WXMDetailTitleBarProtocol, UICollectionViewDataSource, WXMPhotoSignProtocol, WXMDetailToolbarProtocol, WXMPhotoCollectionCellDelegate, WXMPhotoPreviewRefreshDelegate>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 
@@ -55,6 +53,7 @@
         _exitPreview = YES;
         _showVideo = YES;
         _canSelectedVideo = YES;
+        _needUnpack = YES;
     }
     return self;
 }
@@ -75,9 +74,12 @@
     /** 选择相册控制器 */
     [self.view addSubview:self.listController.view];
     if (WXMPhotoShowDetailToolbar && self.photoType == WXMPhotoDetailTypeMultiSelect) {
+        
         [self.view insertSubview:self.toolbar belowSubview:self.listController.view];
         self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, self.toolbar.height + kMargin * 2, 0);
+        
     } else {
+        
         self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, WXMPhoto_SafeHeight, 0);
     }
     
@@ -171,21 +173,29 @@
         _photoType == WXMPhotoDetailTypeGetPhotoCustomSize) {
 
         if (self.exitPreview) {
+            
             size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
             if (size.height * 4 < WXMPhoto_Height) size = PHImageManagerMaximumSize;
+            
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto_256 && !self.exitPreview) {
+            
             size = CGSizeMake(256, 256);
+            
         } else if (_photoType == WXMPhotoDetailTypeGetPhoto && !self.exitPreview) {
+            
             size = PHImageManagerMaximumSize;
         }
         
         [self getImagePreview:phsset size:size callback:^(UIImage *image) {
             if (self.exitPreview) {
+                
                 phsset.cacheImage = image;
                 WXMPhotoPreviewController *preview = [self wp_getPreviewController:indexPath];
                 preview.previewType = WXMPhotoPreviewTypeSingle;
                 [self.navigationController pushViewController:preview animated:YES];
+                
             } else {
+                
                 [self sendImageWithPhotoAsset:phsset coverImage:image];
             }
         }];
@@ -193,6 +203,7 @@
 
     /** 先同步获取大图 否则跳界面会闪 */
     if (_photoType == WXMPhotoDetailTypeMultiSelect) {
+        
         size = CGSizeMake(WXMPhoto_Width * 2.0, WXMPhoto_Width * phsset.aspectRatio * 2.0);
         [self getImagePreview:phsset size:size callback:^(UIImage *image) {
             phsset.cacheImage = image;
@@ -201,26 +212,26 @@
             [self.navigationController pushViewController:preview animated:YES];
         }];
     }
-//
-//    /** 裁剪框 */
-//    if (_photoType == WXMPhotoDetailTypeTailoring) {
-//        CGFloat width = (WXMPhoto_Width - WXMPhotoCropBoxMargin * 2);
-//        CGFloat height = width * phsset.aspectRatio;
-//        if (phsset.aspectRatio < 1.0) {
-//            height = width;
-//            width = height / phsset.aspectRatio * 1.0;
-//        }
-//
-//        size = CGSizeMake(width * 4, height * 4);
-//        if (WXMPhotoCropUseOriginal) size = PHImageManagerMaximumSize;
-//        [man synchronousGetPictures:asset size:size completion:^(UIImage *image) {
-//            WXMPhotoShapeController *shape = [WXMPhotoShapeController new];
-//            shape.delegate = self_weak.delegate;
-//            shape.shapeImage = image;
-//            shape.expectSize = self_weak.expectSize;
-//            [self_weak.navigationController pushViewController:shape animated:YES];
-//        }];
-//    }
+
+    /** 裁剪框 */
+    if (_photoType == WXMPhotoDetailTypeTailoring) {
+        CGFloat width = (WXMPhoto_Width - WXMPhotoCropBoxMargin * 2);
+        CGFloat height = width * phsset.aspectRatio;
+        if (phsset.aspectRatio < 1.0) {
+            height = width;
+            width = height / phsset.aspectRatio * 1.0;
+        }
+
+        size = CGSizeMake(width * 4, height * 4);
+        if (WXMPhotoCropUseOriginal) size = PHImageManagerMaximumSize;
+        [self getImagePreview:phsset size:size callback:^(UIImage *image) {
+            WXMPhotoShapeController *shape = [WXMPhotoShapeController new];
+            shape.delegate = self.delegate;
+            shape.shapeImage = image.wp_redraw;
+            shape.expectSize = self.expectSize;
+            [self.navigationController pushViewController:shape animated:YES];
+        }];
+    }
 }
 
 /** 获取预览图片 */
@@ -337,6 +348,7 @@
 #pragma mark ----------------------------------- 点击选择框
 #pragma mark ----------------------------------- 点击选择框
 #pragma mark ----------------------------------- 点击选择框
+
 - (void)wp_photoCollectionCellCheckBox:(WXMPhotoCollectionCell *)cell selected:(BOOL)selected {
     @synchronized (self) {
         NSInteger maxCount = [self realSelectCount];
@@ -412,7 +424,10 @@
     if (cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo &&
         cell.photoAsset.asset.duration > WXMPhotoLimitVideoTime &&
         WXMPhotoLimitVideoTime > 0) return NO;
-
+    
+    /** 不足一秒的 */
+    /** if (cell.photoAsset.asset.duration <= 1 && cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo) return NO; */
+    
     NSInteger count = self.dictionaryArray.count;
     NSString *localIdentifier = cell.photoAsset.asset.localIdentifier;
     WXMPhotoRecordModel *recordModel = [self.dictionaryArray objectForKey:localIdentifier];
@@ -466,7 +481,7 @@
 /** 用户第一张选择的类型 */
 - (WXMPhotoMediaType)chooseType {
     if (self.dictionaryArray.count == 0) return WXMPHAssetMediaTypeNone;
-    WXMPhotoSignModel * signModel = self.dictionaryArray.firstObject;
+    WXMPhotoRecordModel * signModel = self.dictionaryArray.firstObject;
     if (signModel.mediaType == WXMPHAssetMediaTypeVideo) return WXMPHAssetMediaTypeVideo;
     return WXMPHAssetMediaTypeImage;
 }

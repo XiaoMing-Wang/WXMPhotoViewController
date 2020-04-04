@@ -32,7 +32,6 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 #import <UIKit/UIKit.h>
 #import "UIView+WXMPhoto.h"
-#import "WXMPhotoSignModel.h"
 #import "WXMPhotoResources.h"
 #import "WXMPhotoAssistant.h"
 
@@ -57,7 +56,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoCompressionRatio 0.3
 
 /** 限制可选视频最大时间长度 */
-#define WXMPhotoLimitVideoTime 10
+#define WXMPhotoLimitVideoTime 60.5
 
 /** 全局是否支持显示视频 (NO会显示视频的第一帧 且WXMPhotoViewController设置showVideo也无效)*/
 #define WXMPhotoSupportVideo YES
@@ -66,7 +65,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoShowGIFSign NO
 
 /** 是否可以选择原图 */
-#define WXMPhotoSelectOriginal YES
+#define WXMPhotoSelectOriginal NO
 
 /** 是否显示视频标志 WXMPhotoDetailViewController */
 #define WXMPhotoShowVideoSign (WXMPhotoSupportVideo && YES)
@@ -84,7 +83,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoShowLivePhtoMuted YES
 
 /** 选择图片时(选择GIF和视频依旧会返回)是否返回data(可自行转成合适大小的data) */
-#define WXMPhotoSelectedImageReturnData YES
+#define WXMPhotoSelectedImageReturnData NO
 
 /** collection列表是否显示下边工具栏 */
 #define WXMPhotoShowDetailToolbar YES

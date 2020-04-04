@@ -8,7 +8,6 @@
 
 #import <UIKit/UIKit.h>
 #import "WXMPhotoManager.h"
-#import "WXMPhotoSignModel.h"
 #import "WXMPhotoRecordModel.h"
 #import "WXMPhotoConfiguration.h"
 

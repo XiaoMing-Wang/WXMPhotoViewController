@@ -212,10 +212,13 @@ static WXMPhotoManager *manager = nil;
     if (synchronous == YES) option.synchronous = YES;
     
     CGSize size;
-    if (original) size = CGSizeMake(asset.pixelWidth * 1.0, asset.pixelHeight * 1.0);
-    else size = assetSize;
-        
-    /** 下载图片 iCloud */
+    if (original) {
+        size = CGSizeMake(asset.pixelWidth * 1.0, asset.pixelHeight * 1.0);
+    } else {
+        size = [self calculateSize:assetSize asset:asset];
+    }
+    
+    /** iCloud下载图片  */
     option.networkAccessAllowed = YES;
     
     /** targetSize 即你想要的图片尺寸，若想要原尺寸则可输入PHImageManagerMaximumSize */
@@ -247,6 +250,7 @@ static WXMPhotoManager *manager = nil;
                      synchronous:(BOOL)synchronous
                        assetSize:(CGSize)assetSize
                       completion:(void (^)(UIImage *image))completion {
+    assetSize = [self calculateSize:assetSize asset:asset];
     return [self getPicturesByAsset:asset
                         synchronous:synchronous
                            original:NO
@@ -257,23 +261,24 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 同步获取图片 */
-- (int32_t)synchronousGetPictures:(PHAsset *)asset
-                             size:(CGSize)size
-                       completion:(void (^)(UIImage *image))comple {
-    
-    if (CGSizeEqualToSize(size, CGSizeZero) || CGSizeEqualToSize(size, PHImageManagerMaximumSize)) {
-        size = CGSizeMake(asset.pixelWidth * 1.0, asset.pixelHeight * 1.0);
+- (int32_t)synchronousGetPictures:(PHAsset *)asset size:(CGSize)size completion:(void (^)(UIImage *image))comple {
+    size = [self calculateSize:size asset:asset];
+    return [self getPicturesCustomSize:asset synchronous:YES assetSize:size completion:comple];
+}
+
+/** 重新计算size */
+- (CGSize)calculateSize:(CGSize)originalSize asset:(PHAsset *)asset {
+    if (CGSizeEqualToSize(originalSize, CGSizeZero) || CGSizeEqualToSize(originalSize, PHImageManagerMaximumSize)) {
+        originalSize = CGSizeMake(asset.pixelWidth * 1.0, asset.pixelHeight * 1.0);
     }
     
-    CGFloat expectedW = size.width;
-    CGFloat expectedH = size.height;
+    CGFloat expectedW = originalSize.width;
+    CGFloat expectedH = originalSize.height;
     if (expectedW > asset.pixelWidth * 1.0 || expectedH > asset.pixelHeight * 1.0) {
         expectedW = asset.pixelWidth * 1.0;
         expectedH = asset.pixelHeight * 1.0;;
     }
-    
-    size = CGSizeMake(expectedW, expectedH);
-    return [self getPicturesCustomSize:asset synchronous:YES assetSize:size completion:comple];
+    return CGSizeMake(expectedW, expectedH);
 }
 
 /** GIF */
@@ -282,6 +287,8 @@ static WXMPhotoManager *manager = nil;
     option.resizeMode = PHImageRequestOptionsResizeModeFast;
     option.synchronous = NO;
     option.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
+    option.networkAccessAllowed = YES;
+    
     return [[PHCachingImageManager defaultManager] requestImageDataForAsset:asset options:option resultHandler:^(NSData *data, NSString *dataUTI, UIImageOrientation o, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
             completion(data);
@@ -295,6 +302,7 @@ static WXMPhotoManager *manager = nil;
     option.resizeMode = PHImageRequestOptionsResizeModeFast;
     option.synchronous = YES;
     option.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
+    option.networkAccessAllowed = YES;
     
     return [[PHCachingImageManager defaultManager] requestImageDataForAsset:asset options:option resultHandler:^(NSData *data, NSString *dataUTI, UIImageOrientation o, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -310,6 +318,7 @@ static WXMPhotoManager *manager = nil;
     
     /** ascending 为YES时，按照照片的创建时间升序排列;为NO时，则降序排列 */
     option.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:ascending]];
+            
     PHFetchResult *result = [PHAsset fetchAssetsWithMediaType:PHAssetMediaTypeImage options:option];
     [result enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
         PHAsset *asset = (PHAsset *) obj;
@@ -319,8 +328,7 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 获得指定相册的PHAsset资源 */
-- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
-                                         ascending:(BOOL)ascending {
+- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection ascending:(BOOL)ascending {
     NSMutableArray<PHAsset *> *arr = @[].mutableCopy;
     PHFetchResult *result = [self fetchAssetsInAssetCollection:assetCollection ascending:ascending];
     [result enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
@@ -330,19 +338,23 @@ static WXMPhotoManager *manager = nil;
 }
 
 /** 获取视频 */
-- (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(NSURL * , NSData *))completiont {
+- (void)getVideoByAsset:(PHAsset *)assetData
+             completion:(void (^)(AVURLAsset *, NSURL * , NSData *))completiont {
+    
     PHVideoRequestOptions *options = [[PHVideoRequestOptions alloc] init];
     options.version = PHImageRequestOptionsVersionCurrent;
     options.deliveryMode = PHVideoRequestOptionsDeliveryModeAutomatic;
+    options.networkAccessAllowed = YES;
+    
     [[PHImageManager defaultManager] requestAVAssetForVideo:assetData options:options resultHandler:^(AVAsset *asset, AVAudioMix *audioMix, NSDictionary *info) {
         
-        // 获取信息 asset audioMix info
-        // 上传视频时用到data
+        /**  获取信息 asset audioMix info */
+        /**  上传视频时用到data */
         AVURLAsset *urlAsset = (AVURLAsset *)asset;
         NSURL *url = urlAsset.URL;
         NSData *data = [NSData dataWithContentsOfURL:url];
         dispatch_async(dispatch_get_main_queue(), ^{
-            completiont(url, data);
+            completiont(urlAsset, url, data);
         });
     }];
 }

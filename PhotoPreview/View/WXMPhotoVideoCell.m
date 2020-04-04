@@ -133,7 +133,7 @@
     
     if (self.currentRequestID) [manager cancelRequestWithID:self.currentRequestID];
     int32_t ids = [manager getPicturesCustomSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-        self.imageView.image = image;
+        self.imageView.image = image.wp_redraw;
         [self setLocation:_photoAsset.aspectRatio];
     }];
     
@@ -174,7 +174,7 @@
     if (self.photoAsset.videoUrl) [self playVideos:playImmediately];
     if (!self.photoAsset.videoUrl) {
         WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
-        [manager getVideoByAsset:self.photoAsset.asset completion:^(NSURL *url, NSData *data) {
+        [manager getVideoByAsset:self.photoAsset.asset completion:^(AVURLAsset *asset, NSURL *url, NSData *data) {
             self.photoAsset.videoUrl = url;
             [self playVideos:playImmediately];
         }];

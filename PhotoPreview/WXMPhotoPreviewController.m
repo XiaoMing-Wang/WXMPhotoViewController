@@ -280,15 +280,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
             return;
         }
         
-        /** 添加一个 */
-        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:self.selectedIndex inSection:0];
-        WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
-        WXMPhotoRecordModel *recordModel = [WXMPhotoRecordModel new];
-        recordModel.recordAsset = asset;
-        recordModel.recordRank = (self.dictionaryArray.count + 1);
-        recordModel.recordIndexPath = indexPath;
-        recordModel.mediaType = asset.mediaType;
-        [self.dictionaryArray setObject:recordModel forKey:asset.asset.localIdentifier];
+        [self addPhotoRecordModel];
         [self.bottomBarView addPhotoRecordModel:self.dictionaryArray];
         [self wp_setUpTopView:self.selectedIndex];
                            
@@ -306,6 +298,19 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
         [self.refreshDelegate wp_reloadPhotoDetailViewController];
     }
 }
+
+/** 添加一个WXMPhotoRecordModel */
+- (void)addPhotoRecordModel {
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:self.selectedIndex inSection:0];
+    WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
+    WXMPhotoRecordModel *recordModel = [WXMPhotoRecordModel new];
+    recordModel.recordAsset = asset;
+    recordModel.recordRank = (self.dictionaryArray.count + 1);
+    recordModel.recordIndexPath = indexPath;
+    recordModel.mediaType = asset.mediaType;
+    [self.dictionaryArray setObject:recordModel forKey:asset.asset.localIdentifier];
+}
+
 
 /** 重新刷新排名 */
 - (void)refreshRanking:(NSString *)localIdentifier {
@@ -335,62 +340,60 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     });
 }
 
-///** 完成按钮 */
-//- (void)wp_touchButtomFinsh {
-//    if (_previewType == WXMPhotoPreviewTypeSingle) {
-//        [self wp_singlePhotoSendImage];
-//    } else if (_previewType == WXMPhotoPreviewTypeMost) {
-//        [self wp_morePhotoSendImage];
-//    }
-//}
-//
-//#pragma mark  回调图片
-//#pragma mark  回调图片
-//#pragma mark  回调图片
-//
-///** 回调单张图片 */
-//- (void)wp_singlePhotoSendImage {
-//    WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
-//    if (self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
-//        self.photoType == WXMPhotoDetailTypeGetPhoto ||
-//        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) {
-//        CGSize size = CGSizeZero;
-//        if (self.photoType == WXMPhotoDetailTypeGetPhoto) size = PHImageManagerMaximumSize;
-//        if (self.photoType == WXMPhotoDetailTypeGetPhoto_256) size = CGSizeMake(256, 256);
-//    /** if (self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) size = self.expectSize; */
-//        if (self.bottomBarView.isOriginalImage == YES) size = PHImageManagerMaximumSize;
-//        [WXMResourceAssistant sendResource:asset
-//                                 coverSize:size
-//                                  delegate:self.delegate
-//                               isShowVideo:self.showVideo
-//                                isShowLoad:(self.photoType == WXMPhotoDetailTypeGetPhoto)
-//                            viewController:self.navigationController];
-//    }
-//}
-//
-///** 回调多张图片 */
-//- (void)wp_morePhotoSendImage {
-//    CGSize size = CGSizeZero;
-//
-//    if (self.bottomBarView.isOriginalImage) size = PHImageManagerMaximumSize;
-//    NSMutableArray * array = @[].mutableCopy;
-//    [self.dictionaryArray enumerateObjectsUsingBlock:^(WXMPhotoSignModel*obj,NSUInteger idx,BOOL stop) {
-//        WXMPhotoAsset *phsset = self.dataSource[obj.indexPath.row];
-//        if (phsset) [array addObject:phsset];
-//    }];
-//    [WXMResourceAssistant sendMoreResource:array
-//                                 coverSize:size
-//                                  delegate:self.delegate
-//                               isShowVideo:self.showVideo
-//                                isShowLoad:YES
-//                            viewController:self.navigationController];
-//}
+/** 完成按钮 */
+- (void)wp_touchButtomFinsh {
+    if (_previewType == WXMPhotoPreviewTypeSingle) {
+        [self wp_singlePhotoSendImage];
+    } else if (_previewType == WXMPhotoPreviewTypeMost) {
+        [self wp_morePhotoSendImage];
+    }
+}
+
+#pragma mark  回调图片
+#pragma mark  回调图片
+#pragma mark  回调图片
+
+/** 回调单张图片 */
+- (void)wp_singlePhotoSendImage {
+    WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
+    if (self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
+        self.photoType == WXMPhotoDetailTypeGetPhoto ||
+        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) {
+        CGSize size = CGSizeZero;
+        if (self.photoType == WXMPhotoDetailTypeGetPhoto) size = PHImageManagerMaximumSize;
+        if (self.photoType == WXMPhotoDetailTypeGetPhoto_256) size = CGSizeMake(256, 256);
+        /** if (self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) size = self.expectSize; */
+        if (self.bottomBarView.isOriginalImage == YES) size = PHImageManagerMaximumSize;
+        [WXMResourceAssistant sendResource:asset
+                                 coverSize:size
+                                  delegate:self.delegate
+                               isShowVideo:self.showVideo
+                                isShowLoad:(self.photoType == WXMPhotoDetailTypeGetPhoto)
+                            viewController:self.navigationController];
+    }
+}
+
+/** 回调多张图片 */
+- (void)wp_morePhotoSendImage {
+    
+    if (self.dictionaryArray.count == 0) [self addPhotoRecordModel];
+    
+    NSMutableArray * array = @[].mutableCopy;
+    [self.dictionaryArray enumerateObjectsUsingBlock:^(WXMPhotoRecordModel*obj,NSUInteger idx,BOOL stop) {
+        if (obj.recordAsset) [array addObject:obj.recordAsset];
+    }];
+    [WXMResourceAssistant sendMoreResource:array
+                                  delegate:self.delegate
+                               isShowVideo:self.showVideo
+                                isShowLoad:YES
+                            viewController:self.navigationController];
+}
 
 /** 用户第一张选择的类型 */
 - (WXMPhotoMediaType)chooseType {
     if (self.dictionaryArray.count == 0) return WXMPHAssetMediaTypeNone;
-    WXMPhotoSignModel * signModel = self.dictionaryArray.firstObject;
-    if (signModel.mediaType == WXMPHAssetMediaTypeVideo) return WXMPHAssetMediaTypeVideo;
+    WXMPhotoRecordModel *recordModel = self.dictionaryArray.firstObject;
+    if (recordModel.mediaType == WXMPHAssetMediaTypeVideo) return WXMPHAssetMediaTypeVideo;
     return WXMPHAssetMediaTypeImage;
 }
 

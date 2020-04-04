@@ -180,7 +180,6 @@ static char p_rightNameKey;
 
 @implementation UIButton (WXMPhoto)
 
-
 - (void)callActionBlock:(id)sender {
     void (^buttonBlock)(void) = (void (^)(void))objc_getAssociatedObject(self, &p_touchUpInsideKey);
     if (buttonBlock) buttonBlock();
@@ -224,6 +223,17 @@ static char p_rightNameKey;
     return CGRectContainsPoint(rect, point) ? self : nil;
 }
 
+@end
 
+@implementation UIImage (WXMPhoto)
 
+- (UIImage *)wp_redraw {
+    CGFloat width = CGImageGetWidth(self.CGImage);
+    CGFloat height = CGImageGetHeight(self.CGImage);
+    UIGraphicsBeginImageContext(CGSizeMake(width, height));
+    [self drawInRect:CGRectMake(0, 0, width, height)];
+    UIImage* images = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return images;
+}
 @end

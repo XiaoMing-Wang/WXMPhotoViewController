@@ -141,12 +141,16 @@
                    synchronous:NO
                    original:NO
                    assetSize:CGSizeMake(WXMItemWidth, WXMItemWidth)
-                   resizeMode:PHImageRequestOptionsResizeModeExact
+                   resizeMode:PHImageRequestOptionsResizeModeFast
                    deliveryMode:PHImageRequestOptionsDeliveryModeOpportunistic
                    completion:^(UIImage *image) {
         
         if ([_assetIdentifier isEqualToString:_photoAsset.asset.localIdentifier]) {
-            self.imageView.image = image;
+            
+            @autoreleasepool {
+                self.imageView.image = image.wp_redraw;
+            }
+            
         } else {
             [[WXMPhotoManager sharedInstance] cancelRequestWithID:_currentRequestID];
         }
@@ -227,5 +231,25 @@
     self.imageView.image = nil;
 }
 
+- (UIImage *)redraw:(UIImage *)image {
+    CGFloat width = CGImageGetWidth(image.CGImage);
+    CGFloat height = CGImageGetHeight(image.CGImage);
+
+    // 创建一个bitmap的context
+    // 并把它设置成为当前正在使用的context
+    UIGraphicsBeginImageContext(CGSizeMake(width, height));
+    
+    // 绘制图片大小设置
+    [image drawInRect:CGRectMake(0, 0, width, height)];
+    
+    // 从当前context中创建一个图片
+    UIImage* images = UIGraphicsGetImageFromCurrentImageContext();
+    
+    // 使当前的context出堆栈
+    UIGraphicsEndImageContext();
+    
+    // 返回新的改变大小后的图片
+    return images;
+}
 @end
 

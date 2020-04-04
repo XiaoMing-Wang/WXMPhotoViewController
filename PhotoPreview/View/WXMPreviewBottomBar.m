@@ -5,11 +5,10 @@
 //  Created by edz on 2019/5/13.
 //  Copyright © 2019年 wq. All rights reserved.
 //
-#import "WXMPhotoConfiguration.h"
-#import "WXMPreviewBottomBar.h"
-#import "WXMPhotoSignModel.h"
 #import "UIImage+WXMPhoto.h"
+#import "WXMPreviewBottomBar.h"
 #import "WXMPhotoRecordModel.h"
+#import "WXMPhotoConfiguration.h"
 #import "WXMBottomBarCollectionViewCell.h"
 
 @interface WXMPreviewBottomBar ()<UICollectionViewDelegate,UICollectionViewDataSource>
@@ -140,17 +139,23 @@
 /** 滚动到那个记录的model */
 - (void)setRecordModel:(WXMPhotoRecordModel *)recordModel {
     _recordModel = recordModel;
-    
+        
     WXMBottomBarCollectionViewCell *selectCell = nil;
     for (WXMBottomBarCollectionViewCell *cell in self.collectionView.visibleCells) {
         cell.isSelected = (recordModel == cell.recordModel);
         if (cell.isSelected) selectCell = cell;
     }
     
-    if (!selectCell) return;
     UICollectionViewScrollPosition po = UICollectionViewScrollPositionCenteredHorizontally;
-    NSIndexPath *indexPath = [_collectionView indexPathForCell:selectCell];
-    [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:po animated:YES];
+    if (selectCell == nil)  {
+        NSInteger index = [self.dictionaryArray indexOfObject:recordModel];
+        if (index < 0 || index >= self.dictionaryArray.count) return;
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:po animated:NO];
+    } else {
+        NSIndexPath *indexPath = [_collectionView indexPathForCell:selectCell];
+        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:po animated:YES];
+    }
 }
 
 /** 设置按钮 */
@@ -159,7 +164,7 @@
     [NSString stringWithFormat:@"完成(%ld)",self.dictionaryArray.count] : @"完成";
     [self.finishButton setTitle:title forState:UIControlStateNormal];
     self.finishButton.width = (self.dictionaryArray.count > 0) ? 70 : 60;
-    self.finishButton.layoutRight = 15;
+    self.finishButton.right = WXMPhoto_Width - 15;
     [UIView animateWithDuration:(animations ? 0.5 : 0) animations:^{
         self.line.alpha = (self.dictionaryArray.count > 0);
         self.photoView.alpha = (self.dictionaryArray.count > 0);
@@ -215,6 +220,8 @@
 }
 
 #pragma mark _____________________________________________UICollectionView dataSource
+#pragma mark _____________________________________________UICollectionView dataSource
+#pragma mark _____________________________________________UICollectionView dataSource
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)sec {
     return self.dictionaryArray.count;
@@ -254,8 +261,8 @@
     if (self.lastSeleIdx != seletedIdx) {
         [self.collectionView reloadData];
         self.lastSeleIdx = seletedIdx;
-        WXMPhotoSignModel * signModel = [self.dictionaryArray objectForKey:@(seletedIdx).stringValue];
-        NSInteger idx = [self.dictionaryArray indexOfObject:signModel];
+        WXMPhotoRecordModel *photoRecordModel = [self.dictionaryArray objectForKey:@(seletedIdx).stringValue];
+        NSInteger idx = [self.dictionaryArray indexOfObject:photoRecordModel];
         UICollectionViewScrollPosition po= UICollectionViewScrollPositionCenteredHorizontally;
         if (idx >= 0) {
             NSIndexPath *inPath = [NSIndexPath indexPathForRow:idx inSection:0];

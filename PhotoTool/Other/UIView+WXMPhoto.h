@@ -57,3 +57,7 @@
                             right:(CGFloat)right
                            bottom:(CGFloat)bottom;
 @end
+
+@interface UIImage (WXMPhoto)
+- (UIImage *)wp_redraw;
+@end

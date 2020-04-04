@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** 根据颜色绘制图片 */
 + (UIImage *)imageFromColor:(UIColor *)color;
 
+
 @end
 
 NS_ASSUME_NONNULL_END
