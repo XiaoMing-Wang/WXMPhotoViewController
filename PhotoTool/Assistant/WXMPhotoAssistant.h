@@ -13,7 +13,7 @@
 @interface WXMPhotoAssistant : NSObject
 
 /** loadingView */
-+ (void)wxm_showLoadingView:(UIView *)supView;
++ (void)wp_showLoadingView:(UIView *)supView;
 
 /** 根据颜色绘制图片 */
 + (UIImage *)wxmPhoto_imageWithColor:(UIColor *)color;
@@ -22,13 +22,13 @@
 + (UIView *)wxmPhoto_snapViewImage:(UIView *)screenshots;
 
 /** 显示导航1px线条 */
-+ (void)wxm_navigationLine:(UINavigationController *)nav show:(BOOL)show;
++ (void)wp_navigationLine:(UINavigationController *)nav show:(BOOL)show;
 
 /** 获取原始图大小 */
-+ (CGFloat)wxm_getOriginalSize:(PHAsset *)asset;
++ (CGFloat)wp_getOriginalSize:(PHAsset *)asset;
 
 /** 获取 ButtonItem */
-+ (UIBarButtonItem *)wxm_createButtonItem:(NSString *)title
++ (UIBarButtonItem *)wp_createButtonItem:(NSString *)title
                                    target:(id)target
                                    action:(SEL)action;
 

@@ -23,7 +23,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+        
     UIBarButtonItem * item = [[UIBarButtonItem alloc] initWithTitle:@"" style:0 target:nil action:nil];
     self.navigationItem.leftBarButtonItem = item;
     self.navigationController.navigationBar.shadowImage = [[UIImage alloc] init];
@@ -43,7 +43,7 @@
 - (void)initializationInterface {
     __weak __typeof(self) weakself = self;
     _cropView = [[TOCropView alloc] initWithImage:self.shapeImage];
-    _cropView.frame = (CGRect){0,0,WXMPhoto_Width,WXMPhoto_Height - 44};
+    _cropView.frame = (CGRect){0, 0, WXMPhoto_Width,WXMPhoto_Height - 44};
     _cropView.aspectRatioLockEnabled = YES;
     _cropView.resetAspectRatioEnabled = NO;
     _cropView.aspectRatio = CGSizeMake(1, 1);
@@ -56,8 +56,8 @@
     _cropToolbar.clampButtonHidden = YES;
     _cropToolbar.doneTextButtonTitle = @"确定";
     _cropToolbar.cancelTextButtonTitle = @"取消";
-    [_cropToolbar.doneIconButton wc_setEnlargeEdgeWithTop:10 left:15 right:15 bottom:10];
-    [_cropToolbar.cancelIconButton wc_setEnlargeEdgeWithTop:10 left:15 right:15 bottom:10];
+    [_cropToolbar.doneIconButton wp_setEnlargeEdgeWithTop:10 left:15 right:15 bottom:10];
+    [_cropToolbar.cancelIconButton wp_setEnlargeEdgeWithTop:10 left:15 right:15 bottom:10];
     
     _cropToolbar.cancelButtonTapped = ^{ [weakself popViewController]; };
     _cropToolbar.doneButtonTapped = ^{ [weakself dismissViewController]; };
@@ -94,15 +94,11 @@
 }
 
 - (void)dismissViewController {
-    
     CGRect cropFrame = self.cropView.imageCropFrame;
     NSInteger angle = self.cropView.angle;
     
     @autoreleasepool {
-        UIImage *cropImage = [self.cropView.image croppedImageWithFrame:cropFrame
-                                                                  angle:angle
-                                                           circularClip:NO];
-        
+        UIImage *cropImage = [self.cropView.image croppedImageWithFrame:cropFrame angle:angle circularClip:NO];
         if (CGSizeEqualToSize(self.expectSize, CGSizeZero) == NO) {
             cropImage = [cropImage scaleToSize:self.expectSize];
         }

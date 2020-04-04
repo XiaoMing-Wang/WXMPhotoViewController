@@ -11,45 +11,115 @@
 @interface WXMPhotoCollectionCell ()
 
 /** 白色蒙版 */
-@property(nonatomic, strong) UIView *maskCoverView;
+@property (nonatomic, strong) UIView *maskCoverView;
 
 /** 图片 */
-@property(nonatomic, strong) UIImageView *imageView;
+@property (nonatomic, strong) UIImageView *imageView;
 
-/** 资源类型标记 */
-@property(nonatomic, strong) UIButton *typeSign;
+/** 资源类型标记 GIF Video */
+@property (nonatomic, strong) UIButton *typeSign;
 
 /** 勾选框  */
 @property (nonatomic, strong) UIButton *chooseButton;
+
+/** 当前cell的下载的ID 复用的时候使用 */
 @property (nonatomic, assign) int32_t currentRequestID;
+
+/** 唯一标识 */
+@property (nonatomic, copy) NSString *assetIdentifier;
 
 @end
 
 @implementation WXMPhotoCollectionCell
 
 - (instancetype)initWithFrame:(CGRect)frame {
-    if (self = [super initWithFrame:frame]) [self setupInterface];
+    if (self = [super initWithFrame:frame]) [self initializationInterface];
     return self;
 }
 
-- (void)setupInterface {
+- (void)initializationInterface {
     self.userCanTouch = YES;
     self.imageView = [[UIImageView alloc] initWithFrame:self.bounds];
     self.imageView.contentMode = UIViewContentModeScaleAspectFill;
     self.imageView.clipsToBounds = YES;
-    
     [self.contentView addSubview:self.imageView];
     [self.contentView addSubview:self.typeSign];
+    [self.contentView addSubview:self.chooseButton];
+    [self.contentView addSubview:self.maskCoverView];
 }
 
-/** 设置相册类型 */
-- (void)setPhotoType:(WXMPhotoDetailType)photoType {
-    _photoType = photoType;
-    if (photoType == WXMPhotoDetailTypeMultiSelect) {
-        [self.contentView addSubview:self.maskCoverView];
-        [self.contentView addSubview:self.chooseButton];
-    }  else if (photoType == WXMPhotoDetailTypeTailoring) {
-        self.typeSign.alpha = WXMPhotoTailoringShowGIFSign;
+/** 是否显示选择框 */
+- (void)setDisplayCheckBox:(BOOL)displayCheckBox {
+    _displayCheckBox = displayCheckBox;
+    self.chooseButton.hidden = (!displayCheckBox);
+    self.chooseButton.enabled = displayCheckBox;
+}
+
+/** 设置显示界面效果 */
+- (void)setShowVideo:(BOOL)showVideo {
+    _showVideo = showVideo;
+    
+    self.typeSign.hidden = YES;
+    [self.contentView bringSubviewToFront:self.typeSign];
+
+    /** 视频 */
+    if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo &&
+        WXMPhotoShowVideoSign &&
+        WXMPhotoSupportVideo) {
+        self.typeSign.hidden = (!showVideo);
+        NSString *duration = [NSString stringWithFormat:@"  %@", _photoAsset.videoDrantion];
+        [self.typeSign setTitle:duration forState:UIControlStateNormal];
+
+        UIImage *image = [UIImage imageNamed:@"photo_videoSmall"];
+        [self.typeSign setImage:image forState:UIControlStateNormal];
+        self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+        self.typeSign.titleLabel.font = [UIFont systemFontOfSize:11];
+
+    /** GIF */
+    } else if (_photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && WXMPhotoShowGIFSign) {
+        self.typeSign.hidden = NO;
+        self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:15];
+        [self.typeSign setTitle:@"  GIF" forState:UIControlStateNormal];
+        [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
+        self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    }
+}
+
+/** 是否可以点击 */
+- (void)setUserCanTouch:(BOOL)userCanTouch animation:(BOOL)animation {
+    _userCanTouch = userCanTouch;
+    CGFloat duration = animation ? 0.2 : 0;
+    [UIView animateWithDuration:duration animations:^{
+        self.maskCoverView.alpha = !userCanTouch;
+        self.userInteractionEnabled = userCanTouch;
+    }];
+}
+
+/** 选中记录的model */
+- (void)setRecordModel:(WXMPhotoRecordModel *)recordModel {
+    _recordModel = recordModel;
+    if (recordModel) {
+        
+        NSInteger rank = recordModel.recordRank;
+        self.chooseButton.selected = YES;
+        [self.chooseButton setTitle:@(rank).stringValue forState:UIControlStateSelected];
+        
+    } else {
+        self.chooseButton.selected = NO;
+        [self.chooseButton setTitle:@"" forState:UIControlStateSelected];
+    }
+}
+
+/** 设置排名 */
+- (void)refreshRanking:(WXMPhotoRecordModel *)recordModel animation:(BOOL)animation {
+    if (recordModel != nil) {
+        NSInteger rank = recordModel.recordRank;
+        self.chooseButton.selected = YES;
+        [self.chooseButton setTitle:@(rank).stringValue forState:UIControlStateSelected];
+        if (animation) [self setAnimation];
+    } else {
+        self.chooseButton.selected = NO;
+        [self.chooseButton setTitle:@"" forState:UIControlStateSelected];
     }
 }
 
@@ -60,26 +130,27 @@
 - (void)setPhotoAsset:(WXMPhotoAsset *)photoAsset {
     _imageView.image = nil;
     _photoAsset = photoAsset;
-    _assetIdentifier = _photoAsset.asset.localIdentifier;
-    CGSize size = CGSizeMake(WXMItemWidth, WXMItemWidth);
     
-    /** 设置界面 */
-    [self wxm_setTypeSignInterface];
-       
+    /** NSLog(@"%@",photoAsset.asset.localIdentifier); */
+    _assetIdentifier = _photoAsset.asset.localIdentifier;
+        
     /** PHImageRequestOptionsResizeModeExact返回精确大小 */
     /** PHImageRequestOptionsResizeModeExact想返回缩略图在返回需要大小 */
-    
     int32_t ids = [[WXMPhotoManager sharedInstance]
                    getPicturesByAsset:photoAsset.asset
                    synchronous:NO
                    original:NO
-                   assetSize:size
-                   resizeMode:PHImageRequestOptionsResizeModeExact
+                   assetSize:CGSizeMake(WXMItemWidth, WXMItemWidth)
+                   resizeMode:PHImageRequestOptionsResizeModeFast
                    deliveryMode:PHImageRequestOptionsDeliveryModeOpportunistic
                    completion:^(UIImage *image) {
         
         if ([_assetIdentifier isEqualToString:_photoAsset.asset.localIdentifier]) {
-            self.imageView.image = image;
+            
+            @autoreleasepool {
+                self.imageView.image = image.wp_redraw;
+            }
+            
         } else {
             [[WXMPhotoManager sharedInstance] cancelRequestWithID:_currentRequestID];
         }
@@ -92,135 +163,24 @@
     _photoAsset.requestID = ids;
     [self setNeedsLayout];
 }
-#pragma clang diagnostic pop
-
-
-/** 多选模式下设置代理 */
-- (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
-          indexPath:(NSIndexPath *)indexPath
-          signModel:(WXMPhotoSignModel *)signModel
-          available:(BOOL)available {
-    
-    _delegate = delegate;
-    _indexPath = indexPath;
-    _signModel = signModel;
-    BOOL selected = (signModel != nil);
-    if (selected) available = YES;
-    
-    [self signButtonSelected:selected];
-    [self wxm_setTypeSignInterface];
-    [self setUserCanTouch:available animation:NO];
-}
-
-/** 设置能否响应 */
-- (void)setUserCanTouch:(BOOL)userCanTouch animation:(BOOL)animation {
-    _userCanTouch = userCanTouch;
-    
-    /** 用户能否点击 */
-    CGFloat duration = animation ? 0.2 : 0;
-    [UIView animateWithDuration:duration animations:^{
-        self.maskCoverView.alpha = (!userCanTouch);
-    }];
-}
-
-/** 设置显示界面效果 */
-- (void)wxm_setTypeSignInterface {
-    self.typeSign.hidden = YES;
-    [self.contentView bringSubviewToFront:self.typeSign];
-    
-    /** 视频 */
-    if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo &&
-        WXMPhotoShowVideoSign &&
-        WXMPhotoSupportVideo) {
-        if (self.showVideo)  self.typeSign.hidden = NO;
-        NSString *duration = [NSString stringWithFormat:@"  %@", _photoAsset.videoDrantion];
-        [self.typeSign setTitle:duration forState:UIControlStateNormal];
-        
-        UIImage *image = [UIImage imageNamed:@"photo_videoSmall"];
-        [self.typeSign setImage:image forState:UIControlStateNormal];
-        self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
-        self.typeSign.titleLabel.font = [UIFont systemFontOfSize:11];
-        
-    /** GIF */
-    } else if (_photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && WXMPhotoShowGIFSign) {
-        self.typeSign.hidden = NO;
-        self.typeSign.titleLabel.font = [UIFont boldSystemFontOfSize:15];
-        [self.typeSign setTitle:@"  GIF" forState:UIControlStateNormal];
-        [self.typeSign setImage:[UIImage imageNamed:@""] forState:UIControlStateNormal];
-        self.typeSign.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-    }
-}
-
-/** 设置button选中 */
-- (void)signButtonSelected:(BOOL)selected {
-    self.chooseButton.selected = selected;
-    UIControlState sele = UIControlStateSelected;
-    if (selected) {
-        [self.chooseButton setTitle:@(_signModel.rank).stringValue forState:sele];
-    } else {
-        [self.chooseButton setTitle:@"" forState:UIControlStateNormal];
-        [self.chooseButton setTitle:@"" forState:sele];
-    }
-}
 
 /** 勾号点击 */
-- (void)wxm_touchEvent {
-    if (self.userCanTouch == NO) {
-        [self wxm_showAlertController];
-        return;
+- (void)wp_touchEvent:(UIButton *)sender {
+    if ([self.delegate respondsToSelector:@selector(wp_photoCollectionCellCheckBox:selected:)]) {
+        [self.delegate wp_photoCollectionCellCheckBox:self selected:sender.selected];
     }
-    
-    self.chooseButton.selected = !_chooseButton.selected;
-    [self.chooseButton setTitle:@"" forState:UIControlStateNormal];
-    [self.chooseButton setTitle:@"" forState:UIControlStateSelected];
-    [self setAnimation];
-    
-    NSUInteger maxCount = WXMMultiSelectMax;
-    if ([self.delegate respondsToSelector:@selector(wxm_maxCountPhotoNumber)]) {
-        maxCount = [self.delegate wxm_maxCountPhotoNumber];
-    }
-    
-    /** 设置第几个选中 */
-    if ([self.delegate respondsToSelector:@selector(touchWXMPhotoSignView:selected:)]) {
-        BOOL selected = _chooseButton.selected;
-        NSInteger markNumber = [self.delegate touchWXMPhotoSignView:_indexPath selected:selected];
-        if (markNumber >= 1 && markNumber <= maxCount) {
-            [_chooseButton setTitle:@(markNumber).stringValue forState:UIControlStateSelected];
-        }
-        
-        if (markNumber > maxCount)  {
-            self.chooseButton.selected = NO;
-            [self.chooseButton setTitle:@"" forState:UIControlStateNormal];
-            [self.chooseButton setTitle:@"" forState:UIControlStateSelected];
-        }
-    }
-  
 }
 
 /** 设置动画 */
 - (void)setAnimation {
     if (!self.chooseButton.selected) return;
-    self.chooseButton.userInteractionEnabled = NO;
+    self.userInteractionEnabled = NO;
     self.chooseButton.transform = CGAffineTransformMakeScale(0.3, 0.3);
     [UIView animateWithDuration:1.f delay:0 usingSpringWithDamping:0.4 initialSpringVelocity:0.0 options:UIViewAnimationOptionLayoutSubviews animations:^{
         self.chooseButton.transform = CGAffineTransformIdentity;
     } completion:^(BOOL finished) {
-        self.chooseButton.userInteractionEnabled = YES;
+        self.userInteractionEnabled = YES;
     }];
-}
-
-/** 提示框 */
-- (void)wxm_showAlertController {
-    if ([self.delegate respondsToSelector:@selector(wxm_cantTouchWXMPhotoSignView:)]){
-        [self.delegate wxm_cantTouchWXMPhotoSignView:self.photoAsset.mediaType];
-    }
-}
-
-/** 刷新标号排名 */
-- (void)refreshRankingWithSignModel:(WXMPhotoSignModel *)signModel {
-    _signModel = signModel;
-    _chooseButton.selected = YES;
-    [_chooseButton setTitle:@(_signModel.rank).stringValue forState:UIControlStateSelected];
 }
 
 /** 标志view */
@@ -261,8 +221,8 @@
         _chooseButton.titleLabel.font = [UIFont systemFontOfSize:WXMSelectedFont];
         [_chooseButton setBackgroundImage:normal forState:UIControlStateNormal];
         [_chooseButton setBackgroundImage:selected forState:UIControlStateSelected];
-        [_chooseButton wc_addTarget:self action:@selector(wxm_touchEvent)];
-        [_chooseButton wc_setEnlargeEdgeWithTop:3 left:15 right:3 bottom:15];
+        [_chooseButton wp_addTarget:self action:@selector(wp_touchEvent:)];
+        [_chooseButton wp_setEnlargeEdgeWithTop:3 left:15 right:3 bottom:15];
     }
     return _chooseButton;
 }
@@ -271,5 +231,25 @@
     self.imageView.image = nil;
 }
 
+- (UIImage *)redraw:(UIImage *)image {
+    CGFloat width = CGImageGetWidth(image.CGImage);
+    CGFloat height = CGImageGetHeight(image.CGImage);
+
+    // 创建一个bitmap的context
+    // 并把它设置成为当前正在使用的context
+    UIGraphicsBeginImageContext(CGSizeMake(width, height));
+    
+    // 绘制图片大小设置
+    [image drawInRect:CGRectMake(0, 0, width, height)];
+    
+    // 从当前context中创建一个图片
+    UIImage* images = UIGraphicsGetImageFromCurrentImageContext();
+    
+    // 使当前的context出堆栈
+    UIGraphicsEndImageContext();
+    
+    // 返回新的改变大小后的图片
+    return images;
+}
 @end
 

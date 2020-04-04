@@ -180,24 +180,23 @@ static char p_rightNameKey;
 
 @implementation UIButton (WXMPhoto)
 
-
 - (void)callActionBlock:(id)sender {
     void (^buttonBlock)(void) = (void (^)(void))objc_getAssociatedObject(self, &p_touchUpInsideKey);
     if (buttonBlock) buttonBlock();
 }
 
 /** */
-- (void)wc_addTarget:(nullable id)target action:(SEL)action {
+- (void)wp_addTarget:(nullable id)target action:(SEL)action {
     [self addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
 }
 
 /** */
-- (void)wxm_setBackgroundImage:(NSString *)imageName {
+- (void)wp_setBackgroundImage:(NSString *)imageName {
     [self setBackgroundImage:[UIImage imageNamed:imageName] forState:UIControlStateNormal];
 }
 
 /** 扩大点击 */
-- (void)wc_setEnlargeEdgeWithTop:(CGFloat)top left:(CGFloat)left right:(CGFloat)right bottom:(CGFloat)bottom {
+- (void)wp_setEnlargeEdgeWithTop:(CGFloat)top left:(CGFloat)left right:(CGFloat)right bottom:(CGFloat)bottom {
     objc_setAssociatedObject(self, &p_topNameKey, @(top), OBJC_ASSOCIATION_COPY_NONATOMIC);
     objc_setAssociatedObject(self, &p_rightNameKey, @(right), OBJC_ASSOCIATION_COPY_NONATOMIC);
     objc_setAssociatedObject(self, &p_bottomNameKey, @(bottom), OBJC_ASSOCIATION_COPY_NONATOMIC);
@@ -224,6 +223,17 @@ static char p_rightNameKey;
     return CGRectContainsPoint(rect, point) ? self : nil;
 }
 
+@end
 
+@implementation UIImage (WXMPhoto)
 
+- (UIImage *)wp_redraw {
+    CGFloat width = CGImageGetWidth(self.CGImage);
+    CGFloat height = CGImageGetHeight(self.CGImage);
+    UIGraphicsBeginImageContext(CGSizeMake(width, height));
+    [self drawInRect:CGRectMake(0, 0, width, height)];
+    UIImage* images = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return images;
+}
 @end

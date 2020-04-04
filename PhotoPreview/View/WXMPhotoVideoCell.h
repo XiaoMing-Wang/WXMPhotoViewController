@@ -18,6 +18,6 @@
 - (UIImage *)currentImage;
 
 /** 开始播放视频 */
-- (void)wxm_avPlayStartPlay:(bool)playImmediately;
+- (void)wp_avPlayStartPlay:(bool)playImmediately;
 
 @end

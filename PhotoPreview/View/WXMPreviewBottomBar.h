@@ -8,8 +8,13 @@
 
 #import <UIKit/UIKit.h>
 #import "WXMDictionary_Array.h"
+#import "WXMPhotoRecordModel.h"
+#import "WXMPhotoConfiguration.h"
 
 @interface WXMPreviewBottomBar : UIView
+
+/** 选中的记录RecordModel */
+@property (nonatomic, strong) WXMPhotoRecordModel *recordModel;
 
 /** 是否选取原图 */
 @property (nonatomic, assign, readonly) BOOL isOriginalImage;
@@ -24,12 +29,25 @@
 @property (nonatomic, assign) NSInteger seletedIdx;
 
 /** 全部选中的 */
-@property (nonatomic, strong) WXMDictionary_Array *signObj;
+@property (nonatomic, strong) WXMDictionary_Array *dictionaryArray;
 @property (nonatomic, assign) id<WXMPreviewToolbarProtocol> delegate;
 
 /** 显示隐藏 */
 - (void)setOriginalImage;
+
+/** 显示原图大小 */
 - (void)setRealImageByte:(NSString *)realImageByte video:(BOOL)video;
+
+/**  */
 - (void)setAccordingState:(BOOL)state;
-- (void)setSignObj:(WXMDictionary_Array *)signObj removeIdx:(NSInteger)idx;
+
+/** 加载数据 */
+- (void)loadDictionaryArray:(WXMDictionary_Array *)dictionaryArray;
+
+/** 新增一个 */
+- (void)addPhotoRecordModel:(WXMDictionary_Array *)dictionaryArray;
+
+/** 删除一个 */
+- (void)deletePhotoRecordModel:(WXMDictionary_Array *)dictionaryArray;
+
 @end

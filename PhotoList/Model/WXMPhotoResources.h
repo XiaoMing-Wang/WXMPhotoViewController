@@ -17,8 +17,11 @@
 /** 视频data */
 @property (nonatomic, strong) NSData *resourceData;
 
-/** tag */
-@property (nonatomic, strong) NSString *resourceTag;
+/** 本地URL */
+@property (nonatomic, strong) NSString *resourceUrl;
+
+/** 阿里云URL */
+@property (nonatomic, strong) NSString *aliCloudUrl;
 
 /** 类型 */
 @property (nonatomic, assign) WXMPhotoMediaType mediaType;

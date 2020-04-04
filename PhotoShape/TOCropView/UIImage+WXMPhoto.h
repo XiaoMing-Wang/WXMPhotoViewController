@@ -24,6 +24,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** 获取压缩后的data */
 - (NSData *)compressionImageData;
+
+/** 根据颜色绘制图片 */
++ (UIImage *)imageFromColor:(UIColor *)color;
+
+
 @end
 
 NS_ASSUME_NONNULL_END

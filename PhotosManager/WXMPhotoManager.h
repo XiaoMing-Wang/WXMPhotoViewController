@@ -19,7 +19,6 @@ typedef enum {
     WXMPHAssetMediaTypeNone,
 } WXMPhotoMediaType;
 
-
 /** 相册对象 */
 @interface WXMPhotoList : NSObject
 @property (nonatomic, strong) NSString *title;                    /**相册的名字*/
@@ -35,7 +34,7 @@ typedef enum {
 @property (nonatomic, strong) UIImage *cacheImage;
 @property (nonatomic, copy) NSURL *videoUrl;               /** video url */
 @property (nonatomic, copy) NSString *videoDrantion;       /** video 时间 */
-@property (nonatomic, assign) int32_t requestID;           /** 下载id */
+@property (nonatomic, assign) int32_t requestID;           /** 下载唯一id */
 @property (nonatomic, assign) CGFloat bytes;               /** 大小 */
 @property (nonatomic, assign) CGFloat aspectRatio;         /** 高/宽比例 */
 @property (nonatomic, assign) WXMPhotoMediaType mediaType; /** 相片类型 */
@@ -46,9 +45,6 @@ typedef enum {
 @property (nonatomic, strong) WXMPhotoList *firstPhotoList;
 
 + (instancetype)sharedInstance;
-
-/** 是否有权限 */
-- (BOOL)photoPermission;
 
 /** 获得所有的相册对象 */
 - (void)getAllPicturesListBlock:(void (^)(NSArray<WXMPhotoList *> *))callback;
@@ -79,20 +75,17 @@ typedef enum {
 
 
 /** 获取高质量原图 */
-- (int32_t)getPictures_original:(PHAsset *)asset
-                    synchronous:(BOOL)synchronous
-                     completion:(void (^)(UIImage *image))completion;
+- (int32_t)getPicturesOriginal:(PHAsset *)asset
+                   synchronous:(BOOL)synchronous
+                    completion:(void (^)(UIImage *image))completion;
 
-
-/** 获取自定义尺寸 */
 /** 获取自定义尺寸 设置PHImageRequestOptionsResizeModeExact是有效 */
-- (int32_t)getPictures_customSize:(PHAsset *)asset
-                      synchronous:(BOOL)synchronous
-                        assetSize:(CGSize)assetSize
-                       completion:(void (^)(UIImage *image))completion;
+- (int32_t)getPicturesCustomSize:(PHAsset *)asset
+                     synchronous:(BOOL)synchronous
+                       assetSize:(CGSize)assetSize
+                      completion:(void (^)(UIImage *image))completion;
 
-
-/** 同步获取图片 size为zero时获取原图 */
+/** 同步获取图片 size为zero获取原图 */
 - (int32_t)synchronousGetPictures:(PHAsset *)asset
                              size:(CGSize)size
                        completion:(void (^)(UIImage *image))comple;
@@ -105,7 +98,7 @@ typedef enum {
 - (int32_t)getImageByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
 
 /** 获取视频路径 */
-- (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(NSURL *, NSData *))completiont;
+- (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(AVURLAsset *, NSURL * , NSData *))completiont;
 
 /** 获取livephoto 系统大于9.1 */
 - (void)getLivePhotoByAsset:(PHAsset *)assetData

@@ -22,14 +22,16 @@
 
 /** 初始化 */
 - (void)setupInterface {
+    CGFloat wh = WXMPhotoListCellH * 0.65;
+    CGFloat left = wh + 30;
     self.posterImageView = [[UIImageView alloc] init];
-    self.posterImageView.frame = CGRectMake(15, 15, 70, 70);
+    self.posterImageView.frame = CGRectMake(15, (WXMPhotoListCellH - wh) / 2.0, wh, wh);
     self.posterImageView.contentMode = UIViewContentModeScaleAspectFill;
     self.posterImageView.clipsToBounds = YES;
     
     self.titleLable = [[UILabel alloc] init];
-    self.titleLable.frame = CGRectMake(105, 0, self.frame.size.width - 125, 100);
-    self.titleLable.font = [UIFont systemFontOfSize:16];
+    self.titleLable.frame = CGRectMake(left, 0, self.frame.size.width - 125, WXMPhotoListCellH);
+    self.titleLable.font = [UIFont systemFontOfSize:15];
     self.titleLable.textColor = [UIColor blackColor];
     self.titleLable.textAlignment = NSTextAlignmentLeft;
     
@@ -41,11 +43,11 @@
 - (void)setPhoneList:(WXMPhotoList *)phoneList {
     _phoneList = phoneList;
     
+    CGFloat wh = self.posterImageView.width * 2.0;
     NSString *infoHelp = [NSString stringWithFormat:@"  (%zd)", _phoneList.photoNum];
     NSString *info = [_phoneList.title stringByAppendingString:infoHelp];
     self.titleLable.text = info;
-    
-    [[WXMPhotoManager sharedInstance] getPictures_customSize:self.phoneList.firstAsset synchronous:NO assetSize:CGSizeMake(140, 140) completion:^(UIImage *image) {
+    [[WXMPhotoManager sharedInstance] getPicturesCustomSize:self.phoneList.firstAsset synchronous:NO assetSize:CGSizeMake(wh, wh) completion:^(UIImage *image) {
         self.posterImageView.image = image;
     }];
 }
