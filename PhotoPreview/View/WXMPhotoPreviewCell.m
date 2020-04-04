@@ -28,20 +28,20 @@
 @property (nonatomic, assign) BOOL isPlayLivePhoto;
 
 /** 距离原点的比例 */
-@property (nonatomic, assign) CGFloat wxm_x;
-@property (nonatomic, assign) CGFloat wxm_y;
-@property (nonatomic, assign) CGFloat wxm_zoomScale;
-@property (nonatomic, assign) CGPoint wxm_lastPoint;
+@property (nonatomic, assign) CGFloat wp_x;
+@property (nonatomic, assign) CGFloat wp_y;
+@property (nonatomic, assign) CGFloat wp_zoomScale;
+@property (nonatomic, assign) CGPoint wp_lastPoint;
 @end
 #pragma clang diagnostic pop
 
 @implementation WXMPhotoPreviewCell
 - (instancetype)initWithFrame:(CGRect)frame {
-    if (self = [super initWithFrame:frame]) [self setupInterface];
+    if (self = [super initWithFrame:frame]) [self initializationInterface];
     return self;
 }
 
-- (void)setupInterface {
+- (void)initializationInterface {
     CGFloat w = [UIScreen mainScreen].bounds.size.width ;
     CGFloat h = [UIScreen mainScreen].bounds.size.height;
     self.contentScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
@@ -110,7 +110,7 @@
         
         /** 自定义转场需要当前图片 */
         /** 所以先加载图片 在上面覆盖livephoto */
-        int32_t ids = [manager getPictures_customSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
+        int32_t ids = [manager getPicturesCustomSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
             self.imageView.image = image;
             [self setLocation:_photoAsset.aspectRatio];
         }];
@@ -230,8 +230,8 @@
 
 /** 单击 */
 - (void)respondsToTapSingle:(UITapGestureRecognizer *)tap {
-    if ([self.delegate respondsToSelector:@selector(wxm_respondsToTapSingle:)]) {
-        [self.delegate wxm_respondsToTapSingle:NO];
+    if ([self.delegate respondsToSelector:@selector(wp_respondsToTapSingle:)]) {
+        [self.delegate wp_respondsToTapSingle:NO];
     }
 }
 
@@ -262,21 +262,21 @@
     [recognizer.view.superview bringSubviewToFront:recognizer.view];
     CGPoint center = recognizer.view.center;
     CGPoint translation = [recognizer translationInView:self];  /** 位移 */
-    CGFloat wxm_centery = center.y + translation.y;             /** y轴位移 */
+    CGFloat wp_centery = center.y + translation.y;             /** y轴位移 */
     CGFloat recognizer_W = recognizer.view.frame.size.width;
     CGFloat recognizer_H = recognizer.view.frame.size.height;
     
     if (recognizer.state == UIGestureRecognizerStateBegan) {
         CGPoint point = [recognizer locationInView:self];
-        self.wxm_x = point.x / recognizer_W;
-        self.wxm_y = point.y / recognizer_H;
-        self.wxm_lastPoint = recognizer.view.center;
-        if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_respondsBeginDragCell)]) {
-            [self.delegate wxm_respondsBeginDragCell];
+        self.wp_x = point.x / recognizer_W;
+        self.wp_y = point.y / recognizer_H;
+        self.wp_lastPoint = recognizer.view.center;
+        if (self.delegate && [self.delegate respondsToSelector:@selector(wp_respondsBeginDragCell)]) {
+            [self.delegate wp_respondsBeginDragCell];
         }
         
     } else if (recognizer.state == UIGestureRecognizerStateChanged) {
-        CGFloat displacement = wxm_centery - self.wxm_lastPoint.y;
+        CGFloat displacement = wp_centery - self.wp_lastPoint.y;
         CGFloat proportion = 1;
         CGFloat scaleAlpha = 1;
         if (displacement <= 0) proportion = 1;
@@ -291,8 +291,8 @@
         recognizer.view.transform = CGAffineTransformScale(CGAffineTransformIdentity, proportion, proportion);
         
         CGPoint point_XY = [recognizer locationInView:self];
-        CGFloat distance_x = recognizer_W * _wxm_x;
-        CGFloat distance_y = recognizer_H * _wxm_y;
+        CGFloat distance_x = recognizer_W * _wp_x;
+        CGFloat distance_y = recognizer_H * _wp_y;
         CGRect rect = recognizer.view.frame;
         rect.origin.x = point_XY.x - distance_x;
         rect.origin.y = point_XY.y - distance_y;
@@ -306,17 +306,17 @@
         if (cancle) {
             [UIView animateWithDuration:0.35 animations:^{
                 recognizer.view.transform = CGAffineTransformIdentity;
-                recognizer.view.center = self.wxm_lastPoint;
+                recognizer.view.center = self.wp_lastPoint;
                 self.blackView.alpha = 1;
             } completion:^(BOOL finished) {
-                if ([self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
-                    [self.delegate wxm_respondsEndDragCell:nil];
+                if ([self.delegate respondsToSelector:@selector(wp_respondsEndDragCell:)]) {
+                    [self.delegate wp_respondsEndDragCell:nil];
                 }
             }];
         } else {
             _contentScrollView.userInteractionEnabled = NO;
-            if ([self.delegate respondsToSelector:@selector(wxm_respondsEndDragCell:)]) {
-                [self.delegate wxm_respondsEndDragCell:self.contentScrollView];
+            if ([self.delegate respondsToSelector:@selector(wp_respondsEndDragCell:)]) {
+                [self.delegate wp_respondsEndDragCell:self.contentScrollView];
             }
         }
     }

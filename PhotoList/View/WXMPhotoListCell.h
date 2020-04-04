@@ -13,6 +13,7 @@
 
 @interface WXMPhotoListCell : UITableViewCell
 
+/** 相册媒介 */
 @property (nonatomic, strong) WXMPhotoList *phoneList;
 
 @end

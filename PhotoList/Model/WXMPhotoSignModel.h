@@ -14,13 +14,16 @@
 /** 相册名字 */
 @property (nonatomic, copy) NSString *albumName;
 
+/** 本地标识 */
+@property (nonatomic, copy) NSString *localIdentifier;
+
 /** 位置 */
 @property (nonatomic, strong) NSIndexPath *indexPath;
 
 /** 相片 */
 @property (nonatomic, strong) UIImage *image;
 
-/** rank是动态的 保存的不准确 */
+/** rank是动态的 */
 @property (nonatomic, assign) NSInteger rank;
 
 /** 相片类型 */

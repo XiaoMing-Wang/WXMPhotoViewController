@@ -14,7 +14,7 @@
 #import "WXMPhotoVideoCell.h"
 #import "WXMResourceAssistant.h"
 
-@interface WXMPhotoPreviewController ()<UICollectionViewDelegate,UICollectionViewDataSource,
+@interface WXMPhotoPreviewController () <UICollectionViewDelegate,UICollectionViewDataSource,
 WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegate>
 
 @property (nonatomic, weak) UINavigationController *weakNavigationVC;
@@ -35,23 +35,20 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     [super viewDidLoad];
     
     self.navigationController.delegate = self;
-    self.automaticallyAdjustsScrollViewInsets = NO;
     self.navigationController.navigationBar.translucent = YES;
     self.view.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:1.0];
     self.navigationItem.leftBarButtonItem = [UIBarButtonItem new];
-
+    
     self.showToolbar = YES;
     self.weakNavigationVC = self.navigationController;
-    if (self.wxm_windowView) [self.view addSubview:self.wxm_windowView];
-    if (self.wxm_contentView) [self.view addSubview:self.wxm_contentView];
+    if (self.wp_windowView) [self.view addSubview:self.wp_windowView];
+    if (self.wp_contentView) [self.view addSubview:self.wp_contentView];
     
     self.navigationController.navigationBar.shadowImage = [[UIImage alloc] init];
     self.navigationController.navigationBar.backgroundColor = [UIColor clearColor];
     UIColor *whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
     UIImage *image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
-    
-    UIBarMetrics metr = UIBarMetricsDefault;
-    [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics:metr];
+    [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics:0];
     
     @try {
         UIViewController * firstVC = self.navigationController.viewControllers.firstObject;
@@ -80,7 +77,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
         [self playLivePhotoOrVideo];
         
         /** 计算原图大小 */
-        [self wxm_setBottomBarViewrealByte];
+        [self wp_setBottomBarViewrealByte];
     });
     
 }
@@ -89,22 +86,21 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 #pragma mark UICollectionView dataSource
 #pragma mark UICollectionView dataSource
 
-- (NSInteger)collectionView:(UICollectionView *)cw numberOfItemsInSection:(NSInteger)section {
+- (NSInteger)collectionView:(UICollectionView *)collection numberOfItemsInSection:(NSInteger)section {
     return self.dataSource.count;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     WXMPhotoAsset *asset = self.dataSource[indexPath.row];
-    UICollectionView *cv = collectionView;
+    UICollectionView *collection = collectionView;
     UICollectionViewCell * cell = nil;
-    
     if (asset.mediaType == WXMPHAssetMediaTypeVideo && self.showVideo) {
-        cell = [cv dequeueReusableCellWithReuseIdentifier:@"aCell" forIndexPath:indexPath];
+        cell = [collection dequeueReusableCellWithReuseIdentifier:@"aCell" forIndexPath:indexPath];
         ((WXMPhotoVideoCell *)cell).delegate = self;
         ((WXMPhotoVideoCell *)cell).photoAsset = asset;
     } else {
-        cell = [cv dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
+        cell = [collection dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
         ((WXMPhotoPreviewCell *)cell).delegate = self;
         ((WXMPhotoPreviewCell *)cell).photoAsset = asset;
     }
@@ -131,20 +127,19 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     else if (index <= self.selectedIndex - 0.5) location = self.selectedIndex - 1;
     else location = self.selectedIndex;
     
-    /** 设置topView bottomView */
-    [self wxm_setUpTopView:location];
+    /** 设置topView bottomView显示 */
+    [self wp_setUpTopView:location];
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     CGFloat offY = scrollView.contentOffset.x;
-    self.selectedIndex = offY / scrollView.frame.size.width;
-    
-    /** 设置topView bottomView */
-    [self wxm_setUpTopView:self.selectedIndex];
-    
+    self.selectedIndex = offY / scrollView.width;
+
+    /** 设置topView bottomView显示 */
+    [self wp_setUpTopView:self.selectedIndex];
+
     /** 设置原图大小 */
-    [self wxm_setBottomBarViewrealByte];
-    
+    [self wp_setBottomBarViewrealByte];
     
     if (self.dataSource.count < self.selectedIndex) return;
     
@@ -161,19 +156,19 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     if ([cell isKindOfClass:WXMPhotoPreviewCell.class] && WXMPhotoShowLivePhto) {
         [((WXMPhotoPreviewCell *)cell) startPlayLivePhoto];
     } else if ([cell isKindOfClass:WXMPhotoVideoCell.class] && WXMPhotoAutomaticVideo) {
-        [((WXMPhotoVideoCell *)cell) wxm_avPlayStartPlay:YES];
-        [self wxm_respondsToTapSingle:YES];
+        [((WXMPhotoVideoCell *)cell) wp_avPlayStartPlay:YES];
+        [self wp_respondsToTapSingle:YES];
     }
 }
 
-/** 获取当前图片的data大小 */
-- (void)wxm_setBottomBarViewrealByte {
+/** 获取当前图片的和视频的data大小 */
+- (void)wp_setBottomBarViewrealByte {
     if (WXMPhotoSelectOriginal) {
         WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
         BOOL video = (asset.mediaType == WXMPHAssetMediaTypeVideo && self.showVideo);
         CGFloat bytes = asset.bytes;
         if (bytes < 20 && !(asset.mediaType == WXMPHAssetMediaTypeVideo && !self.showVideo)) {
-            bytes = [WXMPhotoAssistant wxm_getOriginalSize:asset.asset];
+            bytes = [WXMPhotoAssistant wp_getOriginalSize:asset.asset];
             asset.bytes = bytes;
         }
         
@@ -189,6 +184,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
                 asset.bytes = data.length;
             }
         }
+        
         NSString * realByte = [NSString stringWithFormat:@"%.1fM", bytes / (1024 * 1024)];
         if (bytes / (1024 * 1024) < 0.1f) {
             realByte = [NSString stringWithFormat:@"%.0fk", (bytes / (1024))];
@@ -202,7 +198,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 #pragma mark  cell回调代理
 
 /** cell回调代理 单击回调 */
-- (void)wxm_respondsToTapSingle:(BOOL)plays {
+- (void)wp_respondsToTapSingle:(BOOL)plays {
     if (plays && !self.showToolbar) return;
     self.showToolbar = !self.showToolbar;
     self.topBarView.hidden = self.bottomBarView.hidden = !self.showToolbar;
@@ -211,11 +207,11 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 }
 
 /** 手势滑动代理回调 开始 */
-- (void)wxm_respondsBeginDragCell {
-    if (self.dragCallback) {
-        self.wxm_contentView = self.dragCallback();
-        self.wxm_contentView.maskView = self.maskBottomView;
-        [self.view insertSubview:self.wxm_contentView aboveSubview:self.wxm_windowView];
+- (void)wp_respondsBeginDragCell {
+    if ([self.refreshDelegate respondsToSelector:@selector(wp_getScreenshotsPhotoDetailViewController)]) {
+        self.wp_contentView = [self.refreshDelegate wp_getScreenshotsPhotoDetailViewController];
+        self.wp_contentView.maskView = self.maskBottomView;
+        [self.view insertSubview:self.wp_contentView aboveSubview:self.wp_windowView];
     }
     
     self.collectionView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0];
@@ -226,14 +222,14 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 }
 
 /** 手势滑动代理回调 结束 */
-- (void)wxm_respondsEndDragCell:(UIScrollView *)jump {
+- (void)wp_respondsEndDragCell:(UIScrollView *)jump {
     if (jump == nil) {
         self.collectionView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:1];
         if (self.showToolbar) [self.topBarView setAccordingState:YES];
         if (self.showToolbar) [self.bottomBarView setAccordingState:YES];
         [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
         self.collectionView.scrollEnabled = YES;
-        [self.wxm_contentView removeFromSuperview];
+        [self.wp_contentView removeFromSuperview];
     } else {
         self.transitionScrollView = jump;
         [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleDefault;
@@ -245,155 +241,156 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 #pragma mark 设置topview bottomBarView 属性
 
 /** 设置topview bottomBarView 属性 */
-- (void)wxm_setUpTopView:(NSInteger)location {
-    NSString *indexString = @(location).stringValue;
+- (void)wp_setUpTopView:(NSInteger)location {
+    WXMPhotoAsset *asset = self.dataSource[location];
+    WXMPhotoRecordModel *recordModel = [self.dictionaryArray objectForKey:asset.asset.localIdentifier];
+    self.topBarView.recordModel = recordModel;
+    self.bottomBarView.recordModel = recordModel;
     
-    /** 设置当前需要显示的signModel */
-    self.topBarView.signModel = [self.signObj objectForKey:indexString];
-    
-    /** 当前滚动到哪个 */
-    self.bottomBarView.seletedIdx = location;
-    
+    /** 视频不显示右按钮 */
+    self.topBarView.showRightButton = YES;
+    if (self.realSelectVideo == 1 && asset.mediaType == WXMPHAssetMediaTypeVideo) {
+        self.topBarView.showRightButton = NO;
+    }
+  
     /** 不支持同时选视频图片修改显示文字 */
-    if (WXMPhotoChooseVideo_Photo == NO) {
+    if (self.chooseVideoWithPhoto == NO) {
         WXMPhotoAsset *asset = self.dataSource[location];
         [self.topBarView setChooseType:self.chooseType asset:asset];
     }
 }
 
-#pragma mark  上工具栏回调
-#pragma mark  上工具栏回调
-#pragma mark  上工具栏回调
+#pragma mark  ---------------------------- 上工具栏回调
+#pragma mark  ---------------------------- 上工具栏回调
+#pragma mark  ---------------------------- 上工具栏回调
 
 /** 上工具栏回调 左按钮 */
-- (void)wxm_touchTopLeftItem {
+- (void)wp_touchTopLeftItem {
     self.navigationController.delegate = nil;
     [self.navigationController popViewControllerAnimated:YES];
 }
 
 /** 上工具栏回调 右按钮 */
-- (void)wxm_touchTopRightItem:(WXMPhotoSignModel *)obj {
+- (void)wp_touchTopRightItem:(WXMPhotoRecordModel *)recordModel {
     
-    /** 类型不同时不能选择 */
-    WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
-    BOOL isVideo = (self.chooseType == WXMPHAssetMediaTypeVideo);
-    BOOL assetVideo = (asset.mediaType == WXMPHAssetMediaTypeVideo);
-    if ((isVideo != assetVideo) &&
-        self.chooseType != WXMPHAssetMediaTypeNone &&
-        WXMPhotoChooseVideo_Photo == NO) {
-        return;
-    }
-    
-    /** 视频超过时长的 */
-    if (asset.mediaType == WXMPHAssetMediaTypeVideo &&
-        asset.asset.duration > WXMPhotoLimitVideoTime &&
-        WXMPhotoLimitVideoTime > 0) {
-        return;
-    }
-    
-    NSInteger maxCount = self.selectedMaxCount;
-    NSString *title = [NSString stringWithFormat:@"您最多可以选择%zd张图片", maxCount];
-    if (self.chooseType == WXMPHAssetMediaTypeVideo) {
-        title = [NSString stringWithFormat:@"您最多可以选择%zd个视频",maxCount];
-    }
-    
-    /** 选中个数超过最大 */
-    if (self.signObj.count >= maxCount && !obj) {
-        [self wxm_showAlertController:title];
-        return;
-    }
-    
-    /** 勾选回掉 */
-    if (self.signCallback)  {
-        self.signObj = self.signCallback(self.selectedIndex);
-        [self wxm_setUpTopView:self.selectedIndex];
-       
-        NSString *indexString = @(self.selectedIndex).stringValue;
-        WXMPhotoSignModel *signModel = [self.signObj objectForKey:indexString];
+    /** 新增一个 */
+    if (recordModel == nil) {
+        if (self.dictionaryArray.count >= self.realSelectCount) {
+            NSLog(@"%@",@"xxxxxxxxxxxx");
+            return;
+        }
+        
+        /** 添加一个 */
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:self.selectedIndex inSection:0];
         WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
-        CGSize size = CGSizeMake(WXMPhotoPreviewImageWH * 2, WXMPhotoPreviewImageWH * 2);
-        [[WXMPhotoManager sharedInstance] getPictures_customSize:asset.asset synchronous:YES assetSize:size completion:^(UIImage *image) {
-            signModel.image = image;
-            [self.bottomBarView setSignObj:self.signObj removeIdx:obj.rank];
-        }];
+        WXMPhotoRecordModel *recordModel = [WXMPhotoRecordModel new];
+        recordModel.recordAsset = asset;
+        recordModel.recordRank = (self.dictionaryArray.count + 1);
+        recordModel.recordIndexPath = indexPath;
+        recordModel.mediaType = asset.mediaType;
+        [self.dictionaryArray setObject:recordModel forKey:asset.asset.localIdentifier];
+        [self.bottomBarView addPhotoRecordModel:self.dictionaryArray];
+        [self wp_setUpTopView:self.selectedIndex];
+                           
+    } else {
+
+        /** 删除后重新排名 */
+        [self refreshRanking:recordModel.recordAsset.asset.localIdentifier];
+        [self.dictionaryArray removeObjectForKey:recordModel.recordAsset.asset.localIdentifier];
+        [self.bottomBarView deletePhotoRecordModel:self.dictionaryArray];
+        [self wp_setUpTopView:self.selectedIndex];
+    }
+    
+    /** 同步数据 */
+    if ([self.refreshDelegate respondsToSelector:@selector(wp_reloadPhotoDetailViewController)]) {
+        [self.refreshDelegate wp_reloadPhotoDetailViewController];
     }
 }
 
+/** 重新刷新排名 */
+- (void)refreshRanking:(NSString *)localIdentifier {
+    WXMPhotoRecordModel *delete = [self.dictionaryArray objectForKey:localIdentifier];
+    if (!delete) return;
+    for (WXMPhotoRecordModel *recordModel in self.dictionaryArray.allValues) {
+        if (delete == recordModel) continue;
+        if (recordModel.recordRank > delete.recordRank) {
+            recordModel.recordRank = MAX(recordModel.recordRank - 1, 1);
+        }
+    }
+}
+
+
 /** 下工具栏回调 */
-- (void)wxm_touchButtomDidSelectItem:(NSIndexPath *)idx {
+- (void)wp_touchButtomDidSelectItem:(NSIndexPath *)idexPath {
     UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
-    [self.collectionView scrollToItemAtIndexPath:idx atScrollPosition:position animated:NO];
-    [self wxm_setUpTopView:idx.row];
-    self.selectedIndex = idx.row;
+    [self.collectionView scrollToItemAtIndexPath:idexPath atScrollPosition:position animated:NO];
+    [self wp_setUpTopView:idexPath.row];
+    self.selectedIndex = idexPath.row;
     dispatch_async(dispatch_get_main_queue(), ^{
         CATransition *transition = [CATransition animation];
         transition.duration = 0.175;
         transition.type = kCATransitionFade;
         [self.collectionView.layer addAnimation:transition forKey:@"animations"];
-        [self wxm_setBottomBarViewrealByte];
+        [self wp_setBottomBarViewrealByte];
     });
 }
 
-/** 完成按钮 */
-- (void)wxm_touchButtomFinsh {
-    if (_previewType == WXMPhotoPreviewTypeSingle) {
-        [self wxm_singlePhotoSendImage];
-    } else if (_previewType == WXMPhotoPreviewTypeMost) {
-        [self wxm_morePhotoSendImage];
-    }
-}
+///** 完成按钮 */
+//- (void)wp_touchButtomFinsh {
+//    if (_previewType == WXMPhotoPreviewTypeSingle) {
+//        [self wp_singlePhotoSendImage];
+//    } else if (_previewType == WXMPhotoPreviewTypeMost) {
+//        [self wp_morePhotoSendImage];
+//    }
+//}
+//
+//#pragma mark  回调图片
+//#pragma mark  回调图片
+//#pragma mark  回调图片
+//
+///** 回调单张图片 */
+//- (void)wp_singlePhotoSendImage {
+//    WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
+//    if (self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
+//        self.photoType == WXMPhotoDetailTypeGetPhoto ||
+//        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) {
+//        CGSize size = CGSizeZero;
+//        if (self.photoType == WXMPhotoDetailTypeGetPhoto) size = PHImageManagerMaximumSize;
+//        if (self.photoType == WXMPhotoDetailTypeGetPhoto_256) size = CGSizeMake(256, 256);
+//    /** if (self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) size = self.expectSize; */
+//        if (self.bottomBarView.isOriginalImage == YES) size = PHImageManagerMaximumSize;
+//        [WXMResourceAssistant sendResource:asset
+//                                 coverSize:size
+//                                  delegate:self.delegate
+//                               isShowVideo:self.showVideo
+//                                isShowLoad:(self.photoType == WXMPhotoDetailTypeGetPhoto)
+//                            viewController:self.navigationController];
+//    }
+//}
+//
+///** 回调多张图片 */
+//- (void)wp_morePhotoSendImage {
+//    CGSize size = CGSizeZero;
+//
+//    if (self.bottomBarView.isOriginalImage) size = PHImageManagerMaximumSize;
+//    NSMutableArray * array = @[].mutableCopy;
+//    [self.dictionaryArray enumerateObjectsUsingBlock:^(WXMPhotoSignModel*obj,NSUInteger idx,BOOL stop) {
+//        WXMPhotoAsset *phsset = self.dataSource[obj.indexPath.row];
+//        if (phsset) [array addObject:phsset];
+//    }];
+//    [WXMResourceAssistant sendMoreResource:array
+//                                 coverSize:size
+//                                  delegate:self.delegate
+//                               isShowVideo:self.showVideo
+//                                isShowLoad:YES
+//                            viewController:self.navigationController];
+//}
 
-#pragma mark  回调图片
-#pragma mark  回调图片
-#pragma mark  回调图片
-
-/** 回调单张图片 */
-- (void)wxm_singlePhotoSendImage {
-    WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
-    if (self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
-        self.photoType == WXMPhotoDetailTypeGetPhoto ||
-        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) {
-        CGSize size = CGSizeZero;
-        if (self.photoType == WXMPhotoDetailTypeGetPhoto) size = PHImageManagerMaximumSize;
-        if (self.photoType == WXMPhotoDetailTypeGetPhoto_256) size = CGSizeMake(256, 256);
-        if (self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) size = self.expectSize;
-        if (self.bottomBarView.isOriginalImage == YES) size = PHImageManagerMaximumSize;
-        [WXMResourceAssistant sendResource:asset
-                                 coverSize:size
-                                  delegate:self.delegate
-                               isShowVideo:self.showVideo
-                                isShowLoad:(self.photoType == WXMPhotoDetailTypeGetPhoto)
-                            viewController:self.navigationController];
-    }
-}
-
-/** 回调多张图片 */
-- (void)wxm_morePhotoSendImage {
-    CGSize size = self.expectSize;
-    
-    if (self.bottomBarView.isOriginalImage) size = PHImageManagerMaximumSize;
-    NSMutableArray * array = @[].mutableCopy;
-    [self.signObj enumerateObjectsUsingBlock:^(WXMPhotoSignModel*obj,NSUInteger idx,BOOL stop) {
-        WXMPhotoAsset *phsset = self.dataSource[obj.indexPath.row];
-        if (phsset) [array addObject:phsset];
-    }];
-    [WXMResourceAssistant sendMoreResource:array
-                                 coverSize:size
-                                  delegate:self.delegate
-                               isShowVideo:self.showVideo
-                                isShowLoad:YES
-                            viewController:self.navigationController];
-}
-
-/** 目前选中的资源的类型 */
+/** 用户第一张选择的类型 */
 - (WXMPhotoMediaType)chooseType {
-    if (self.signObj.count == 0) return WXMPHAssetMediaTypeNone;
-    if (self.signObj.count > 0) {
-        WXMPhotoSignModel * signModel = self.signObj.firstObject;
-        if (signModel.mediaType == WXMPHAssetMediaTypeVideo) {
-            return WXMPHAssetMediaTypeVideo;
-        }
-    }
+    if (self.dictionaryArray.count == 0) return WXMPHAssetMediaTypeNone;
+    WXMPhotoSignModel * signModel = self.dictionaryArray.firstObject;
+    if (signModel.mediaType == WXMPHAssetMediaTypeVideo) return WXMPHAssetMediaTypeVideo;
     return WXMPHAssetMediaTypeImage;
 }
 
@@ -401,22 +398,24 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 #pragma mark 设置
 #pragma mark 设置
 
+/** 导航栏 */
 - (WXMPreviewTopBar *)topBarView {
     if (!_topBarView)  {
         _topBarView = [[WXMPreviewTopBar alloc] initWithFrame:CGRectZero];
         _topBarView.delegate = self;
-        if (_previewType == WXMPhotoPreviewTypeSingle) {
-            _topBarView.showRightButton = NO;
-        }
+        
+        /** 单选 */
+        if (_previewType == WXMPhotoPreviewTypeSingle) _topBarView.showRightButton = NO;
     }
     return _topBarView;
 }
 
+/** 工具栏 */
 - (WXMPreviewBottomBar *)bottomBarView {
     if (!_bottomBarView) {
         _bottomBarView = [[WXMPreviewBottomBar alloc] initWithFrame:CGRectZero];
         _bottomBarView.delegate = self;
-        [_bottomBarView setSignObj:self.signObj removeIdx: -1];
+        [_bottomBarView loadDictionaryArray:self.dictionaryArray];
         if (_isOriginalImage) [_bottomBarView setOriginalImage];
         if (_photoType == WXMPhotoDetailTypeGetPhoto_256 ||
             _photoType == WXMPhotoDetailTypeGetPhoto) {
@@ -450,29 +449,16 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     return _collectionView;
 }
 
+#pragma mark 动画用
+#pragma mark 动画用
+#pragma mark 动画用
+
 - (UIView *)maskBottomView {
     UIView * maskBottom = [UIView new];
     maskBottom.size = CGSizeMake(WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_BarHeight);
     maskBottom.top = WXMPhoto_BarHeight;
     maskBottom.backgroundColor = [UIColor blackColor];
     return maskBottom;
-}
-
-- (BOOL)showVideo {
-    if (self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
-        self.photoType == WXMPhotoDetailTypeTailoring) {
-        _showVideo = NO;
-    }
-    return _showVideo;
-}
-
-/** 提示框 */
-- (void)wxm_showAlertController:(NSString *)title {
-    [WXMPhotoAssistant showAlertViewControllerWithTitle:title
-                                                message:@""
-                                                 cancel:@"知道了"
-                                            otherAction:nil
-                                          completeBlock:nil];
 }
 
 - (UIScrollView *)transitionScrollerView {
@@ -511,7 +497,6 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
     UIImage * image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
-    
     UIBarMetrics metr = UIBarMetricsDefault;
     [self.weakNavigationVC.navigationBar setBackgroundImage:image forBarMetrics:metr];
 }
@@ -519,10 +504,9 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 - (void)dealloc {
     UIColor *whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:1.0];
     UIImage *image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
-    
     UIBarMetrics metr = UIBarMetricsDefault;
     [self.weakNavigationVC.navigationBar setBackgroundImage:image forBarMetrics:metr];
-    [self.wxm_windowView removeFromSuperview];
+    [self.wp_windowView removeFromSuperview];
     NSLog(@"释放 %@",NSStringFromClass(self.class));
 }
 

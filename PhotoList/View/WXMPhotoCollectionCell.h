@@ -7,36 +7,41 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "WXMPhotoConfiguration.h"
-#import "WXMPhotoSignModel.h"
 #import "WXMPhotoManager.h"
+#import "WXMPhotoSignModel.h"
+#import "WXMPhotoRecordModel.h"
+#import "WXMPhotoConfiguration.h"
+
+@class WXMPhotoCollectionCell;
+@protocol WXMPhotoCollectionCellDelegate <NSObject>
+- (void)wp_photoCollectionCellCheckBox:(WXMPhotoCollectionCell *)cell selected:(BOOL)selected;
+@end
 
 /** 单个相册CollectionViewCell*/
 @interface WXMPhotoCollectionCell : UICollectionViewCell
-@property (nonatomic, assign) BOOL showVideo;
-@property (nonatomic, assign) BOOL userCanTouch;
-@property (nonatomic, strong) NSIndexPath *indexPath;
-@property (nonatomic, copy) NSString *warningString;
-@property (nonatomic, copy) NSString *assetIdentifier;
 
-@property (nonatomic, assign) WXMPhotoDetailType photoType;
+/** 数据源 */
 @property (nonatomic, strong) WXMPhotoAsset *photoAsset;
-@property (nonatomic, strong) WXMPhotoSignModel *signModel;
-@property (nonatomic, weak) id<WXMPhotoSignProtocol> delegate;
 
-/** 设置button选中 */
-- (void)signButtonSelected:(BOOL)selected;
+/** 是否显示勾选框 */
+@property (nonatomic, assign) BOOL displayCheckBox;
 
-/** 刷新标号排名 */
-- (void)refreshRankingWithSignModel:(WXMPhotoSignModel *)signModel;
+/** 是否显示视频 NO会显示为视频第一帧 */
+@property (nonatomic, assign) BOOL showVideo;
 
-/** 设置蒙版 */
+/** 是否可以点击 */
+@property (nonatomic, assign) BOOL userCanTouch;
+
+/** 代理 */
+@property (nonatomic, assign) id<WXMPhotoCollectionCellDelegate>delegate;
+
+/** 选中的对象 */
+@property (nonatomic, strong) WXMPhotoRecordModel *recordModel;
+
+/** 设置选中按钮 */
+- (void)refreshRanking:(WXMPhotoRecordModel *)recordModel animation:(BOOL)animation;
+
+/** 显示遮罩 */
 - (void)setUserCanTouch:(BOOL)userCanTouch animation:(BOOL)animation;
-
-/** 多选模式下设置代理 */
-- (void)setDelegate:(id<WXMPhotoSignProtocol>)delegate
-          indexPath:(NSIndexPath *)indexPath
-          signModel:(WXMPhotoSignModel *)signModel
-          available:(BOOL)available;
 
 @end

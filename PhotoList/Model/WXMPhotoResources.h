@@ -17,8 +17,8 @@
 /** 视频data */
 @property (nonatomic, strong) NSData *resourceData;
 
-/** tag */
-@property (nonatomic, strong) NSString *resourceTag;
+/** 视频路径 */
+@property (nonatomic, strong) NSString *resourceUrl;
 
 /** 类型 */
 @property (nonatomic, assign) WXMPhotoMediaType mediaType;

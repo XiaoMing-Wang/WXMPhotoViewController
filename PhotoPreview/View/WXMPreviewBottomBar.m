@@ -8,6 +8,9 @@
 #import "WXMPhotoConfiguration.h"
 #import "WXMPreviewBottomBar.h"
 #import "WXMPhotoSignModel.h"
+#import "UIImage+WXMPhoto.h"
+#import "WXMPhotoRecordModel.h"
+#import "WXMBottomBarCollectionViewCell.h"
 
 @interface WXMPreviewBottomBar ()<UICollectionViewDelegate,UICollectionViewDataSource>
 @property (nonatomic, strong) UICollectionView *collectionView;
@@ -26,12 +29,12 @@
 @implementation WXMPreviewBottomBar
 
 - (instancetype)initWithFrame:(CGRect)frame {
-    if (self = [super initWithFrame:frame]) [self setupInterface];
+    if (self = [super initWithFrame:frame]) [self initializationInterface];
     return self;
 }
 
 /** 初始化界面 */
-- (void)setupInterface {
+- (void)initializationInterface {
     CGFloat h = 125;
     CGFloat y = WXMPhoto_Height - h - (kIPhoneX ? 35 : 0);
     self.frame = CGRectMake(0, y, WXMPhoto_Width, h);
@@ -56,12 +59,11 @@
     [self addSubview:self.photoView];
     [self addSubview:self.finshView];
     [self addSubview:self.line];
-    [self wxm_setUpFinshView];
+    [self wp_setUpFinshView];
 }
 
 /** finshView */
-- (void)wxm_setUpFinshView {
-    
+- (void)wp_setUpFinshView {
     CGFloat height = 30;
     CGFloat heightFinash = 45;
     self.originalButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 200, height)];
@@ -77,51 +79,94 @@
     self.originalButton.left = 15;
     self.originalButton.hidden = !WXMPhotoSelectOriginal;
     self.originalButton.centerY = heightFinash / 2;
-    [self.originalButton wc_setEnlargeEdgeWithTop:5 left:10 right:-120 bottom:0];
-    [self.originalButton wc_addTarget:self action:@selector(originalTouchEvents:)];
+    [self.originalButton wp_setEnlargeEdgeWithTop:5 left:10 right:-120 bottom:0];
+    [self.originalButton wp_addTarget:self action:@selector(originalTouchEvents:)];
     
+    UIImage *images = [UIImage imageFromColor:WXMSelectedColor];
     self.finishButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 60, height)];
     self.finishButton.layoutRight = 15;
     self.finishButton.centerY = heightFinash / 2 + 2;
-    self.finishButton.titleLabel.font = [UIFont systemFontOfSize:15];
+    self.finishButton.titleLabel.font = [UIFont systemFontOfSize:16];
     [self.finishButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [self.finishButton setTitle:@"完成" forState:UIControlStateNormal];
-    self.finishButton.backgroundColor = WXMSelectedColor;
+    [self.finishButton setBackgroundImage:images forState:UIControlStateNormal];
+    [self.finishButton wp_addTarget:self action:@selector(finishTouchEvents)];
     self.finishButton.layer.cornerRadius = 4;
-    [self.finishButton wc_addTarget:self action:@selector(finishTouchEvents)];
+    self.finishButton.layer.masksToBounds = YES;
     
     [self.finshView addSubview:self.originalButton];
     [self.finshView addSubview:self.finishButton];
 }
 
-
-- (void)setOriginalImage {
-    self.originalButton.selected = YES;
-    self.isOriginalImage = YES;
+/** 第一次加载 */
+- (void)loadDictionaryArray:(WXMDictionary_Array *)dictionaryArray {
+    _dictionaryArray = dictionaryArray;
+    [self.collectionView reloadData];
+    [self setFinashButtonCount:NO];
 }
 
-/** 原图选中 */
-- (void)originalTouchEvents:(UIButton *)sender {
-    sender.selected = !sender.selected;
-    _isOriginalImage = sender.selected;
-    [[NSNotificationCenter defaultCenter]
-     postNotificationName:WXMPhoto_originalNoti object:@(_isOriginalImage).stringValue];
+/** 新增一个 */
+- (void)addPhotoRecordModel:(WXMDictionary_Array *)dictionaryArray {
+    _dictionaryArray = dictionaryArray;
+    UICollectionViewScrollPosition po = UICollectionViewScrollPositionCenteredHorizontally;
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:dictionaryArray.count - 1 inSection:0];
+    [_collectionView insertItemsAtIndexPaths:@[indexPath]];
+    [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:po animated:YES];
+    
+    UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
+    cell.contentView.alpha = 0;
+    cell.contentView.transform = CGAffineTransformMakeScale(.1, .1);
+    [UIView animateWithDuration:0.35 animations:^{
+        cell.contentView.alpha = 1;
+        cell.contentView.transform = CGAffineTransformIdentity;
+    }];
+    [self setFinashButtonCount:(dictionaryArray.count == 1)];
 }
 
-/** 完成按钮 */
-- (void)finishTouchEvents {
-    if (self.delegate && [self.delegate respondsToSelector:@selector(wxm_touchButtomFinsh)]) {
-        [self.delegate wxm_touchButtomFinsh];
+/** 删除一个 */
+- (void)deletePhotoRecordModel:(WXMDictionary_Array *)dictionaryArray {
+    _dictionaryArray = dictionaryArray;
+    CGFloat width = _collectionView.contentSizeWidth - WXMPhotoPreviewImageWH - 12;
+    if (width < WXMPhoto_Width) {
+        CGPoint point = CGPointMake(-_collectionView.contentInsetLeft, 0);
+        [_collectionView setContentOffset:point animated:YES];
     }
+    
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:(self.recordModel.recordRank - 1) inSection:0];
+    [_collectionView deleteItemsAtIndexPaths:@[indexPath]];
+    [self setFinashButtonCount:(dictionaryArray.count == 0)];
 }
 
-/** 显示隐藏原图按钮 */
-- (void)setShowOriginalButton:(BOOL)showOriginalButton{
-    _showOriginalButton = showOriginalButton;
-    self.originalButton.hidden = !showOriginalButton;
+/** 滚动到那个记录的model */
+- (void)setRecordModel:(WXMPhotoRecordModel *)recordModel {
+    _recordModel = recordModel;
+    
+    WXMBottomBarCollectionViewCell *selectCell = nil;
+    for (WXMBottomBarCollectionViewCell *cell in self.collectionView.visibleCells) {
+        cell.isSelected = (recordModel == cell.recordModel);
+        if (cell.isSelected) selectCell = cell;
+    }
+    
+    if (!selectCell) return;
+    UICollectionViewScrollPosition po = UICollectionViewScrollPositionCenteredHorizontally;
+    NSIndexPath *indexPath = [_collectionView indexPathForCell:selectCell];
+    [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:po animated:YES];
 }
 
-/** 更新原图大小 */
+/** 设置按钮 */
+- (void)setFinashButtonCount:(BOOL)animations {
+    NSString *title = self.dictionaryArray.count ?
+    [NSString stringWithFormat:@"完成(%ld)",self.dictionaryArray.count] : @"完成";
+    [self.finishButton setTitle:title forState:UIControlStateNormal];
+    self.finishButton.width = (self.dictionaryArray.count > 0) ? 70 : 60;
+    self.finishButton.layoutRight = 15;
+    [UIView animateWithDuration:(animations ? 0.5 : 0) animations:^{
+        self.line.alpha = (self.dictionaryArray.count > 0);
+        self.photoView.alpha = (self.dictionaryArray.count > 0);
+    }];
+}
+
+/** 显示资源文件的大小和类型 */
 - (void)setRealImageByte:(NSString *)realImageByte video:(BOOL)video {
     _realImageByte = realImageByte;
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -143,84 +188,54 @@
     });
 }
 
-/** 赋值 0=增加 >0删除 -1刷新 */
-- (void)setSignObj:(WXMDictionary_Array *)signObj removeIdx:(NSInteger)idx {
-    _signObj = signObj;
-    NSString *title = signObj.count ?
-    [NSString stringWithFormat:@"完成(%ld)",signObj.count] : @"完成";
-    
-    [self.finishButton setTitle:title forState:UIControlStateNormal];
-    [UIView animateWithDuration:((idx > 0) ? 0.5 : 0) animations:^{
-        self.line.alpha = (signObj.count > 0);
-        self.photoView.alpha = (signObj.count > 0);
-    }];
-    
-    if (idx == -1) {
-        [self.collectionView reloadData];
-    } else if (idx == 0) {
-        UICollectionViewCell *lastCell = nil;
-        CGColorRef black = [UIColor clearColor].CGColor;
-        UICollectionViewScrollPosition po = UICollectionViewScrollPositionCenteredHorizontally;
-        
-        lastCell = [self.collectionView cellForItemAtIndexPath:_lastIndexPath];;
-        [lastCell.contentView viewWithTag:10086].layer.borderColor = black;
-                
-        NSInteger changeRow = MAX((signObj.count - 1), 0);
-        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:changeRow inSection:0];
-        [_collectionView insertItemsAtIndexPaths:@[indexPath]];
-        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:po animated:YES];
-        
-        UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
-        cell.contentView.alpha = 0;
-        cell.contentView.transform = CGAffineTransformMakeScale(.1, .1);
-        CGFloat duration = (signObj.count - 1 == 0) ? 0 : 0.35;
-        [UIView animateWithDuration:duration animations:^{
-            cell.contentView.alpha = 1;
-            cell.contentView.transform = CGAffineTransformIdentity;
-        }];
-    } else if (idx > 0) {
-        CGFloat width = _collectionView.contentSizeWidth - WXMPhotoPreviewImageWH - 12;
-        if (width < WXMPhoto_Width) {
-            CGPoint point = CGPointMake(-_collectionView.contentInsetLeft, 0);
-            [_collectionView setContentOffset:point animated:YES];
-        }
-        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:idx - 1 inSection:0];
-        [_collectionView deleteItemsAtIndexPaths:@[indexPath]];
+- (void)setOriginalImage {
+    self.originalButton.selected = YES;
+    self.isOriginalImage = YES;
+}
+
+/** 原图选中 */
+- (void)originalTouchEvents:(UIButton *)sender {
+    sender.selected = !sender.selected;
+    _isOriginalImage = sender.selected;
+    [[NSNotificationCenter defaultCenter]
+     postNotificationName:WXMPhoto_originalNoti object:@(_isOriginalImage).stringValue];
+}
+
+/** 完成按钮 */
+- (void)finishTouchEvents {
+    if (self.delegate && [self.delegate respondsToSelector:@selector(wp_touchButtomFinsh)]) {
+        [self.delegate wp_touchButtomFinsh];
     }
+}
+
+/** 显示隐藏原图按钮 */
+- (void)setShowOriginalButton:(BOOL)showOriginalButton{
+    _showOriginalButton = showOriginalButton;
+    self.originalButton.hidden = !showOriginalButton;
 }
 
 #pragma mark _____________________________________________UICollectionView dataSource
 
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    return self.signObj.count;
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)sec {
+    return self.dictionaryArray.count;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    UICollectionViewCell *cell =
+    WXMBottomBarCollectionViewCell *cell =
     [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
-    WXMPhotoSignModel * signModel = [self.signObj objectAtIndex:indexPath.row];
-    UIImageView * imageView = [cell.contentView viewWithTag:10086];
-    if (!imageView) {
-        imageView = [self createImageView];
-        [cell.contentView addSubview:imageView];
-    }
-    imageView.image = signModel.image;
-    imageView.layer.borderColor = [UIColor clearColor].CGColor;
-    if (self.seletedIdx == signModel.indexPath.row) {
-        self.lastIndexPath = indexPath;
-        imageView.layer.borderColor = WXMSelectedColor.CGColor;
-    }
+    WXMPhotoRecordModel *recordModel = [self.dictionaryArray objectAtIndex:indexPath.row];
+    cell.recordModel = recordModel;
+    cell.isSelected = (recordModel == self.recordModel);
     return cell;
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-    WXMPhotoSignModel * signModel = [self.signObj objectAtIndex:indexPath.row];
-    SEL sel = @selector(wxm_touchButtomDidSelectItem:);
+    WXMPhotoRecordModel *signModel = [self.dictionaryArray objectAtIndex:indexPath.row];
+    SEL sel = @selector(wp_touchButtomDidSelectItem:);
     if (self.delegate && [self.delegate respondsToSelector:sel]) {
-        [self.delegate wxm_touchButtomDidSelectItem:signModel.indexPath];
+        [self.delegate wp_touchButtomDidSelectItem:signModel.recordIndexPath];
     }
-
 }
 
 /** 显示隐藏 */
@@ -239,8 +254,8 @@
     if (self.lastSeleIdx != seletedIdx) {
         [self.collectionView reloadData];
         self.lastSeleIdx = seletedIdx;
-        WXMPhotoSignModel * signModel = [self.signObj objectForKey:@(seletedIdx).stringValue];
-        NSInteger idx = [self.signObj indexOfObject:signModel];
+        WXMPhotoSignModel * signModel = [self.dictionaryArray objectForKey:@(seletedIdx).stringValue];
+        NSInteger idx = [self.dictionaryArray indexOfObject:signModel];
         UICollectionViewScrollPosition po= UICollectionViewScrollPositionCenteredHorizontally;
         if (idx >= 0) {
             NSIndexPath *inPath = [NSIndexPath indexPathForRow:idx inSection:0];
@@ -268,21 +283,10 @@
         _collectionView.alwaysBounceVertical = NO;
         _collectionView.alwaysBounceHorizontal = YES;
         _collectionView.contentInset = UIEdgeInsetsMake(0, 10, 0, 10);
-        [_collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"cell"];
+        [_collectionView registerClass:[WXMBottomBarCollectionViewCell class] forCellWithReuseIdentifier:@"cell"];
     }
     return _collectionView;
 }
 
-/** 创建预览imageview */
-- (UIImageView *)createImageView {
-    UIImageView * imageView = [[UIImageView alloc] initWithFrame:CGRectZero];
-    imageView.clipsToBounds = YES;
-    imageView.size = CGSizeMake(WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
-    imageView.layer.borderWidth = 1.5;
-    imageView.contentMode = UIViewContentModeScaleAspectFill;
-    imageView.layer.borderColor = [UIColor clearColor].CGColor;
-    imageView.tag = 10086;
-    return imageView;
-}
 @end
 

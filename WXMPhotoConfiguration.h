@@ -6,9 +6,9 @@
 //  Copyright © 2019年 wq. All rights reserved.
 //
 #define kIPhoneX \
-({BOOL isPhoneX = NO;\
-if (@available(iOS 11.0, *)) {\
-isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bottom > 0.0;\
+({ BOOL isPhoneX = NO; \
+if (@available(iOS 11.0, *)) { \
+   isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bottom > 0.0;\
 }\
 (isPhoneX);})
 
@@ -17,6 +17,7 @@ isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bo
 #define WXMPhoto_Height [UIScreen mainScreen].bounds.size.height
 
 #define WXMPhoto_BarHeight ((kIPhoneX) ? 88.0f : 64.0f)
+#define WXMPhoto_SafeHeight ((kIPhoneX) ? 35.0f : 0.0f)
 
 #define WXMPhoto_KWindow [[[UIApplication sharedApplication] delegate] window]
 
@@ -28,6 +29,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 #ifndef WXMPhotoConfiguration_h
 #define WXMPhotoConfiguration_h
+
 #import <UIKit/UIKit.h>
 #import "UIView+WXMPhoto.h"
 #import "WXMPhotoSignModel.h"
@@ -55,7 +57,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoCompressionRatio 0.3
 
 /** 限制可选视频最大时间长度 */
-#define WXMPhotoLimitVideoTime 15
+#define WXMPhotoLimitVideoTime 10
 
 /** 全局是否支持显示视频 (NO会显示视频的第一帧 且WXMPhotoViewController设置showVideo也无效)*/
 #define WXMPhotoSupportVideo YES
@@ -64,10 +66,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoShowGIFSign NO
 
 /** 是否可以选择原图 */
-#define WXMPhotoSelectOriginal NO
-
-/** 裁剪是否显示GIF */
-#define WXMPhotoTailoringShowGIFSign  (WXMPhotoShowGIFSign && NO)
+#define WXMPhotoSelectOriginal YES
 
 /** 是否显示视频标志 WXMPhotoDetailViewController */
 #define WXMPhotoShowVideoSign (WXMPhotoSupportVideo && YES)
@@ -148,6 +147,15 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** 裁剪框边距 */
 #define WXMPhotoCropBoxMargin 20
 
+/** list cell高度 */
+#define WXMPhotoListCellH 80
+
+/** list个数 */
+#define WXMPhotoListCellCount (WXMPhoto_Width == 320 ? 5 : (WXMPhoto_Width == 375 ? 6 : 7))
+
+/** 全屏 */
+/** #define WXMPhotoListCellCount 0 */
+
 /** 类型 */
 typedef NS_ENUM(NSInteger, WXMPhotoDetailType) {
     WXMPhotoDetailTypeGetPhoto = 0,             /* 单选原图大小 */
@@ -169,38 +177,44 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 
 /** cover 封面(除256和原图外设置用户可设置返回图片大小 不设置返回预览时大小) */
 /** data 选中image时返回宏设置压缩比大小(默认大约为原图1/4大小 视频和gif返回原始data) */
-- (void)wxm_singlePhotoAlbumWithResources:(WXMPhotoResources *)resource;
-- (void)wxm_morePhotoAlbumWithResources:(NSArray<WXMPhotoResources *>*)resource;
+- (void)wp_singlePhotoAlbumWithResources:(WXMPhotoResources *)resource;
+- (void)wp_morePhotoAlbumWithResources:(NSArray<WXMPhotoResources *>*)resource;
 @end
 
 #pragma mark _____________________________________________ 多选模式
+
 /** 点击标记Sign选中view回调 WXMPhotoDetailTypeMultiSelect模式 */
 @protocol WXMPhotoSignProtocol <NSObject>
 - (NSInteger)touchWXMPhotoSignView:(NSIndexPath *)index selected:(BOOL)selected;
-- (NSInteger)wxm_maxCountPhotoNumber;
-- (void)wxm_cantTouchWXMPhotoSignView:(WXMPhotoMediaType)mediaType;
+- (NSInteger)wp_maxCountPhotoNumber;
+- (void)wp_cantTouchWXMPhotoSignView:(WXMPhotoMediaType)mediaType;
 @end
 
 /** 预览缩放cell回调 */
 @protocol WXMPreviewCellProtocol <NSObject>
-- (void)wxm_respondsToTapSingle:(BOOL)plays;
-- (void)wxm_respondsBeginDragCell;
-- (void)wxm_respondsEndDragCell:(UIScrollView *)jump;
+- (void)wp_respondsToTapSingle:(BOOL)plays;
+- (void)wp_respondsBeginDragCell;
+- (void)wp_respondsEndDragCell:(UIScrollView *)jump;
+@end
+
+/** 查看详情标题栏 */
+@protocol WXMDetailTitleBarProtocol <NSObject>
+- (void)wp_touchTitleBarWithUnfold:(BOOL)unfold;
+- (void)wp_changePhotoList:(WXMPhotoList *)photoList;
 @end
 
 /** 查看详情工具栏回调 */
 @protocol WXMDetailToolbarProtocol <NSObject>
-- (void)wxm_touchPreviewControl;
-- (void)wxm_touchDismissViewController;
-
+- (void)wp_touchPreviewControl;
+- (void)wp_touchDismissViewController;
 @end
 
 /** 预览上下工具栏回调 */
 @protocol WXMPreviewToolbarProtocol <NSObject>
-- (void)wxm_touchTopLeftItem;
-- (void)wxm_touchTopRightItem:(id)obj;
-- (void)wxm_touchButtomFinsh;
-- (void)wxm_touchButtomDidSelectItem:(NSIndexPath *)idx;
+- (void)wp_touchTopLeftItem;
+- (void)wp_touchTopRightItem:(id)obj;
+- (void)wp_touchButtomFinsh;
+- (void)wp_touchButtomDidSelectItem:(NSIndexPath *)idx;
 @end
 
 

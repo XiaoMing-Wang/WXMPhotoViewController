@@ -12,10 +12,10 @@
 #import "WXMPhotoManager.h"
 
 @implementation WXMPhotoAssistant
-static char wxm_Photoline;
+static char wp_Photoline;
 
 /** loadingView */
-+ (void)wxm_showLoadingView:(UIView *)supView {
++ (void)wp_showLoadingView:(UIView *)supView {
     UIView *hud = [UIView new];
     hud.frame = CGRectMake(0, 0, 78, 78);
     hud.backgroundColor = [UIColor colorWithRed:23/255. green:23/255. blue:23/255. alpha:0.90];
@@ -48,9 +48,9 @@ static char wxm_Photoline;
 }
 
 /** 显示导航1px线条 */
-+ (void)wxm_navigationLine:(UINavigationController *)nav show:(BOOL)show {
++ (void)wp_navigationLine:(UINavigationController *)nav show:(BOOL)show {
     if (!nav) return;
-    CALayer *line = objc_getAssociatedObject(nav, &wxm_Photoline);
+    CALayer *line = objc_getAssociatedObject(nav, &wp_Photoline);
     if (line && show == NO) line.hidden = YES;
     if (show == NO) return;;
     
@@ -59,13 +59,13 @@ static char wxm_Photoline;
         line.frame = CGRectMake(0, 44, WXMPhoto_Width, 0.5);
         line.backgroundColor = WXMBarLineColor.CGColor;
         [nav.navigationBar.layer addSublayer:line];
-        objc_setAssociatedObject(nav, &wxm_Photoline, line, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(nav, &wp_Photoline, line, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     line.hidden = NO;
 }
 
 /** 获取 UIBarButtonItem*/
-+ (UIBarButtonItem *)wxm_createButtonItem:(NSString *)title
++ (UIBarButtonItem *)wp_createButtonItem:(NSString *)title
                                    target:(id)target
                                    action:(SEL)action {
     UIBarButtonItem *buttonItem = [[UIBarButtonItem alloc]
@@ -79,7 +79,7 @@ static char wxm_Photoline;
 }
 
 /** 获取原始图大小 */
-+ (CGFloat)wxm_getOriginalSize:(PHAsset *)asset {
++ (CGFloat)wp_getOriginalSize:(PHAsset *)asset {
     @autoreleasepool {
         PHAssetResource *resource = [[PHAssetResource assetResourcesForAsset:asset] firstObject];
         long long size = [[resource valueForKey:@"fileSize"] longLongValue];

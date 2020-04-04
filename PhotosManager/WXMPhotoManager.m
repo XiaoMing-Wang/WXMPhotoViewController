@@ -65,33 +65,6 @@ static WXMPhotoManager *manager = nil;
     return manager;
 }
 
-/** 是否有权限 */
-- (BOOL)photoPermission {
-    if (PHPhotoLibrary.authorizationStatus == AVAuthorizationStatusNotDetermined ||
-        PHPhotoLibrary.authorizationStatus == AVAuthorizationStatusAuthorized) {
-        return YES;
-    }
-    
-    NSString *msg = @"请在系统设置中打开“允许访问照片”，否则将无法获取照片";
-    UIAlertController*al= [UIAlertController alertControllerWithTitle:@"提示"
-                                                              message:msg
-                                                       preferredStyle:1];
-    
-    UIAlertAction *cancle = [UIAlertAction actionWithTitle:@"取消" style:1 handler:nil];
-    UIAlertAction *action = [UIAlertAction actionWithTitle:@"去开启" style:0 handler:^(UIAlertAction *acs) {
-        NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
-        [[UIApplication sharedApplication] openURL:url];
-    }];
-    [al addAction:cancle];
-    [al addAction:action];
-    
-    UIWindow * window = [[[UIApplication sharedApplication] delegate] window];
-    UIViewController * root = nil;
-    root = window.rootViewController.presentedViewController?:window.rootViewController;
-    [root presentViewController:al animated:YES completion:nil];
-    return NO;
-}
-
 /** 相册名称转换 */
 - (NSString *)transformAblumTitle:(NSString *)title {
     if ([title isEqualToString:@"Slo-mo"]) return @"慢动作";
@@ -112,7 +85,7 @@ static WXMPhotoManager *manager = nil;
     return title;
 }
 
-/** 获得所有的相册对象*/
+/** 获得所有的相册对象 */
 - (void)getAllPicturesListBlock:(void(^)(NSArray<WXMPhotoList *> *))callback {
     if (self.picturesArray.count > 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -209,6 +182,7 @@ static WXMPhotoManager *manager = nil;
                    completion:(void (^)(UIImage *AssetImage))completion {
     
     PHImageRequestOptions *option = [[PHImageRequestOptions alloc] init];
+    
     /**
      resizeMode：对请求的图像怎样缩放。有三种选择：
      None，不缩放； PHImageRequestOptionsResizeModeNone
@@ -223,24 +197,28 @@ static WXMPhotoManager *manager = nil;
      */
     
     /** 控制照片尺寸 */
+    //None，不缩放； PHImageRequestOptionsResizeModeNone
+    //Fast，尽快地提供接近或稍微大于要求的尺寸；
+    //Exact，精准提供要求的尺寸。PHImageRequestOptionsResizeModeExact
     option.resizeMode = resizeMode;
 
     /** 控制照片质量 */
+    //Opportunistic，在速度与质量中均衡；
+    //HighQualityFormat，不管花费多长时间，提供高质量图像；
+    //FastFormat，以最快速度提供好的质量。
     option.deliveryMode = deliveryMode;
 
     /** 是否同步获取 */
     if (synchronous == YES) option.synchronous = YES;
     
-    CGSize size = assetSize;
-    if (original) {
-        size = PHImageManagerMaximumSize;
-    }  else {
-        size = assetSize;
-    }
+    CGSize size;
+    if (original) size = CGSizeMake(asset.pixelWidth * 1.0, asset.pixelHeight * 1.0);
+    else size = assetSize;
+        
+    /** 下载图片 iCloud */
+    option.networkAccessAllowed = YES;
     
-    /** 下载图片 */
-    /** option.networkAccessAllowed = YES; */
-    /**  targetSize 即你想要的图片尺寸，若想要原尺寸则可输入PHImageManagerMaximumSize */
+    /** targetSize 即你想要的图片尺寸，若想要原尺寸则可输入PHImageManagerMaximumSize */
     int32_t requestID = [[PHCachingImageManager defaultManager] requestImageForAsset:asset targetSize:size contentMode:PHImageContentModeAspectFill options:option resultHandler:^(UIImage *image, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (completion) completion(image);
@@ -249,10 +227,10 @@ static WXMPhotoManager *manager = nil;
     return requestID;
 }
 
-/** 获取高质量原图 */
-- (int32_t)getPictures_original:(PHAsset *)asset
-                    synchronous:(BOOL)synchronous
-                     completion:(void (^)(UIImage *AssetImage))completion {
+/** 同步获取高质量原图 */
+- (int32_t)getPicturesOriginal:(PHAsset *)asset
+                   synchronous:(BOOL)synchronous
+                    completion:(void (^)(UIImage *AssetImage))completion {
     
     /** PHImageRequestOptionsResizeModeExact精准大小 */
     return [self getPicturesByAsset:asset
@@ -264,17 +242,16 @@ static WXMPhotoManager *manager = nil;
                          completion:completion];
 }
 
-/** 获取自定义尺寸 设置PHImageRequestOptionsResizeModeExact是有效 */
-- (int32_t)getPictures_customSize:(PHAsset *)asset
-                      synchronous:(BOOL)synchronous
-                        assetSize:(CGSize)assetSize
-                       completion:(void (^)(UIImage *image))completion {
-    
+/** 获取自定义尺寸 只有设置PHImageRequestOptionsResizeModeExact才有效 */
+- (int32_t)getPicturesCustomSize:(PHAsset *)asset
+                     synchronous:(BOOL)synchronous
+                       assetSize:(CGSize)assetSize
+                      completion:(void (^)(UIImage *image))completion {
     return [self getPicturesByAsset:asset
                         synchronous:synchronous
                            original:NO
                           assetSize:assetSize
-                         resizeMode:PHImageRequestOptionsResizeModeFast
+                         resizeMode:PHImageRequestOptionsResizeModeExact
                        deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
                          completion:completion];
 }
@@ -284,20 +261,19 @@ static WXMPhotoManager *manager = nil;
                              size:(CGSize)size
                        completion:(void (^)(UIImage *image))comple {
     
-    if (CGSizeEqualToSize(size, CGSizeZero) ||
-        CGSizeEqualToSize(size, PHImageManagerMaximumSize)) {
-        return [self getPictures_original:asset
-                              synchronous:YES
-                               completion:comple];
-    } else {
-        return [self getPicturesByAsset:asset
-                            synchronous:YES
-                               original:NO
-                              assetSize:size
-                             resizeMode:PHImageRequestOptionsResizeModeExact
-                           deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
-                             completion:comple];
+    if (CGSizeEqualToSize(size, CGSizeZero) || CGSizeEqualToSize(size, PHImageManagerMaximumSize)) {
+        size = CGSizeMake(asset.pixelWidth * 1.0, asset.pixelHeight * 1.0);
     }
+    
+    CGFloat expectedW = size.width;
+    CGFloat expectedH = size.height;
+    if (expectedW > asset.pixelWidth * 1.0 || expectedH > asset.pixelHeight * 1.0) {
+        expectedW = asset.pixelWidth * 1.0;
+        expectedH = asset.pixelHeight * 1.0;;
+    }
+    
+    size = CGSizeMake(expectedW, expectedH);
+    return [self getPicturesCustomSize:asset synchronous:YES assetSize:size completion:comple];
 }
 
 /** GIF */

@@ -8,13 +8,14 @@
 //预览模式导航栏
 #import <UIKit/UIKit.h>
 #import "WXMPhotoSignModel.h"
+#import "WXMPhotoRecordModel.h"
 
 @interface WXMPreviewTopBar : UIView
 
 /** 显示左右按钮 */
 @property (nonatomic, assign) BOOL showLeftButton;
 @property (nonatomic, assign) BOOL showRightButton;
-@property (nonatomic, strong) WXMPhotoSignModel *signModel;
+@property (nonatomic, strong) WXMPhotoRecordModel *recordModel;
 @property (nonatomic, assign) id<WXMPreviewToolbarProtocol> delegate;
 
 /** 显示隐藏 */
@@ -22,4 +23,5 @@
 
 /** 目前选中的是那种资源 video image no三种 */
 - (void)setChooseType:(WXMPhotoMediaType)chooseType asset:(WXMPhotoAsset *)asset;
+
 @end

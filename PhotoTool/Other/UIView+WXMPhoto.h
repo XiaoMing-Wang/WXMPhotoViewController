@@ -48,11 +48,11 @@
 @interface UIButton (WXMPhoto)
 
 /** 点击 block */
-- (void)wc_addTarget:(id)target action:(SEL)action;
-- (void)wxm_setBackgroundImage:(NSString *)imageName;
+- (void)wp_addTarget:(id)target action:(SEL)action;
+- (void)wp_setBackgroundImage:(NSString *)imageName;
 
 /** 扩大Button的点击范围 */
-- (void)wc_setEnlargeEdgeWithTop:(CGFloat)top
+- (void)wp_setEnlargeEdgeWithTop:(CGFloat)top
                              left:(CGFloat)left
                             right:(CGFloat)right
                            bottom:(CGFloat)bottom;

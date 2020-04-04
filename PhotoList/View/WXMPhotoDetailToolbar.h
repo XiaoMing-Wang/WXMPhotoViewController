@@ -13,7 +13,7 @@
 @interface WXMPhotoDetailToolbar : UIView
 
 /** 存储被标记的图片model */
-@property (nonatomic, strong) WXMDictionary_Array *signObj;
+@property (nonatomic, strong) WXMDictionary_Array *dictionaryArray;
 
 /** 是否选取原图 */
 @property (nonatomic, assign, readonly) BOOL isOriginalImage;
@@ -22,6 +22,6 @@
 @property (nonatomic, assign) BOOL originalEnabled;
 
 /** 代理 */
-@property (nonatomic, weak) id<WXMDetailToolbarProtocol> detailDelegate;
+@property (nonatomic, weak) id<WXMDetailToolbarProtocol> delegate;
 
 @end
