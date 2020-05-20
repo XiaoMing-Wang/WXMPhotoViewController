@@ -17,10 +17,10 @@ static int errorCount = 0;
                     avAsset:(AVURLAsset *)avAsset
                    callback:(void (^)(BOOL success))callback {
     
-    if (DEBUG) {
-        NSLog(@"==================================压缩视频-输入地址 %@",inputString);
-        NSLog(@"==================================压缩视频-输出地址 %@",outString);
-    }
+#if DEBUG
+    NSLog(@"==================================压缩视频-输入地址 %@",inputString);
+    NSLog(@"==================================压缩视频-输出地址 %@",outString);
+#endif
     
     CGFloat bitys = [self fileSize:[NSURL URLWithString:inputString]];
     
