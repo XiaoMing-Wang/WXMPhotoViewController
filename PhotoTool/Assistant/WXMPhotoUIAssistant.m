@@ -6,16 +6,16 @@
 //  Copyright © 2019年 wq. All rights reserved.
 //
 
-#import "WXMPhotoAssistant.h"
+#import "WXMPhotoUIAssistant.h"
 #import "WXMPhotoConfiguration.h"
 #import <objc/runtime.h>
 #import "WXMPhotoManager.h"
 
-@implementation WXMPhotoAssistant
+@implementation WXMPhotoUIAssistant
 static char wp_Photoline;
 
 /** loadingView */
-+ (void)wp_showLoadingView:(UIView *)supView {
++ (void)showLoadingView:(UIView *)supView {
     UIView *hud = [UIView new];
     hud.frame = CGRectMake(0, 0, 78, 78);
     hud.backgroundColor = [UIColor colorWithRed:23/255. green:23/255. blue:23/255. alpha:0.90];
@@ -30,7 +30,7 @@ static char wp_Photoline;
 }
 
 /** 根据颜色回执图片 */
-+ (UIImage *)wxmPhoto_imageWithColor:(UIColor *)color {
++ (UIImage *)photoImageWithColor:(UIColor *)color {
     CGRect rect = CGRectMake(0, 0, 1, 1);
     UIGraphicsBeginImageContext(rect.size);
     CGContextRef context = UIGraphicsGetCurrentContext();
@@ -42,13 +42,13 @@ static char wp_Photoline;
 }
 
 /** 获取截图view */
-+ (UIView *)wxmPhoto_snapViewImage:(UIView *)screenshots {
++ (UIView *)photoSnapViewImage:(UIView *)screenshots {
     UIView *snapView = [screenshots snapshotViewAfterScreenUpdates:YES];
     return snapView;
 }
 
 /** 显示导航1px线条 */
-+ (void)wp_navigationLine:(UINavigationController *)nav show:(BOOL)show {
++ (void)navigationLine:(UINavigationController *)nav show:(BOOL)show {
     if (!nav) return;
     CALayer *line = objc_getAssociatedObject(nav, &wp_Photoline);
     if (line && show == NO) line.hidden = YES;
@@ -65,21 +65,14 @@ static char wp_Photoline;
 }
 
 /** 获取 UIBarButtonItem*/
-+ (UIBarButtonItem *)wp_createButtonItem:(NSString *)title
-                                   target:(id)target
-                                   action:(SEL)action {
-    UIBarButtonItem *buttonItem = [[UIBarButtonItem alloc]
-                                   initWithTitle:title
-                                   style:UIBarButtonItemStylePlain
-                                   target:target
-                                   action:action];
-    
++ (UIBarButtonItem *)createButtonItem:(NSString *)title target:(id)target action:(SEL)action {
+    UIBarButtonItem *buttonItem = [[UIBarButtonItem alloc] initWithTitle:title style:UIBarButtonItemStylePlain target:target action:action];
     buttonItem.tintColor = WXMBarTitleColor;
     return buttonItem;
 }
 
 /** 获取原始图大小 */
-+ (CGFloat)wp_getOriginalSize:(PHAsset *)asset {
++ (CGFloat)getOriginalSize:(PHAsset *)asset {
     @autoreleasepool {
         PHAssetResource *resource = [[PHAssetResource assetResourcesForAsset:asset] firstObject];
         long long size = [[resource valueForKey:@"fileSize"] longLongValue];
@@ -87,17 +80,19 @@ static char wp_Photoline;
     }
 }
 
+/** 获取原始图大小 */
++ (CGFloat)getOriginalMultipartfile:(PHAsset *)asset {
+    @autoreleasepool {
+        CGFloat bytes = [self getOriginalSize:asset];
+        CGFloat multipartfile = bytes / (1024 * 1024);
+        return multipartfile;
+    }
+}
+
 /** 警告框 AlertViewController */
-+ (void)showAlertViewControllerWithTitle:(NSString *)title
-                                 message:(NSString *)message
-                                  cancel:(NSString *)cancleString
-                             otherAction:(NSArray *)otherAction
-                           completeBlock:(void (^)(NSInteger index))block {
++ (void)showAlertViewControllerWithTitle:(NSString *)title message:(NSString *)message cancel:(NSString *)cancleString otherAction:(NSArray *)otherAction  completeBlock:(void (^)(NSInteger index))block {
     
-    UIAlertController *alert=[UIAlertController alertControllerWithTitle:title
-                                                                 message:message
-                                                          preferredStyle:1];
-    
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:1];
     UIAlertAction *cancle = [UIAlertAction actionWithTitle:cancleString style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
         if (block) block(0);
     }];

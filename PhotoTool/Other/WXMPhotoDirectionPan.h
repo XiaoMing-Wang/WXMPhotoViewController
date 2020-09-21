@@ -22,7 +22,7 @@ typedef enum {
 
 } DirectionPangestureRecognizerDirection;
 
-@interface WXMDirectionPanGestureRecognizer : UIPanGestureRecognizer {
+@interface WXMPhotoDirectionPan : UIPanGestureRecognizer {
   @public
     BOOL _drag;
     int _moveX;

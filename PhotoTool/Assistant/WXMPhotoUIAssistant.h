@@ -10,25 +10,26 @@
 #import <Foundation/Foundation.h>
 @class PHAsset;
 
-@interface WXMPhotoAssistant : NSObject
+@interface WXMPhotoUIAssistant : NSObject
 
 /** loadingView */
-+ (void)wp_showLoadingView:(UIView *)supView;
++ (void)showLoadingView:(UIView *)supView;
 
 /** 根据颜色绘制图片 */
-+ (UIImage *)wxmPhoto_imageWithColor:(UIColor *)color;
++ (UIImage *)photoImageWithColor:(UIColor *)color;
 
 /** 获取截图view */
-+ (UIView *)wxmPhoto_snapViewImage:(UIView *)screenshots;
++ (UIView *)photoSnapViewImage:(UIView *)screenshots;
 
 /** 显示导航1px线条 */
-+ (void)wp_navigationLine:(UINavigationController *)nav show:(BOOL)show;
++ (void)navigationLine:(UINavigationController *)nav show:(BOOL)show;
 
 /** 获取原始图大小 */
-+ (CGFloat)wp_getOriginalSize:(PHAsset *)asset;
++ (CGFloat)getOriginalSize:(PHAsset *)asset;
++ (CGFloat)getOriginalMultipartfile:(PHAsset *)asset;
 
 /** 获取 ButtonItem */
-+ (UIBarButtonItem *)wp_createButtonItem:(NSString *)title
++ (UIBarButtonItem *)createButtonItem:(NSString *)title
                                    target:(id)target
                                    action:(SEL)action;
 

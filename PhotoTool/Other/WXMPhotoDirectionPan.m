@@ -6,15 +6,16 @@
 //  Copyright © 2019年 wq. All rights reserved.
 //
 
-#import "WXMDirectionPanGestureRecognizer.h"
+#import "WXMPhotoDirectionPan.h"
 int const static kDirectionPanThreshold = 5;
 
-@implementation WXMDirectionPanGestureRecognizer
+@implementation WXMPhotoDirectionPan
 
 @synthesize direction = _direction;
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesMoved:touches withEvent:event];
+    
     if (self.state == UIGestureRecognizerStateFailed) return;
     CGPoint nowPoint = [[touches anyObject] locationInView:self.view];
     CGPoint prevPoint = [[touches anyObject] previousLocationInView:self.view];
