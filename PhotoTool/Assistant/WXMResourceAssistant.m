@@ -16,20 +16,23 @@ NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES).f
 
 /** 缓存文件夹 */
 #define kCachePath \
-[kLibraryboxPath stringByAppendingPathComponent:@"WXMCACHE"]
+[kLibraryboxPath stringByAppendingPathComponent:@"Caches"]
 
-#define kTargetPath \
-[kCachePath stringByAppendingPathComponent:@"PhotoAlbumModule"]
+#define kTargetPath kCachePath
 
+#include <zlib.h>
+#include <CommonCrypto/CommonCrypto.h>
+#import <CoreText/CoreText.h>
+#import <objc/runtime.h>
 #import "WXMResourceAssistant.h"
-#import "WXMPhotoAssistant.h"
+#import "WXMPhotoUIAssistant.h"
 #import "WXMPhotoResources.h"
 #import "WXMCompression.h"
 
 @implementation WXMResourceAssistant
+
 /**
  有封面图的情况下回调
- 
  @param asset 图片资源
  @param coverImage 封面(传过来)
  @param delegate 代理
@@ -41,7 +44,7 @@ NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES).f
       viewController:(UIViewController *)controller {
     
     if (isShowLoad && WXMPhotoSelectedImageReturnData) {
-        [WXMPhotoAssistant wp_showLoadingView:controller.view];
+        [WXMPhotoUIAssistant showLoadingView:controller.view];
         controller.view.userInteractionEnabled = NO;
     }
     
@@ -89,9 +92,7 @@ NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES).f
     }
 }
 
-+ (void)getCoverImage:(PHAsset *)asset
-            coverSize:(CGSize)coverSize
-           completion:(void (^)(UIImage *image))completion {
++ (void)getCoverImage:(PHAsset *)asset coverSize:(CGSize)coverSize completion:(void (^)(UIImage *image))completion {
     [WXMManager synchronousGetPictures:asset size:coverSize completion:^(UIImage *image) {
         if (image && completion) completion(image);
         if (!image) [WXMManager getPicturesOriginal:asset synchronous:YES completion:completion];
@@ -112,19 +113,14 @@ NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES).f
               isShowLoad:(BOOL)isShowLoad
           viewController:(UIViewController *)controller {
         
-    if (delegate == nil || array.count == 0 ||
-        ![delegate respondsToSelector:@selector(wp_morePhotoAlbumWithResources:)]) {
+    if (delegate == nil || array.count == 0 || ![delegate respondsToSelector:@selector(wp_morePhotoAlbumWithResources:)]) {
         [controller dismissViewControllerAnimated:YES completion:nil];
         return;
     }
    
-    /** 图片转化成data 建议自行转化 */
+    /** 图片转化成data */
     BOOL supportVideo = (isShowVideo && WXMPhotoSupportVideo);
-    if (WXMPhotoSelectedImageReturnData || array.count >= 3) {
-        [WXMPhotoAssistant wp_showLoadingView:controller.view];
-        controller.view.userInteractionEnabled = NO;
-    }
-    
+     
     /** 回调 */
     void (^callback)(NSMutableDictionary *) = ^(NSMutableDictionary *dictionary) {
         NSMutableArray * array = @[].mutableCopy;
@@ -139,101 +135,111 @@ NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES).f
     NSMutableDictionary *dictionary = @{}.mutableCopy;
     for (int i = 0 ; i < array.count; i++) {
         WXMPhotoAsset *photoAsset = [array objectAtIndex:i];
-        CGSize size = CGSizeMake(WXMPhoto_Width * 2.0, WXMPhoto_Width * 2.0 * photoAsset.aspectRatio);
+        CGSize size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * 2 * photoAsset.aspectRatio);
         if (size.height * 5 < WXMPhoto_Height) size = PHImageManagerMaximumSize;
                 
         [self getCoverImage:photoAsset.asset coverSize:size completion:^(UIImage *image) {
             if (photoAsset.mediaType == WXMPHAssetMediaTypeVideo && supportVideo) {
                 
-                [WXMPhotoAssistant wp_showLoadingView:controller.view];
                 controller.view.userInteractionEnabled = NO;
-                [WXMManager getVideoByAsset:photoAsset.asset completion:^(AVURLAsset *asset ,NSURL *url, NSData *data) {
+                [WXMPhotoUIAssistant showLoadingView:controller.view];
+                [WXMManager getVideoByAsset:photoAsset.asset completion:^(AVURLAsset *asset, NSURL *url, NSData *data) {
                     
-                    /** 视频压缩 */
-                    /** 视频压缩 */
-                    [WXMPhotoAssistant wp_showLoadingView:controller.view];
-                    controller.view.userInteractionEnabled = NO;
-                    NSString *timeStemp =
-                    [NSString stringWithFormat:@"%zd", (long) [[NSDate date] timeIntervalSince1970]];
+                    NSString *input = url.absoluteString;
+                    NSString *encodedString = input;
+                    CGFloat dataSize = data.length / 1024/ 1024;
+                    if (dataSize <= 120)  { encodedString = [self base64EncodedString:[self getMD5Data:data]]; }
+                    else { encodedString = [self base64EncodedString:[self md5String:input]]; }
                     
-                    __block NSString *input = url.absoluteString;
-                    __block NSString *output = [NSString stringWithFormat:@"%@.mp4", timeStemp];
-                    output = [kTargetPath stringByAppendingPathComponent:output];
+                    encodedString = [encodedString stringByAppendingString:@".mp4"];
+                    WXMPhotoResources *resource = [WXMPhotoResources new];
+                    resource.resourceImage = image;
+                    resource.nativeUrl = input.copy;
+                    resource.asset = asset;
+                    resource.resourceUrl = input;
+                    resource.mediaType = WXMPHAssetMediaTypeVideo;
+                    resource.uploadSize = size;
+                    resource.objKey = encodedString;
+                    resource.aspectRatio = photoAsset.aspectRatio;
+                    resource.videoDrantion = photoAsset.videoDrantion;
+                    resource.assetDrantion = photoAsset.assetDrantion;
+                    [dictionary setObject:resource forKey:@(i)];
+                    if (dictionary.allValues.count == array.count) callback(dictionary);
                     
-                    [WXMCompression wp_compressionVideo:input outString:output avAsset:asset callback:^(BOOL success) {
-                        
-                        NSString *outputS = [@"file://" stringByAppendingString:output.copy];
-                        NSData *newDatas = [NSData dataWithContentsOfURL:[NSURL URLWithString:outputS]];
-                        
-                        WXMPhotoResources *resource = [WXMPhotoResources new];
-                        resource.resourceImage = image;
-                        resource.resourceData = success ? newDatas : data;
-                        resource.resourceUrl = success ? output.copy : input.copy;
-                        resource.mediaType = WXMPHAssetMediaTypeVideo;
-                        resource.uploadSize = size;
-                        resource.aspectRatio = photoAsset.aspectRatio;
-                        [dictionary setObject:resource forKey:@(i)];
-                        if (dictionary.allValues.count == array.count) callback(dictionary);
-                    }];
                 }];
                 
                 
+            } else if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
+                
+                controller.view.userInteractionEnabled = NO;
+                [WXMPhotoUIAssistant showLoadingView:controller.view];
+                [WXMManager getGIFByAsset:photoAsset.asset completion:^(NSData *data) {
+                    WXMPhotoResources *resource = [WXMPhotoResources new];
+                    resource.resourceImage = image;
+                    resource.mediaType = WXMPHAssetMediaTypePhotoGif;
+                    resource.aspectRatio = photoAsset.aspectRatio;
+                    resource.uploadSize = size;
+                    resource.resourceData = data;
+                    [dictionary setObject:resource forKey:@(i)];
+                    if (dictionary.allValues.count == array.count) callback(dictionary);
+                }];
+                
             } else {
-                
-                
-                NSData *data = nil;
-                if (WXMPhotoSelectedImageReturnData) {
-                    data = UIImageJPEGRepresentation(image, WXMPhotoCompressionRatio);
-                }
                 
                 WXMPhotoResources *resource = [WXMPhotoResources new];
                 resource.resourceImage = image;
-                resource.resourceData = data;
                 resource.mediaType = WXMPHAssetMediaTypeImage;
                 resource.aspectRatio = photoAsset.aspectRatio;
                 resource.uploadSize = size;
                 [dictionary setObject:resource forKey:@(i)];
                 if (dictionary.allValues.count == array.count) callback(dictionary);
-                
             }
         }];
     }
 }
 
-///// 压缩视频
-///// @param inputString 输入路径
-///// @param outString 输出路径
-///// @param callback 回调
-//+ (void)compressedVideo:(NSString *)inputString
-//              outString:(NSString *)outString
-//               callback:(void (^)(BOOL success))callback {
-//
-//    JJVideoCompression *compression = [[JJVideoCompression alloc]init];
-//    compression.inputURL = [NSURL URLWithString:inputString]; /**  视频输入路径 */
-//    compression.exportURL = [NSURL fileURLWithPath:outString]; /**  视频输出路径 */
-//
-//    JJAudioConfigurations audioConfigurations;/**  音频压缩配置 */
-//    audioConfigurations.samplerate = JJAudioSampleRate_11025Hz; /**  采样率 */
-//    audioConfigurations.bitrate = JJAudioBitRate_32Kbps;/** / 音频的码率 */
-//    audioConfigurations.numOfChannels = 1;/**  声道数 */
-//    audioConfigurations.frameSize = 8; /**  采样深度 */
-//    compression.audioConfigurations = audioConfigurations;
-//
-//    JJVideoConfigurations videoConfigurations;
-//    videoConfigurations.fps = 25; /**  帧率 一秒中有多少帧 */
-//    videoConfigurations.videoBitRate = JJ_VIDEO_BITRATE_HIGH; /**  视频质量 码率 */
-//    videoConfigurations.videoResolution =  JJ_VIDEO_RESOLUTION_SUPER_HIGH; /** 视频尺寸 */
-//    compression.videoConfigurations = videoConfigurations;
-//    [compression startCompressionWithCompletionHandler:^(JJVideoCompressionState State) {
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            if (State == JJ_VIDEO_STATE_FAILURE) {
-//                NSLog(@"压缩失败");
-//                if (callback) callback(NO);
-//            } else {
-//                NSLog(@"压缩成功");
-//                if (callback) callback(YES);
-//            }
-//        });
-//    }];
-//}
+/** md5 */
++ (NSString *)md5String:(NSString *)astring {
+    NSData *data = [astring dataUsingEncoding:NSUTF8StringEncoding];
+    unsigned char result[CC_MD5_DIGEST_LENGTH];
+    CC_MD5(data.bytes, (CC_LONG) data.length, result);
+    return [NSString stringWithFormat:
+            @"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+            result[0], result[1], result[2], result[3],
+            result[4], result[5], result[6], result[7],
+            result[8], result[9], result[10], result[11],
+            result[12], result[13], result[14], result[15]
+            ].lowercaseString;
+}
+
+/** md5 */
++ (NSString *)getMD5Data:(NSData *)data {
+    @try {
+        
+        if (!data) return nil;
+        //需要MD5变量并且初始化
+        CC_MD5_CTX  md5;
+        CC_MD5_Init(&md5);
+        //开始加密(第一个参数：对md5变量去地址，要为该变量指向的内存空间计算好数据，第二个参数：需要计算的源数据，第三个参数：源数据的长度)
+        CC_MD5_Update(&md5, data.bytes, (CC_LONG)data.length);
+        //声明一个无符号的字符数组，用来盛放转换好的数据
+        unsigned char result[CC_MD5_DIGEST_LENGTH];
+        //将数据放入result数组
+        CC_MD5_Final(result, &md5);
+        //将result中的字符拼接为OC语言中的字符串，以便我们使用。
+        NSMutableString *resultString = [NSMutableString string];
+        for (int i = 0; i < CC_MD5_DIGEST_LENGTH; i++) {
+            [resultString appendFormat:@"%02X",result[i]];
+        }
+        return resultString;
+        
+    } @catch (NSException *exception) { } @finally { }
+}
+
+/**  转换为Base64编码 */
++ (NSString *)base64EncodedString:(NSString *)astring {
+    NSData *data = [astring dataUsingEncoding:NSUTF8StringEncoding];
+    return [data base64EncodedStringWithOptions:0];
+}
+
 @end

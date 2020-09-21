@@ -21,6 +21,7 @@
 
 /** 勾选框  */
 @property (nonatomic, strong) UIButton *chooseButton;
+@property (nonatomic, strong) UIButton *chooseBase;
 
 /** 当前cell的下载的ID 复用的时候使用 */
 @property (nonatomic, assign) int32_t currentRequestID;
@@ -44,6 +45,7 @@
     self.imageView.clipsToBounds = YES;
     [self.contentView addSubview:self.imageView];
     [self.contentView addSubview:self.typeSign];
+    [self.contentView addSubview:self.chooseBase];
     [self.contentView addSubview:self.chooseButton];
     [self.contentView addSubview:self.maskCoverView];
 }
@@ -53,6 +55,7 @@
     _displayCheckBox = displayCheckBox;
     self.chooseButton.hidden = (!displayCheckBox);
     self.chooseButton.enabled = displayCheckBox;
+    self.chooseBase.enabled = self.chooseButton.enabled;
 }
 
 /** 设置显示界面效果 */
@@ -63,9 +66,7 @@
     [self.contentView bringSubviewToFront:self.typeSign];
 
     /** 视频 */
-    if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo &&
-        WXMPhotoShowVideoSign &&
-        WXMPhotoSupportVideo) {
+    if (_photoAsset.mediaType == WXMPHAssetMediaTypeVideo && WXMPhotoShowVideoSign && WXMPhotoSupportVideo) {
         self.typeSign.hidden = (!showVideo);
         NSString *duration = [NSString stringWithFormat:@"  %@", _photoAsset.videoDrantion];
         [self.typeSign setTitle:duration forState:UIControlStateNormal];
@@ -85,10 +86,15 @@
     }
 }
 
+/** 隐藏标记(视频和gif) */
+- (void)hideSign {
+    self.typeSign.hidden = YES;
+}
+
 /** 是否可以点击 */
 - (void)setUserCanTouch:(BOOL)userCanTouch animation:(BOOL)animation {
     _userCanTouch = userCanTouch;
-    CGFloat duration = animation ? 0.2 : 0;
+    CGFloat duration = animation ? 0.25 : 0;
     [UIView animateWithDuration:duration animations:^{
         self.maskCoverView.alpha = !userCanTouch;
         self.userInteractionEnabled = userCanTouch;
@@ -142,18 +148,18 @@
                    original:NO
                    assetSize:CGSizeMake(WXMItemWidth, WXMItemWidth)
                    resizeMode:PHImageRequestOptionsResizeModeFast
-                   deliveryMode:PHImageRequestOptionsDeliveryModeOpportunistic
+                   deliveryMode:PHImageRequestOptionsDeliveryModeHighQualityFormat
                    completion:^(UIImage *image) {
         
         if ([_assetIdentifier isEqualToString:_photoAsset.asset.localIdentifier]) {
             
-            @autoreleasepool {
-                self.imageView.image = image.wp_redraw;
-            }
+            @autoreleasepool { self.imageView.image = image; }
             
         } else {
+            
             [[WXMPhotoManager sharedInstance] cancelRequestWithID:_currentRequestID];
         }
+        
     }];
 
     if (ids && _currentRequestID && ids != _currentRequestID) {
@@ -167,7 +173,7 @@
 /** 勾号点击 */
 - (void)wp_touchEvent:(UIButton *)sender {
     if ([self.delegate respondsToSelector:@selector(wp_photoCollectionCellCheckBox:selected:)]) {
-        [self.delegate wp_photoCollectionCellCheckBox:self selected:sender.selected];
+        [self.delegate wp_photoCollectionCellCheckBox:self selected:self.chooseButton.selected];
     }
 }
 
@@ -213,43 +219,28 @@
     if (!_chooseButton) {
         UIImage *normal = [UIImage imageNamed:@"photo_sign_default"];
         UIImage *selected = [UIImage imageNamed:@"photo_sign_background"];
-        
-        CGFloat wh = WXMSelectedWH;
         _chooseButton = [[UIButton alloc] init];
-        _chooseButton = [[UIButton alloc] initWithFrame:CGRectMake(0,3,wh,wh)];
+        _chooseButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 3, WXMSelectedWH, WXMSelectedWH)];
         _chooseButton.right = self.contentView.width - 3;
         _chooseButton.titleLabel.font = [UIFont systemFontOfSize:WXMSelectedFont];
+        [_chooseButton wp_setEnlargeEdgeWithTop:3 left:135 right:3 bottom:125];
         [_chooseButton setBackgroundImage:normal forState:UIControlStateNormal];
         [_chooseButton setBackgroundImage:selected forState:UIControlStateSelected];
         [_chooseButton wp_addTarget:self action:@selector(wp_touchEvent:)];
-        [_chooseButton wp_setEnlargeEdgeWithTop:3 left:15 right:3 bottom:15];
     }
     return _chooseButton;
 }
 
-- (void)dealloc {
-    self.imageView.image = nil;
+- (UIButton *)chooseBase {
+    if (!_chooseBase) {
+        _chooseBase = [[UIButton alloc] init];
+        _chooseBase.width = self.contentView.width * 0.5;
+        _chooseBase.height = self.contentView.height * 0.45;
+        _chooseBase.right = self.contentView.width;
+        [_chooseBase wp_addTarget:self action:@selector(wp_touchEvent:)];
+    }
+    return _chooseBase;
 }
 
-- (UIImage *)redraw:(UIImage *)image {
-    CGFloat width = CGImageGetWidth(image.CGImage);
-    CGFloat height = CGImageGetHeight(image.CGImage);
-
-    // 创建一个bitmap的context
-    // 并把它设置成为当前正在使用的context
-    UIGraphicsBeginImageContext(CGSizeMake(width, height));
-    
-    // 绘制图片大小设置
-    [image drawInRect:CGRectMake(0, 0, width, height)];
-    
-    // 从当前context中创建一个图片
-    UIImage* images = UIGraphicsGetImageFromCurrentImageContext();
-    
-    // 使当前的context出堆栈
-    UIGraphicsEndImageContext();
-    
-    // 返回新的改变大小后的图片
-    return images;
-}
 @end
 

@@ -61,6 +61,11 @@
     _rightButton.hidden = !_showRightButton;
 }
 
+/** 删除右按钮 */
+- (void)deleteRightButton {
+    [_rightButton removeFromSuperview];
+}
+
 /** 设置勾选框 */
 - (void)setRecordModel:(WXMPhotoRecordModel *)recordModel {
     _recordModel = recordModel;
@@ -75,43 +80,45 @@
 }
 
 /** 目前选中的是那种资源 video image no三种 */
-- (void)setChooseType:(WXMPhotoMediaType)chooseType asset:(WXMPhotoAsset *)asset {
-
+- (void)setChooseType:(WXMPhotoMediaType)chooseType asset:(WXMPhotoAsset *)asset unrestrictedmode:(NSInteger)unrestrictedmode {
     WXMPhotoMediaType assetType = asset.mediaType;
     self.line.hidden = self.promptLabel.hidden = YES;
-
-    /** 视频超过时长的 */
-    if (assetType == WXMPHAssetMediaTypeVideo &&
-        asset.asset.duration > WXMPhotoLimitVideoTime &&
-        WXMPhotoLimitVideoTime > 0) {
-        NSInteger dration = WXMPhotoLimitVideoTime;
-        self.line.hidden = self.promptLabel.hidden = NO;
-        self.promptLabel.text = [NSString stringWithFormat:@"   暂时不支持超过%zd秒的视频",dration];
+    self.showRightButton = YES;
+    if (unrestrictedmode == 0) {
         return;
     }
 
-    if (chooseType == WXMPHAssetMediaTypeNone) return;
-    BOOL isVideo = (chooseType == WXMPHAssetMediaTypeVideo);
-    BOOL assetVideo = (assetType == WXMPHAssetMediaTypeVideo);
-    if (isVideo) {
-        self.line.hidden = self.promptLabel.hidden = assetVideo;
-        self.promptLabel.text = @"   选择视频时不能选择图片";
-    } else {
-        self.line.hidden = self.promptLabel.hidden = !assetVideo;
-        self.promptLabel.text = @"   选择图片时不能选择视频";
+    /**< 视频超过时长的 */
+    if (assetType == WXMPHAssetMediaTypeVideo && asset.asset.duration > WXMPhotoLimitVideoTime && WXMPhotoLimitVideoTime > 0) {
+        self.showRightButton = NO;
+        self.line.hidden = self.promptLabel.hidden = NO;
+        self.promptLabel.text = [NSString stringWithFormat:@"   不支持超过%d秒的视频", WXMPhotoLimitVideoTime];
+    }
+    
+    /** gif超过大小 */
+    if (assetType == WXMPHAssetMediaTypePhotoGif && WXMPhotoLimitGIFSize > 0) {
+        CGFloat multipartfile = [WXMPhotoUIAssistant getOriginalMultipartfile:asset.asset];
+        if (multipartfile > WXMPhotoLimitGIFSize) {
+            self.showRightButton = NO;
+            self.line.hidden = self.promptLabel.hidden = NO;
+            self.promptLabel.text = [NSString stringWithFormat:@"   不支持超过%dM的动图", WXMPhotoLimitGIFSize];
+        }
+    }
+    
+    /**< 单一选项 */
+    if (unrestrictedmode == 2 && chooseType != WXMPHAssetMediaTypeNone)  {
+        BOOL assetVideo = (assetType == WXMPHAssetMediaTypeVideo);
+        if (chooseType == WXMPHAssetMediaTypeVideo) {
+            if (assetVideo == NO) self.showRightButton = NO;
+            self.line.hidden = self.promptLabel.hidden = assetVideo;
+            self.promptLabel.text = @"    选择视频时不能选择图片";
+        } else {
+            if (assetVideo) self.showRightButton = NO;
+            self.line.hidden = self.promptLabel.hidden = !assetVideo;
+            self.promptLabel.text = @"    选择图片时不能选择视频";
+        }
     }
 }
-
-//- (void)setSignModel:(WXMPhotoSignModel *)signModel {
-//    _signModel = signModel;
-//    if (signModel == nil) {
-//        self.rightButton.selected = NO;
-//        [self.rightButton setTitle:@"" forState:UIControlStateSelected];
-//    } else {
-//        self.rightButton.selected = YES;
-//        [self.rightButton setTitle:@(signModel.rank).stringValue forState:UIControlStateSelected];
-//    }
-//}
 
 /** 左按钮 */
 - (void)leftItemTouchEvents {

@@ -14,8 +14,7 @@
 #import "WXMPhotoVideoCell.h"
 #import "WXMResourceAssistant.h"
 
-@interface WXMPhotoPreviewController () <UICollectionViewDelegate,UICollectionViewDataSource,
-WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegate>
+@interface WXMPhotoPreviewController () <UICollectionViewDelegate,UICollectionViewDataSource, WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegate>
 
 @property (nonatomic, weak) UINavigationController *weakNavigationVC;
 @property (nonatomic, strong) UICollectionView *collectionView;
@@ -44,16 +43,16 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     if (self.wp_windowView) [self.view addSubview:self.wp_windowView];
     if (self.wp_contentView) [self.view addSubview:self.wp_contentView];
     
+    self.automaticallyAdjustsScrollViewInsets = false;
     self.navigationController.navigationBar.shadowImage = [[UIImage alloc] init];
     self.navigationController.navigationBar.backgroundColor = [UIColor clearColor];
     UIColor *whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
-    UIImage *image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
-    [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics:0];
+    [self.navigationController.navigationBar setBackgroundImage:[WXMPhotoUIAssistant photoImageWithColor:whiteColor] forBarMetrics:0];
     
     @try {
-        UIViewController * firstVC = self.navigationController.viewControllers.firstObject;
+        UIViewController *firstVC = self.navigationController.viewControllers.firstObject;
         self.navigationController.interactivePopGestureRecognizer.delegate = (id)firstVC;
-        UIGestureRecognizer * ges = self.navigationController.interactivePopGestureRecognizer;
+        UIGestureRecognizer *ges = self.navigationController.interactivePopGestureRecognizer;
         [ges requireGestureRecognizerToFail:_collectionView.panGestureRecognizer];
     } @catch (NSException *exception) {} @finally {};
     
@@ -70,14 +69,17 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     UICollectionViewScrollPosition posi = UICollectionViewScrollPositionCenteredHorizontally;
     [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:posi animated:NO];
     
-    dispatch_time_t time_t = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.08 * NSEC_PER_SEC));
+    dispatch_time_t time_t = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.03 * NSEC_PER_SEC));
     dispatch_after(time_t, dispatch_get_main_queue() , ^{
         
-        /** 播放livePhoto */
+        /**< 播放livePhoto */
         [self playLivePhotoOrVideo];
         
-        /** 计算原图大小 */
-        [self wp_setBottomBarViewrealByte];
+        /**< 计算原图大小 */
+        [self setBottomBarViewrealByte];
+        
+        /**< 设置topView bottomView显示 */
+        [self setupTopBottomView:self.selectedIndex];
     });
     
 }
@@ -90,26 +92,24 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     return self.dataSource.count;
 }
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
-                  cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     WXMPhotoAsset *asset = self.dataSource[indexPath.row];
-    UICollectionView *collection = collectionView;
-    UICollectionViewCell * cell = nil;
+    UICollectionViewCell *cell = nil;
     if (asset.mediaType == WXMPHAssetMediaTypeVideo && self.showVideo) {
-        cell = [collection dequeueReusableCellWithReuseIdentifier:@"aCell" forIndexPath:indexPath];
+        cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"aCell" forIndexPath:indexPath];
         ((WXMPhotoVideoCell *)cell).delegate = self;
         ((WXMPhotoVideoCell *)cell).photoAsset = asset;
     } else {
-        cell = [collection dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
+        BOOL supportGIF = (_photoType == WXMPhotoDetailTypeTailoring || _photoType == WXMPhotoDetailTypeHybrid);
+        cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
+        ((WXMPhotoPreviewCell *)cell).supportGIF = supportGIF;
         ((WXMPhotoPreviewCell *)cell).delegate = self;
         ((WXMPhotoPreviewCell *)cell).photoAsset = asset;
     }
     return cell;
 }
 
-- (void)collectionView:(UICollectionView *)collectionView
-  didEndDisplayingCell:(UICollectionViewCell *)cell
-    forItemAtIndexPath:(NSIndexPath *)indexPath {
+- (void)collectionView:(UICollectionView *)collectionView didEndDisplayingCell:(UICollectionViewCell *)cell forItemAtIndexPath:(NSIndexPath *)indexPath {
     if ([cell respondsToSelector:@selector(originalAppearance)]) {
         [cell performSelector:@selector(originalAppearance)];
     }
@@ -128,7 +128,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     else location = self.selectedIndex;
     
     /** 设置topView bottomView显示 */
-    [self wp_setUpTopView:location];
+    [self setupTopBottomView:location];
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
@@ -136,10 +136,10 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     self.selectedIndex = offY / scrollView.width;
 
     /** 设置topView bottomView显示 */
-    [self wp_setUpTopView:self.selectedIndex];
+    [self setupTopBottomView:self.selectedIndex];
 
     /** 设置原图大小 */
-    [self wp_setBottomBarViewrealByte];
+    [self setBottomBarViewrealByte];
     
     if (self.dataSource.count < self.selectedIndex) return;
     
@@ -151,8 +151,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 - (void)playLivePhotoOrVideo {
     if (self.dataSource.count < self.selectedIndex) return;
     NSIndexPath *index = [NSIndexPath indexPathForRow:self.selectedIndex inSection:0];
-    UITableViewCell * cell = nil;
-    cell = (UITableViewCell *) [self.collectionView cellForItemAtIndexPath:index];
+    UITableViewCell *cell = (UITableViewCell *) [self.collectionView cellForItemAtIndexPath:index];
     if ([cell isKindOfClass:WXMPhotoPreviewCell.class] && WXMPhotoShowLivePhto) {
         [((WXMPhotoPreviewCell *)cell) startPlayLivePhoto];
     } else if ([cell isKindOfClass:WXMPhotoVideoCell.class] && WXMPhotoAutomaticVideo) {
@@ -162,30 +161,29 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 }
 
 /** 获取当前图片的和视频的data大小 */
-- (void)wp_setBottomBarViewrealByte {
+- (void)setBottomBarViewrealByte {
     if (WXMPhotoSelectOriginal) {
         WXMPhotoAsset *asset = self.dataSource[self.selectedIndex];
         BOOL video = (asset.mediaType == WXMPHAssetMediaTypeVideo && self.showVideo);
         CGFloat bytes = asset.bytes;
         if (bytes < 20 && !(asset.mediaType == WXMPHAssetMediaTypeVideo && !self.showVideo)) {
-            bytes = [WXMPhotoAssistant wp_getOriginalSize:asset.asset];
+            bytes = [WXMPhotoUIAssistant getOriginalSize:asset.asset];
             asset.bytes = bytes;
         }
         
         /** 资源是视频时不显示视频 */
         if(asset.mediaType == WXMPHAssetMediaTypeVideo && !self.showVideo && bytes < 20) {
             NSIndexPath *index = [NSIndexPath indexPathForRow:self.selectedIndex inSection:0];
-            UITableViewCell * cell = nil;
-            cell = (UITableViewCell *) [self.collectionView cellForItemAtIndexPath:index];
+            UITableViewCell * cell = (UITableViewCell *) [self.collectionView cellForItemAtIndexPath:index];
             if ([cell isKindOfClass:WXMPhotoPreviewCell.class]) {
                 UIImage *image = ((WXMPhotoPreviewCell *) cell).currentImage;
-                NSData *data = UIImageJPEGRepresentation(image, 0.75);
+                NSData *data = UIImagePNGRepresentation(image);
                 bytes = data.length;
                 asset.bytes = data.length;
             }
         }
         
-        NSString * realByte = [NSString stringWithFormat:@"%.1fM", bytes / (1024 * 1024)];
+        NSString *realByte = [NSString stringWithFormat:@"%.1fM", bytes / (1024 * 1024)];
         if (bytes / (1024 * 1024) < 0.1f) {
             realByte = [NSString stringWithFormat:@"%.0fk", (bytes / (1024))];
         }
@@ -241,22 +239,34 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 #pragma mark 设置topview bottomBarView 属性
 
 /** 设置topview bottomBarView 属性 */
-- (void)wp_setUpTopView:(NSInteger)location {
+- (void)setupTopBottomView:(NSInteger)location {
     WXMPhotoAsset *asset = self.dataSource[location];
     WXMPhotoRecordModel *recordModel = [self.dictionaryArray objectForKey:asset.asset.localIdentifier];
     self.topBarView.recordModel = recordModel;
     self.bottomBarView.recordModel = recordModel;
+    [self.bottomBarView finashButtonEnabled:YES];
+       
+    /**< 设置文字 */
+    [self.topBarView setChooseType:self.chooseType asset:asset unrestrictedmode: self.unrestrictedmode];
     
-    /** 视频不显示右按钮 */
-    self.topBarView.showRightButton = YES;
+    /**< 视频超过时长 */
+    BOOL isVideo = (asset.mediaType == WXMPHAssetMediaTypeVideo);
+    if (_dictionaryArray.count == 0 && isVideo && asset.asset.duration > WXMPhotoLimitVideoTime && self.unrestrictedmode > 0) {
+        [self.bottomBarView finashButtonEnabled:NO];
+    }
+    
+    /** gif超过大小 */
+    BOOL isGIF = (asset.mediaType == WXMPHAssetMediaTypePhotoGif);
+    if (_dictionaryArray.count == 0 && isGIF && self.unrestrictedmode > 0) {
+        if ([WXMPhotoUIAssistant getOriginalMultipartfile:asset.asset] > WXMPhotoLimitGIFSize) {
+            [self.bottomBarView finashButtonEnabled:NO];
+        }
+    }
+     
+    /** 只能选一个视频  */
+    if (self.photoType == WXMPhotoDetailTypeHybrid) return;
     if (self.realSelectVideo == 1 && asset.mediaType == WXMPHAssetMediaTypeVideo) {
         self.topBarView.showRightButton = NO;
-    }
-  
-    /** 不支持同时选视频图片修改显示文字 */
-    if (self.chooseVideoWithPhoto == NO) {
-        WXMPhotoAsset *asset = self.dataSource[location];
-        [self.topBarView setChooseType:self.chooseType asset:asset];
     }
 }
 
@@ -276,13 +286,14 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     /** 新增一个 */
     if (recordModel == nil) {
         if (self.dictionaryArray.count >= self.realSelectCount) {
-            NSLog(@"%@",@"xxxxxxxxxxxx");
+            NSString *message = [NSString stringWithFormat:@"只能选中%zd张图片", self.realSelectCount];
+            [WXMPhotoUIAssistant showAlertViewControllerWithTitle:message message:@"" cancel:@"确定" otherAction:nil completeBlock:nil];
             return;
         }
         
         [self addPhotoRecordModel];
         [self.bottomBarView addPhotoRecordModel:self.dictionaryArray];
-        [self wp_setUpTopView:self.selectedIndex];
+        [self setupTopBottomView:self.selectedIndex];
                            
     } else {
 
@@ -290,7 +301,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
         [self refreshRanking:recordModel.recordAsset.asset.localIdentifier];
         [self.dictionaryArray removeObjectForKey:recordModel.recordAsset.asset.localIdentifier];
         [self.bottomBarView deletePhotoRecordModel:self.dictionaryArray];
-        [self wp_setUpTopView:self.selectedIndex];
+        [self setupTopBottomView:self.selectedIndex];
     }
     
     /** 同步数据 */
@@ -308,9 +319,9 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     recordModel.recordRank = (self.dictionaryArray.count + 1);
     recordModel.recordIndexPath = indexPath;
     recordModel.mediaType = asset.mediaType;
+    recordModel.recordAlbumName = self.recordAlbumName;
     [self.dictionaryArray setObject:recordModel forKey:asset.asset.localIdentifier];
 }
-
 
 /** 重新刷新排名 */
 - (void)refreshRanking:(NSString *)localIdentifier {
@@ -324,19 +335,17 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     }
 }
 
-
 /** 下工具栏回调 */
 - (void)wp_touchButtomDidSelectItem:(NSIndexPath *)idexPath {
-    UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
-    [self.collectionView scrollToItemAtIndexPath:idexPath atScrollPosition:position animated:NO];
-    [self wp_setUpTopView:idexPath.row];
+    [self.collectionView scrollToItemAtIndexPath:idexPath atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
+    [self setupTopBottomView:idexPath.row];
     self.selectedIndex = idexPath.row;
     dispatch_async(dispatch_get_main_queue(), ^{
         CATransition *transition = [CATransition animation];
         transition.duration = 0.175;
         transition.type = kCATransitionFade;
         [self.collectionView.layer addAnimation:transition forKey:@"animations"];
-        [self wp_setBottomBarViewrealByte];
+        [self setBottomBarViewrealByte];
     });
 }
 
@@ -362,7 +371,6 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
         CGSize size = CGSizeZero;
         if (self.photoType == WXMPhotoDetailTypeGetPhoto) size = PHImageManagerMaximumSize;
         if (self.photoType == WXMPhotoDetailTypeGetPhoto_256) size = CGSizeMake(256, 256);
-        /** if (self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize) size = self.expectSize; */
         if (self.bottomBarView.isOriginalImage == YES) size = PHImageManagerMaximumSize;
         [WXMResourceAssistant sendResource:asset
                                  coverSize:size
@@ -375,9 +383,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 
 /** 回调多张图片 */
 - (void)wp_morePhotoSendImage {
-    
     if (self.dictionaryArray.count == 0) [self addPhotoRecordModel];
-    
     NSMutableArray * array = @[].mutableCopy;
     [self.dictionaryArray enumerateObjectsUsingBlock:^(WXMPhotoRecordModel*obj,NSUInteger idx,BOOL stop) {
         if (obj.recordAsset) [array addObject:obj.recordAsset];
@@ -397,6 +403,22 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     return WXMPHAssetMediaTypeImage;
 }
 
+/** 无限制模式 */
+- (NSInteger)unrestrictedmode {
+    if (self.photoType == WXMPhotoDetailTypeGetPhoto ||
+        self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
+        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize ||
+        self.photoType == WXMPhotoDetailTypeTailoring) {
+        return 0;
+    } else if (self.photoType == WXMPhotoDetailTypeMultiSelect || self.photoType == WXMPhotoDetailTypeHybrid) {
+        return 1;
+    } else if (self.photoType == WXMPhotoDetailTypeSingleType) {
+        return 2;
+    }    
+    return -1;
+}
+
+
 #pragma mark 设置
 #pragma mark 设置
 #pragma mark 设置
@@ -406,9 +428,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     if (!_topBarView)  {
         _topBarView = [[WXMPreviewTopBar alloc] initWithFrame:CGRectZero];
         _topBarView.delegate = self;
-        
-        /** 单选 */
-        if (_previewType == WXMPhotoPreviewTypeSingle) _topBarView.showRightButton = NO;
+        if (_previewType == WXMPhotoPreviewTypeSingle) [_topBarView deleteRightButton];
     }
     return _topBarView;
 }
@@ -417,6 +437,7 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
 - (WXMPreviewBottomBar *)bottomBarView {
     if (!_bottomBarView) {
         _bottomBarView = [[WXMPreviewBottomBar alloc] initWithFrame:CGRectZero];
+        _bottomBarView.recordAlbumName = self.recordAlbumName;
         _bottomBarView.delegate = self;
         [_bottomBarView loadDictionaryArray:self.dictionaryArray];
         if (_isOriginalImage) [_bottomBarView setOriginalImage];
@@ -499,14 +520,14 @@ WXMPreviewCellProtocol, WXMPreviewToolbarProtocol, UINavigationControllerDelegat
     self.lastStatusBarStyle = [UIApplication sharedApplication].statusBarStyle;
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
-    UIImage * image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
+    UIImage * image = [WXMPhotoUIAssistant photoImageWithColor:whiteColor];
     UIBarMetrics metr = UIBarMetricsDefault;
     [self.weakNavigationVC.navigationBar setBackgroundImage:image forBarMetrics:metr];
 }
 
 - (void)dealloc {
     UIColor *whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:1.0];
-    UIImage *image = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
+    UIImage *image = [WXMPhotoUIAssistant photoImageWithColor:whiteColor];
     UIBarMetrics metr = UIBarMetricsDefault;
     [self.weakNavigationVC.navigationBar setBackgroundImage:image forBarMetrics:metr];
     [self.wp_windowView removeFromSuperview];

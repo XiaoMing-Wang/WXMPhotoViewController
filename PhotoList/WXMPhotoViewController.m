@@ -33,11 +33,13 @@
 
 - (UITableViewCell*)tableView:(UITableView *)tableView
         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
     WXMPhotoListCell *cell = nil;
     cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.phoneList = [self.dataSource objectAtIndex:indexPath.row];
+    
     return cell;
 }
 

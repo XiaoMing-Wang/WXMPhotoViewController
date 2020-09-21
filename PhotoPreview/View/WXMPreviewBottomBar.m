@@ -23,6 +23,7 @@
 @property (nonatomic, assign, readwrite) BOOL isOriginalImage;
 @property (nonatomic, assign) NSInteger lastSeleIdx;
 @property (nonatomic, strong) NSIndexPath *lastIndexPath;
+@property (nonatomic, strong) WXMDictionary_Array *allDictionaryArray;
 @end
 
 @implementation WXMPreviewBottomBar
@@ -82,13 +83,16 @@
     [self.originalButton wp_addTarget:self action:@selector(originalTouchEvents:)];
     
     UIImage *images = [UIImage imageFromColor:WXMSelectedColor];
+    UIImage *diaBleimages = [UIImage imageFromColor:WXMDisAbleColor];
     self.finishButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 60, height)];
     self.finishButton.layoutRight = 15;
     self.finishButton.centerY = heightFinash / 2 + 2;
     self.finishButton.titleLabel.font = [UIFont systemFontOfSize:16];
-    [self.finishButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [self.finishButton setTitle:@"完成" forState:UIControlStateNormal];
+    [self.finishButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [self.finishButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
     [self.finishButton setBackgroundImage:images forState:UIControlStateNormal];
+    [self.finishButton setBackgroundImage:diaBleimages forState:UIControlStateDisabled];
     [self.finishButton wp_addTarget:self action:@selector(finishTouchEvents)];
     self.finishButton.layer.cornerRadius = 4;
     self.finishButton.layer.masksToBounds = YES;
@@ -99,7 +103,13 @@
 
 /** 第一次加载 */
 - (void)loadDictionaryArray:(WXMDictionary_Array *)dictionaryArray {
-    _dictionaryArray = dictionaryArray;
+    WXMDictionary_Array *newDictionaryArray = [WXMDictionary_Array new];
+    [dictionaryArray enumerateObjectsUsingBlock:^(WXMPhotoRecordModel* obj, NSUInteger idx, BOOL stop) {
+        [newDictionaryArray addObject:obj];
+    }];
+    
+    _allDictionaryArray = dictionaryArray;
+    _dictionaryArray = newDictionaryArray;
     [self.collectionView reloadData];
     [self setFinashButtonCount:NO];
 }
@@ -139,31 +149,33 @@
 /** 滚动到那个记录的model */
 - (void)setRecordModel:(WXMPhotoRecordModel *)recordModel {
     _recordModel = recordModel;
-        
     WXMBottomBarCollectionViewCell *selectCell = nil;
-    for (WXMBottomBarCollectionViewCell *cell in self.collectionView.visibleCells) {
-        cell.isSelected = (recordModel == cell.recordModel);
-        if (cell.isSelected) selectCell = cell;
+    for (UIView *subView in self.collectionView.subviews) {
+        if ([subView isKindOfClass:WXMBottomBarCollectionViewCell.class]) {
+            WXMBottomBarCollectionViewCell * cell = (WXMBottomBarCollectionViewCell *)subView;
+            cell.isSelected = (recordModel == cell.recordModel);
+            if (cell.isSelected) selectCell = cell;
+        }
     }
     
-    UICollectionViewScrollPosition po = UICollectionViewScrollPositionCenteredHorizontally;
+    UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredHorizontally;
     if (selectCell == nil)  {
         NSInteger index = [self.dictionaryArray indexOfObject:recordModel];
         if (index < 0 || index >= self.dictionaryArray.count) return;
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
-        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:po animated:NO];
+        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:position animated:NO];
     } else {
         NSIndexPath *indexPath = [_collectionView indexPathForCell:selectCell];
-        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:po animated:YES];
+        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:position animated:YES];
     }
 }
 
 /** 设置按钮 */
 - (void)setFinashButtonCount:(BOOL)animations {
-    NSString *title = self.dictionaryArray.count ?
-    [NSString stringWithFormat:@"完成(%ld)",self.dictionaryArray.count] : @"完成";
+    NSString *title = self.allDictionaryArray.count ?
+    [NSString stringWithFormat:@"完成(%ld)",self.allDictionaryArray.count] : @"完成";
     [self.finishButton setTitle:title forState:UIControlStateNormal];
-    self.finishButton.width = (self.dictionaryArray.count > 0) ? 70 : 60;
+    self.finishButton.width = (self.allDictionaryArray.count > 0) ? 70 : 60;
     self.finishButton.right = WXMPhoto_Width - 15;
     [UIView animateWithDuration:(animations ? 0.5 : 0) animations:^{
         self.line.alpha = (self.dictionaryArray.count > 0);
@@ -207,6 +219,11 @@
 }
 
 /** 完成按钮 */
+- (void)finashButtonEnabled:(BOOL)enabled {
+    _finishButton.enabled = enabled;
+}
+
+/** 完成按钮 */
 - (void)finishTouchEvents {
     if (self.delegate && [self.delegate respondsToSelector:@selector(wp_touchButtomFinsh)]) {
         [self.delegate wp_touchButtomFinsh];
@@ -227,10 +244,8 @@
     return self.dictionaryArray.count;
 }
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
-                  cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    WXMBottomBarCollectionViewCell *cell =
-    [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    WXMBottomBarCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
     WXMPhotoRecordModel *recordModel = [self.dictionaryArray objectAtIndex:indexPath.row];
     cell.recordModel = recordModel;
     cell.isSelected = (recordModel == self.recordModel);
@@ -239,10 +254,13 @@
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     WXMPhotoRecordModel *signModel = [self.dictionaryArray objectAtIndex:indexPath.row];
-    SEL sel = @selector(wp_touchButtomDidSelectItem:);
-    if (self.delegate && [self.delegate respondsToSelector:sel]) {
-        [self.delegate wp_touchButtomDidSelectItem:signModel.recordIndexPath];
-    }
+    
+    /** 同一个相册的点击才会跳转 不同相册的没办法跳转 */
+    if ([signModel.recordAlbumName isEqualToString: self.recordAlbumName])  {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(wp_touchButtomDidSelectItem:)]) {
+            [self.delegate wp_touchButtomDidSelectItem:signModel.recordIndexPath];
+        }
+    } 
 }
 
 /** 显示隐藏 */
@@ -263,7 +281,7 @@
         self.lastSeleIdx = seletedIdx;
         WXMPhotoRecordModel *photoRecordModel = [self.dictionaryArray objectForKey:@(seletedIdx).stringValue];
         NSInteger idx = [self.dictionaryArray indexOfObject:photoRecordModel];
-        UICollectionViewScrollPosition po= UICollectionViewScrollPositionCenteredHorizontally;
+        UICollectionViewScrollPosition po = UICollectionViewScrollPositionCenteredHorizontally;
         if (idx >= 0) {
             NSIndexPath *inPath = [NSIndexPath indexPathForRow:idx inSection:0];
             [_collectionView scrollToItemAtIndexPath:inPath atScrollPosition:po animated:YES];

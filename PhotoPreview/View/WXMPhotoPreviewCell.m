@@ -7,7 +7,7 @@
 //
 
 #import "WXMPhotoPreviewCell.h"
-#import "WXMDirectionPanGestureRecognizer.h"
+#import "WXMPhotoDirectionPan.h"
 #import "WXMPhotoConfiguration.h"
 #import <objc/runtime.h>
 #import "WXMPhotoImageView.h"
@@ -18,20 +18,19 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored"-Wunguarded-availability"
 
-@interface WXMPhotoPreviewCell () <UIScrollViewDelegate,UIGestureRecognizerDelegate>
+@interface WXMPhotoPreviewCell () <UIScrollViewDelegate, UIGestureRecognizerDelegate>
 @property (nonatomic, strong) UIView *blackView;
 @property (nonatomic, strong) UIScrollView *contentScrollView;
 @property (nonatomic, strong) PHLivePhotoView *livePhotoView;
 @property (nonatomic, strong) WXMPhotoImageView *imageView;
-@property (nonatomic, strong) WXMDirectionPanGestureRecognizer *recognizer;
+@property (nonatomic, strong) WXMPhotoDirectionPan *recognizer;
+@property (nonatomic, assign) CGRect imageRect;
 @property (nonatomic, assign) int32_t currentRequestID;
 @property (nonatomic, assign) BOOL isPlayLivePhoto;
 
-/** 距离原点的比例 */
-@property (nonatomic, assign) CGFloat wp_x;
-@property (nonatomic, assign) CGFloat wp_y;
-@property (nonatomic, assign) CGFloat wp_zoomScale;
-@property (nonatomic, assign) CGPoint wp_lastPoint;
+@property (nonatomic, assign) CGFloat offX;
+@property (nonatomic, assign) CGFloat offY;
+@property (nonatomic, assign) CGPoint lastPoint;
 @end
 #pragma clang diagnostic pop
 
@@ -42,26 +41,31 @@
 }
 
 - (void)initializationInterface {
-    CGFloat w = [UIScreen mainScreen].bounds.size.width ;
-    CGFloat h = [UIScreen mainScreen].bounds.size.height;
-    self.contentScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
+    self.contentScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Height)];
     self.contentScrollView.delegate = self;
-    self.contentScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
     self.contentScrollView.showsHorizontalScrollIndicator = NO;
     self.contentScrollView.showsVerticalScrollIndicator = NO;
     self.contentScrollView.alwaysBounceHorizontal = NO;
     self.contentScrollView.alwaysBounceVertical = NO;
     self.contentScrollView.layer.masksToBounds = NO;
+    self.contentScrollView.contentInsetBottom = WXMPhoto_SafeHeight;
+    if (@available(iOS 13.0, *)) {
+        self.contentScrollView.automaticallyAdjustsScrollIndicatorInsets = NO;
+    }
     
-    self.imageView = [[WXMPhotoImageView alloc] initWithFrame:CGRectMake(0, 0, w, 0)];
+    if (@available(iOS 11.0, *)) {
+        self.contentScrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+    }
+    
+    self.imageView = [[WXMPhotoImageView alloc] initWithFrame:CGRectMake(0, 0, WXMPhoto_Width, 0)];
     self.imageView.contentMode = UIViewContentModeScaleAspectFit;
     self.imageView.layer.masksToBounds = YES;
     self.imageView.backgroundColor = [UIColor blackColor];
     self.imageView.userInteractionEnabled = NO;
     
     [self.contentView addSubview:self.blackView];
-    [self.contentView addSubview:_contentScrollView];
-    [self.contentScrollView addSubview:_imageView];
+    [self.contentView addSubview:self.contentScrollView];
+    [self.contentScrollView addSubview:self.imageView];
     [self.contentScrollView setMinimumZoomScale:1.0];
     [self.contentScrollView setMaximumZoomScale:2.5f];
     [self addTapGestureRecognizer];
@@ -75,7 +79,6 @@
     _photoAsset = photoAsset;
      
     CGFloat screenWidth  = WXMPhoto_Width * 2.0;
-    WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
     if (_photoAsset.aspectRatio <= 0) {
         CGFloat h = (CGFloat) photoAsset.asset.pixelHeight;
         CGFloat w = (CGFloat) photoAsset.asset.pixelWidth;
@@ -84,14 +87,11 @@
     CGFloat imageHeight = _photoAsset.aspectRatio * screenWidth;
     
     /** GIF */
-    if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif) {
+    if (photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif && _supportGIF) {
         
-        [manager getGIFByAsset:photoAsset.asset completion:^(NSData *imageData) {
-            
-            @autoreleasepool {
-                [self setLocation:_photoAsset.aspectRatio];
-                self.imageView.image = [WXMPhotoGIFImage imageWithData:imageData];
-            }
+        [[WXMPhotoManager sharedInstance] getGIFByAsset:photoAsset.asset completion:^(NSData *imageData) {
+            [self setLocation:_photoAsset.aspectRatio];
+            self.imageView.image = [WXMPhotoGIFImage imageWithData:imageData];
         }];
         
     } else {
@@ -109,14 +109,13 @@
         
         /** 很长的横图 需要获取原图 不然放大很模糊.. */
         if (imageHeight * 3 < WXMPhoto_Height) size = PHImageManagerMaximumSize;
-        if (self.currentRequestID) [manager cancelRequestWithID:self.currentRequestID];
+        if (self.currentRequestID) [[WXMPhotoManager sharedInstance] cancelRequestWithID:self.currentRequestID];
         
         /** 自定义转场需要当前图片 */
         /** 所以先加载图片 在上面覆盖livephoto */
-        int32_t ids = [manager getPicturesCustomSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-            
+        int32_t ids = [[WXMPhotoManager sharedInstance] getPicturesCustomSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
             @autoreleasepool {
-                self.imageView.image = image.wp_redraw;
+                self.imageView.image = image;
             }
             [self setLocation:_photoAsset.aspectRatio];
         }];
@@ -125,11 +124,10 @@
         /** livephoto */
         if (_livePhotoView) self.livePhotoView.hidden = YES;
         if (photoAsset.mediaType == WXMPHAssetMediaTypeLivePhoto && WXMPhotoShowLivePhto) {
-            
             self.livePhotoView.hidden = NO;
             self.livePhotoView.livePhoto = nil;
             [self.imageView addSubview:self.livePhotoView];
-            [manager getLivePhotoByAsset:asset liveSize:size completion:^(PHLivePhoto *livePhoto) {
+            [[WXMPhotoManager sharedInstance] getLivePhotoByAsset:asset liveSize:size completion:^(PHLivePhoto *livePhoto) {
                 self.livePhotoView.livePhoto = livePhoto;
                 [self setLocation:_photoAsset.aspectRatio];
             }];
@@ -141,7 +139,6 @@
 }
 
 #pragma clang diagnostic pop
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored"-Wunguarded-availability"
 
@@ -157,8 +154,10 @@
 /** 还原 */
 - (void)originalAppearance {
     _isPlayLivePhoto = NO;
-    [_contentScrollView setZoomScale:1.0 animated:NO];
+    [self.contentScrollView setZoomScale:1.0 animated:NO];
+    self.imageView.frame = self.imageRect;
     if (_livePhotoView)  [_livePhotoView stopPlayback];
+    self.recognizer.enabled = (self.imageView.height <= WXMPhoto_Height);
 }
 
 #pragma clang diagnostic pop
@@ -172,10 +171,15 @@
 - (void)setLocation:(CGFloat)scale {
     CGFloat cw = self.contentScrollView.frame.size.width;
     CGFloat ch = self.contentScrollView.frame.size.height;
+    
+    [self.contentScrollView setZoomScale:1.0 animated:NO];
     self.imageView.frame = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Width * scale);
     self.imageView.center = CGPointMake(cw / 2, ch / 2);
+    if ((WXMPhoto_Width * scale) > WXMPhoto_Height) self.imageView.top = 0;
     self.livePhotoView.frame = self.imageView.bounds;
+    self.imageRect = self.imageView.frame;
     
+    self.contentScrollView.contentSizeHeight = self.imageView.height;
     self.contentScrollView.maximumZoomScale = 2.5;
     if (self.imageView.height * self.contentScrollView.maximumZoomScale < WXMPhoto_Height) {
         CGFloat maxZoomScale = WXMPhoto_Height / self.imageView.height;
@@ -200,12 +204,17 @@
     CGFloat height = imageViewFrame.size.height;
     CGFloat sHeight = scrollView.bounds.size.height;
     CGFloat sWidth = scrollView.bounds.size.width;
-    if (height > sHeight) imageViewFrame.origin.y = 0;
+    if (height >= sHeight) imageViewFrame.origin.y = 0;
     else imageViewFrame.origin.y = (sHeight - height) / 2.0;
     
-    if (width > sWidth) imageViewFrame.origin.x = 0;
+    if (width >= sWidth) imageViewFrame.origin.x = 0;
     else imageViewFrame.origin.x = (sWidth - width) / 2.0;
     self.imageView.frame = imageViewFrame;
+    self.imageView.userInteractionEnabled = NO;
+    self.recognizer.enabled = (scrollView.zoomScale <= 1);
+    if (scrollView.zoomScale <= 1) {
+        scrollView.contentSize = CGSizeMake(0, scrollView.contentSize.height);
+    }
 }
 
 /** 添加手势 */
@@ -221,9 +230,10 @@
     tapDouble.numberOfTapsRequired = 2;
     
     SEL handle = @selector(handlePan:);
-    _recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self action:handle];
+    _recognizer = [[WXMPhotoDirectionPan alloc] initWithTarget:self action:handle];
     _recognizer->_direction = DirectionPanGestureRecognizerBottom;
     _recognizer.maximumNumberOfTouches = 1;
+    _recognizer.delegate = self;
     
     [tapSingle requireGestureRecognizerToFail:tapDouble];
     [tapSingle requireGestureRecognizerToFail:_recognizer];
@@ -247,78 +257,80 @@
     UIView *zoomView = [self viewForZoomingInScrollView:scrollView];
     CGPoint point = [tap locationInView:zoomView];
     if (!CGRectContainsPoint(zoomView.bounds, point)) return;
-    if (scrollView.zoomScale == scrollView.maximumZoomScale) {
-        [scrollView setZoomScale:1 animated:YES];
+    if (scrollView.zoomScale > 1) {
+        [scrollView setZoomScale:1.0 animated:YES];
     } else {
         [scrollView zoomToRect:CGRectMake(point.x, point.y, 1, 1) animated:YES];
     }
 }
 
-/** 设置手势顺序 */
+/** 设置手势顺序 比colleview的等级低 */
 - (void)setColleRecognizer:(UIPanGestureRecognizer *)colleRecognizer {
     _colleRecognizer = colleRecognizer;
     @try {
+        [_contentScrollView.panGestureRecognizer requireGestureRecognizerToFail:_colleRecognizer];
         [_recognizer requireGestureRecognizerToFail:_colleRecognizer];
     } @catch (NSException *exception) {} @finally {}
 }
+
 
 /** 滑动 */
 /** 这里采用的判断是 在图片缩小过程中 手指的点始终距离图片的xy顶点是view真实大小(view一直在缩小)的固定比例 */
 - (void)handlePan:(UIPanGestureRecognizer *)recognizer {
     [recognizer.view.superview bringSubviewToFront:recognizer.view];
     CGPoint center = recognizer.view.center;
-    CGPoint translation = [recognizer translationInView:self];  /** 位移 */
-    CGFloat wp_centery = center.y + translation.y;             /** y轴位移 */
-    CGFloat recognizer_W = recognizer.view.frame.size.width;
-    CGFloat recognizer_H = recognizer.view.frame.size.height;
-    
+    CGPoint location = [recognizer locationInView:self];
+      
     if (recognizer.state == UIGestureRecognizerStateBegan) {
-        CGPoint point = [recognizer locationInView:self];
-        self.wp_x = point.x / recognizer_W;
-        self.wp_y = point.y / recognizer_H;
-        self.wp_lastPoint = recognizer.view.center;
+        self.lastPoint = recognizer.view.center;
+        self.offX = (WXMPhoto_Width / 2.0) - location.x;
+        self.offY = (WXMPhoto_Height / 2.0) - location.y;
         if (self.delegate && [self.delegate respondsToSelector:@selector(wp_respondsBeginDragCell)]) {
             [self.delegate wp_respondsBeginDragCell];
         }
-        
+
     } else if (recognizer.state == UIGestureRecognizerStateChanged) {
-        CGFloat displacement = wp_centery - self.wp_lastPoint.y;
+        CGFloat displacement = center.y - self.lastPoint.y;
         CGFloat proportion = 1;
         CGFloat scaleAlpha = 1;
-        if (displacement <= 0) proportion = 1;
-        else {
-            CGFloat maxH = WXMPhoto_Height * 1.25;
-            CGFloat scale = displacement / maxH;
+        if (displacement <= 0)  {
+            proportion = 1;
+        } else {
+            CGFloat scale = displacement / (WXMPhoto_Height * 0.80);
             scaleAlpha = 1 - (displacement / (WXMPhoto_Height * 0.6));
             proportion = MAX(1 - scale, WXMPhotoMinification);
             if (displacement <= 0) scaleAlpha = 1;
         }
+      
+        CGFloat narrowProportion = recognizer.view.width / WXMPhoto_Width;
+        CGFloat centerX = location.x + (self.offX * narrowProportion);
+        CGFloat centerY = location.y + (self.offY * narrowProportion);
+       
         self.blackView.alpha = scaleAlpha;
         recognizer.view.transform = CGAffineTransformScale(CGAffineTransformIdentity, proportion, proportion);
-        
-        CGPoint point_XY = [recognizer locationInView:self];
-        CGFloat distance_x = recognizer_W * _wp_x;
-        CGFloat distance_y = recognizer_H * _wp_y;
-        CGRect rect = recognizer.view.frame;
-        rect.origin.x = point_XY.x - distance_x;
-        rect.origin.y = point_XY.y - distance_y;
-        recognizer.view.frame = rect;
+        recognizer.view.center = CGPointMake(centerX, centerY);
+        [recognizer setTranslation:CGPointZero inView:self];
     }
-    
-    if (recognizer.state == UIGestureRecognizerStateEnded ||
-        recognizer.state == UIGestureRecognizerStateCancelled) {
-        CGPoint velocity = [recognizer velocityInView:self];  /** 速度 */
+
+    if (recognizer.state == UIGestureRecognizerStateEnded || recognizer.state == UIGestureRecognizerStateCancelled) {
+
+        /** 速度 */
+        CGPoint velocity = [recognizer velocityInView:self];
         BOOL cancle = (velocity.y < 5 || self.blackView.alpha >= 1);
         if (cancle) {
+
+            [self.contentScrollView setZoomScale:1.01 animated:YES];
             [UIView animateWithDuration:0.35 animations:^{
                 recognizer.view.transform = CGAffineTransformIdentity;
-                recognizer.view.center = self.wp_lastPoint;
+                recognizer.view.center = self.lastPoint;
                 self.blackView.alpha = 1;
             } completion:^(BOOL finished) {
+                [self.contentScrollView setZoomScale:1.0 animated:YES];
                 if ([self.delegate respondsToSelector:@selector(wp_respondsEndDragCell:)]) {
                     [self.delegate wp_respondsEndDragCell:nil];
                 }
             }];
+
         } else {
             _contentScrollView.userInteractionEnabled = NO;
             if ([self.delegate respondsToSelector:@selector(wp_respondsEndDragCell:)]) {
@@ -351,5 +363,6 @@
 - (void)dealloc {
     self.imageView.image = nil;
 }
+
 @end
 

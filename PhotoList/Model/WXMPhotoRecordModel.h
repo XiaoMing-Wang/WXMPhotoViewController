@@ -12,6 +12,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** 勾选用的model */
+/** 勾选用的model */
+/** 勾选用的model */
 @interface WXMPhotoRecordModel : NSObject
 
 /** 相册名字 */

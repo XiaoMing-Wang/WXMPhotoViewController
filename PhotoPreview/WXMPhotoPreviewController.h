@@ -57,10 +57,8 @@
 /** 全部 */
 @property (nonatomic, strong) NSMutableArray *dataSource;
 
-
-
-
-
+/** 相册名字 */
+@property (nonatomic, strong) NSString *recordAlbumName;
 
 /** 可以选中的个数 */
 @property (nonatomic, assign) NSInteger selectedMaxCount;

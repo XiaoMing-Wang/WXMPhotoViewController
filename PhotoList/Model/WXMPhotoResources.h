@@ -9,19 +9,25 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 
+/** 回调用的model */
+/** 回调用的model */
+/** 回调用的model */
 @interface WXMPhotoResources : NSObject
 
 /** 预览图片 */
 @property (nonatomic, strong) UIImage *resourceImage;
 
 /** 视频data */
+@property (nonatomic, strong) NSData *nativeData;
 @property (nonatomic, strong) NSData *resourceData;
+@property (nonatomic, strong) NSString *videoDrantion;
+@property (nonatomic, assign) NSTimeInterval assetDrantion;
 
 /** 本地URL */
+@property (nonatomic, strong) NSString *objKey;
+@property (nonatomic, strong) NSString *nativeUrl;
 @property (nonatomic, strong) NSString *resourceUrl;
-
-/** 阿里云URL */
-@property (nonatomic, strong) NSString *aliCloudUrl;
+@property (nonatomic, strong) AVURLAsset *asset;
 
 /** 类型 */
 @property (nonatomic, assign) WXMPhotoMediaType mediaType;

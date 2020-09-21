@@ -5,13 +5,13 @@
 //  Created by edz on 2019/5/17.
 //  Copyright © 2019年 wq. All rights reserved.
 //
-#import "WXMResourceAssistant.h"
-#import "WXMPhotoShapeController.h"
-#import "WXMPhotoConfiguration.h"
 #import "TOCropView.h"
 #import "TOCropToolbar.h"
 #import "UIView+WXMPhoto.h"
 #import "UIImage+WXMPhoto.h"
+#import "WXMResourceAssistant.h"
+#import "WXMPhotoConfiguration.h"
+#import "WXMPhotoShapeController.h"
 
 @interface WXMPhotoShapeController () <TOCropViewDelegate>
 @property (nonatomic, weak) UINavigationController *weakNavigationVC;
@@ -29,7 +29,7 @@
     self.navigationController.navigationBar.shadowImage = [[UIImage alloc] init];
     self.navigationController.navigationBar.backgroundColor = [UIColor clearColor];
     UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:0.0];
-    UIImage *imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
+    UIImage *imageN = [WXMPhotoUIAssistant photoImageWithColor:whiteColor];
     [self.navigationController.navigationBar setBackgroundImage:imageN
                                                   forBarMetrics:UIBarMetricsDefault];
     
@@ -60,7 +60,10 @@
     [_cropToolbar.cancelIconButton wp_setEnlargeEdgeWithTop:10 left:15 right:15 bottom:10];
     
     _cropToolbar.cancelButtonTapped = ^{ [weakself popViewController]; };
-    _cropToolbar.doneButtonTapped = ^{ [weakself dismissViewController]; };
+    _cropToolbar.doneButtonTapped = ^{
+        weakself.donePop ? [weakself popWithSendViewController] : [weakself dismissViewController];
+    };
+    
     _cropToolbar.rotateCounterclockwiseButtonTapped = ^{ [weakself rotateCropViewCounterclockwise];};
     _cropToolbar.rotateClockwiseButtonTapped = ^{ [weakself rotateCropViewClockwise]; };
     _cropToolbar.resetButtonTapped = ^{ [weakself resetCropViewLayout]; };
@@ -75,7 +78,6 @@
 }
 
 - (void)rotateCropViewCounterclockwise {
-    NSLog(@"%@",NSStringFromCGRect(_cropView.cropBoxFrame));
     [self.cropView rotateImageNinetyDegreesAnimated:YES clockwise:NO];
 }
 
@@ -105,6 +107,21 @@
         
         [WXMResourceAssistant sendCoverImage:cropImage delegate:self.delegate];
         [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+    }
+}
+
+- (void)popWithSendViewController {
+    CGRect cropFrame = self.cropView.imageCropFrame;
+    NSInteger angle = self.cropView.angle;
+    
+    @autoreleasepool {
+        UIImage *cropImage = [self.cropView.image croppedImageWithFrame:cropFrame angle:angle circularClip:NO];
+        if (CGSizeEqualToSize(self.expectSize, CGSizeZero) == NO) {
+            cropImage = [cropImage scaleToSize:self.expectSize];
+        }
+        
+        [WXMResourceAssistant sendCoverImage:cropImage delegate:self.delegate];
+        [self.navigationController popViewControllerAnimated:YES];
     }
 }
 
@@ -142,9 +159,11 @@
 }
 
 - (void)dealloc {
-    UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:1.0];
-    UIImage *imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:whiteColor];
-    [self.weakNavigationVC.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
+    if (self.donePop == NO) {
+        UIColor * whiteColor = [[UIColor whiteColor] colorWithAlphaComponent:1.0];
+        UIImage *imageN = [WXMPhotoUIAssistant photoImageWithColor:whiteColor];
+        [self.weakNavigationVC.navigationBar setBackgroundImage:imageN forBarMetrics:UIBarMetricsDefault];
+    }
 }
 #pragma clang diagnostic pop
 

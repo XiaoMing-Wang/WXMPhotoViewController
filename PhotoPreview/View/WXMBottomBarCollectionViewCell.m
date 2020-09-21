@@ -11,8 +11,8 @@
 
 @interface WXMBottomBarCollectionViewCell ()
 
-
 @property (nonatomic, strong) UIImageView *imageView;
+@property (nonatomic, strong) UIImageView *videoSymbol;
 
 /** 当前cell的下载的ID 复用的时候使用 */
 @property (nonatomic, assign) int32_t currentRequestID;
@@ -30,18 +30,29 @@
 }
 
 - (void)initializationInterface {
-    self.imageView = [[UIImageView alloc] initWithFrame:CGRectZero];
+    self.imageView = [[UIImageView alloc] init];
     self.imageView.clipsToBounds = YES;
     self.imageView.size = CGSizeMake(WXMPhotoPreviewImageWH, WXMPhotoPreviewImageWH);
     self.imageView.layer.borderWidth = 1.5;
     self.imageView.contentMode = UIViewContentModeScaleAspectFill;
     self.imageView.layer.borderColor = [UIColor clearColor].CGColor;
+    
+    self.videoSymbol = [[UIImageView alloc] init];
+    self.videoSymbol.size = CGSizeMake(20, 20);
+    self.videoSymbol.image = [UIImage imageNamed:@"phoro_play"];
+    self.videoSymbol.centerX = self.contentView.width / 2;
+    self.videoSymbol.centerY = self.contentView.height / 2;
+    self.videoSymbol.hidden = YES;
+      
     [self.contentView addSubview:self.imageView];
+    [self.contentView addSubview:self.videoSymbol];
 }
 
 - (void)setRecordModel:(WXMPhotoRecordModel *)recordModel {
     _recordModel = recordModel;
     _assetIdentifier = recordModel.recordAsset.asset.localIdentifier;
+    _videoSymbol.hidden = (recordModel.mediaType != WXMPHAssetMediaTypeVideo);
+    
     CGFloat wh = self.imageView.width * 2.0;
     [[WXMPhotoManager sharedInstance] getPicturesCustomSize:recordModel.recordAsset.asset synchronous:NO assetSize:CGSizeMake(wh, wh) completion:^(UIImage *image) {
         if ([self.assetIdentifier isEqualToString:recordModel.recordAsset.asset.localIdentifier]) {

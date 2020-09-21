@@ -21,6 +21,9 @@
 - (void)setAccordingState:(BOOL)state;
 
 /** 目前选中的是那种资源 video image no三种 */
-- (void)setChooseType:(WXMPhotoMediaType)chooseType asset:(WXMPhotoAsset *)asset;
+- (void)setChooseType:(WXMPhotoMediaType)chooseType asset:(WXMPhotoAsset *)asset unrestrictedmode:(NSInteger)unrestrictedmode;
+
+/** 删除右按钮 */
+- (void)deleteRightButton;
 
 @end

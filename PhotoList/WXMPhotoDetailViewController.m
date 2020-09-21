@@ -8,19 +8,19 @@
 #import <objc/runtime.h>
 #import "WXMPhotoManager.h"
 #import "WXMPhotoListCell.h"
-#import "WXMPhotoCollectionCell.h"
-#import "WXMPhotoConfiguration.h"
-#import "WXMPhotoViewController.h"
-#import "WXMPhotoPreviewController.h"
-#import "WXMPhotoShapeController.h"
 #import "WXMDictionary_Array.h"
+#import "WXMPhotoRecordModel.h"
+#import "WXMResourceAssistant.h"
+#import "WXMPhotoConfiguration.h"
 #import "WXMPhotoDetailToolbar.h"
 #import "WXMPhotoDetailTitleBar.h"
-#import "WXMResourceAssistant.h"
-#import "WXMPhotoRecordModel.h"
+#import "WXMPhotoCollectionCell.h"
+#import "WXMPhotoViewController.h"
+#import "WXMPhotoShapeController.h"
+#import "WXMPhotoPreviewController.h"
 #import "WXMPhotoDetailViewController.h"
 
-@interface WXMPhotoDetailViewController () <UICollectionViewDelegate, WXMDetailTitleBarProtocol, UICollectionViewDataSource, WXMPhotoSignProtocol, WXMDetailToolbarProtocol, WXMPhotoCollectionCellDelegate, WXMPhotoPreviewRefreshDelegate>
+@interface WXMPhotoDetailViewController () <UICollectionViewDelegate, WXMDetailTitleBarProtocol, UICollectionViewDataSource, WXMDetailToolbarProtocol, WXMPhotoCollectionCellDelegate, WXMPhotoPreviewRefreshDelegate>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 
@@ -43,6 +43,9 @@
 /** 存储被标记的图片model <WXMPhotoRecordModel *> */
 @property (nonatomic, strong) WXMDictionary_Array *dictionaryArray;
 
+/** 识别gif */
+@property (nonatomic, assign) BOOL allowRecogGIF;
+
 @end
 
 @implementation WXMPhotoDetailViewController
@@ -64,7 +67,7 @@
     self.navigationController.navigationBar.translucent = YES;
     self.navigationController.navigationBar.shadowImage = [[UIImage alloc] init];
     self.navigationController.navigationBar.backgroundColor = [UIColor clearColor];
-    UIImage *imageN = [WXMPhotoAssistant wxmPhoto_imageWithColor:WXMBarColor];
+    UIImage *imageN = [WXMPhotoUIAssistant photoImageWithColor:WXMBarColor];
     [self.navigationController.navigationBar setBackgroundImage:imageN forBarMetrics:0];
     
     self.view.clipsToBounds = YES;
@@ -73,88 +76,81 @@
     
     /** 选择相册控制器 */
     [self.view addSubview:self.listController.view];
-    if (WXMPhotoShowDetailToolbar && self.photoType == WXMPhotoDetailTypeMultiSelect) {
-        
+    if (WXMPhotoShowDetailToolbar && (self.photoType == WXMPhotoDetailTypeMultiSelect || self.photoType == WXMPhotoDetailTypeHybrid)) {
         [self.view insertSubview:self.toolbar belowSubview:self.listController.view];
-        self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, self.toolbar.height + kMargin * 2, 0);
-        
+        self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, self.toolbar.height - WXMPhoto_SafeHeight + 5, 0);
     } else {
-        
-        self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, WXMPhoto_SafeHeight, 0);
+        self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0);
     }
     
-    self.navigationItem.rightBarButtonItem = [WXMPhotoAssistant
-                                              wp_createButtonItem:@"取消"
-                                              target:self
-                                              action:@selector(dismissViewController)];
-    
     /** 进来加载最近项目相册 */
+    self.navigationItem.leftBarButtonItem = [WXMPhotoUIAssistant createButtonItem:@"取消" target:self action:@selector(dismissViewController)];
     [[WXMPhotoManager sharedInstance] getAllPicturesListBlock:^(NSArray<WXMPhotoList *> *allList) {
         [self getPreviewAlbumWithPhotoList:WXMPhotoManager.sharedInstance.firstPhotoList];
     }];
 }
 
-/** 获取两倍像素的图片 */
-/** 获取两倍像素的图片 */
-/** 获取两倍像素的图片 */
+/**< 获取两倍像素的图片 */
 - (void)getPreviewAlbumWithPhotoList:(WXMPhotoList *)photoList {
     if ([photoList.title isEqualToString:self.phoneList.title] && self.phoneList) return;
        
-    WXMPhotoManager *manager = [WXMPhotoManager sharedInstance];
     self.dataSource = @[].mutableCopy;
     self.phoneList = photoList;
     self.titleBar.title = photoList.title;
-        
+    self.toolbar.albumName = self.titleBar.title;
+    self.toolbar.dictionaryArray = self.dictionaryArray;
+    
     PHAssetCollection *asset = self.phoneList.assetCollection;
-    NSArray <PHAsset *>*phAssets = [manager getAssetsInAssetCollection:asset ascending:YES];
+    NSArray <PHAsset *>*phAssets = [[WXMPhotoManager sharedInstance] getAssetsInAssetCollection:asset ascending:YES];
     [phAssets enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
         WXMPhotoAsset *asset = [WXMPhotoAsset new];
         asset.asset = obj;
         [self.dataSource addObject:asset];
     }];
-    
+        
     /** 滚动到最后 */
     [self.collectionView setContentOffsetY:0];
     [self.collectionView reloadData];
     if (self.dataSource.count <= 1) return;
     UICollectionViewScrollPosition position = UICollectionViewScrollPositionCenteredVertically;
-    NSIndexPath * index = [NSIndexPath indexPathForRow:self.dataSource.count - 1 inSection:0];
+    NSIndexPath *index = [NSIndexPath indexPathForRow:self.dataSource.count - 1 inSection:0];
     [self.collectionView scrollToItemAtIndexPath:index atScrollPosition:position animated:NO];
 }
 
 
 #pragma mark  UICollectionView
-#pragma mark  UICollectionView
-#pragma mark  UICollectionView
-
 - (NSInteger)collectionView:(UICollectionView *)collection numberOfItemsInSection:(NSInteger)section {
     return self.dataSource.count;
 }
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
-                  cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    WXMPhotoCollectionCell *cell = nil;
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    WXMPhotoCollectionCell *cell = cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
     WXMPhotoAsset *photoAsset = [self.dataSource objectAtIndex:indexPath.row];
-    
-    cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
     cell.photoAsset = photoAsset;
     
-    /** 是否显示勾选框 */
+    /**< 是否显示勾选框 */
     cell.displayCheckBox = [self displayCheckBox:photoAsset];
     
-    /** 是否显示视频 NO会显示为视频第一帧 */
+    /**< 是否显示视频 NO会显示为视频第一帧 */
     cell.showVideo = self.showVideo;
     
-    /** 是否可以被点击 否显示白屏 */
+    /**< 是否可以被点击 否显示白屏 */
     [cell setUserCanTouch:[self judgeCellCanTouch:cell] animation:NO];
+    
+    /**< 多选代理 */
+    if (self.photoType == WXMPhotoDetailTypeMultiSelect || self.photoType == WXMPhotoDetailTypeHybrid || self.photoType == WXMPhotoDetailTypeSingleType) {
         
-    /** 多选代理 */
-    if (self.photoType == WXMPhotoDetailTypeMultiSelect) cell.delegate = self;
-    if (self.photoType == WXMPhotoDetailTypeMultiSelect) {
+        /**< 设置代理 */
         NSString *localIdentifier = photoAsset.asset.localIdentifier;
         WXMPhotoRecordModel *recordModel = [self.dictionaryArray objectForKey:localIdentifier];;
         recordModel.recordIndexPath = indexPath;
+        cell.delegate = self;
         cell.recordModel = recordModel;
+        
+    } else {
+        
+        /**< 不是多选和混合不显示gif和视频长度 */
+        [cell hideSign];
     }
 
     return cell;
@@ -171,7 +167,7 @@
     if (_photoType == WXMPhotoDetailTypeGetPhoto ||
         _photoType == WXMPhotoDetailTypeGetPhoto_256 ||
         _photoType == WXMPhotoDetailTypeGetPhotoCustomSize) {
-
+        
         if (self.exitPreview) {
             
             size = CGSizeMake(WXMPhoto_Width * 2, WXMPhoto_Width * phsset.aspectRatio * 2);
@@ -188,26 +184,22 @@
         
         [self getImagePreview:phsset size:size callback:^(UIImage *image) {
             if (self.exitPreview) {
-                
                 phsset.cacheImage = image;
-                WXMPhotoPreviewController *preview = [self wp_getPreviewController:indexPath];
+                WXMPhotoPreviewController *preview = [self getPreviewController:indexPath];
                 preview.previewType = WXMPhotoPreviewTypeSingle;
                 [self.navigationController pushViewController:preview animated:YES];
-                
             } else {
-                
                 [self sendImageWithPhotoAsset:phsset coverImage:image];
             }
         }];
     }
 
     /** 先同步获取大图 否则跳界面会闪 */
-    if (_photoType == WXMPhotoDetailTypeMultiSelect) {
-        
+    if (_photoType == WXMPhotoDetailTypeMultiSelect || _photoType == WXMPhotoDetailTypeHybrid || _photoType == WXMPhotoDetailTypeSingleType) {
         size = CGSizeMake(WXMPhoto_Width * 2.0, WXMPhoto_Width * phsset.aspectRatio * 2.0);
         [self getImagePreview:phsset size:size callback:^(UIImage *image) {
             phsset.cacheImage = image;
-            WXMPhotoPreviewController *preview = [self wp_getPreviewController:indexPath];
+            WXMPhotoPreviewController *preview = [self getPreviewController:indexPath];
             preview.previewType = WXMPhotoPreviewTypeMost;
             [self.navigationController pushViewController:preview animated:YES];
         }];
@@ -222,12 +214,12 @@
             width = height / phsset.aspectRatio * 1.0;
         }
 
-        size = CGSizeMake(width * 4, height * 4);
+        size = CGSizeMake(width * 3, height * 3);
         if (WXMPhotoCropUseOriginal) size = PHImageManagerMaximumSize;
         [self getImagePreview:phsset size:size callback:^(UIImage *image) {
             WXMPhotoShapeController *shape = [WXMPhotoShapeController new];
             shape.delegate = self.delegate;
-            shape.shapeImage = image.wp_redraw;
+            shape.shapeImage = image;
             shape.expectSize = self.expectSize;
             [self.navigationController pushViewController:shape animated:YES];
         }];
@@ -240,7 +232,7 @@
 }
 
 /** 预览控制器 */
-- (WXMPhotoPreviewController *)wp_getPreviewController:(NSIndexPath *)index {
+- (WXMPhotoPreviewController *)getPreviewController:(NSIndexPath *)index {
     WXMPhotoPreviewController * preview = [WXMPhotoPreviewController new];
     preview.dataSource = self.dataSource;
     preview.photoType = self.photoType;
@@ -252,8 +244,9 @@
     preview.isOriginalImage = self.toolbar.isOriginalImage;
     preview.realSelectCount = [self realSelectCount];
     preview.realSelectVideo = [self maxSelectVideoCount];
+    preview.recordAlbumName = self.titleBar.title;
     UIView * snapView = self.navigationController.view;
-    preview.wp_windowView = [WXMPhotoAssistant wxmPhoto_snapViewImage:snapView];
+    preview.wp_windowView = [WXMPhotoUIAssistant photoSnapViewImage:snapView];
     return preview;
 }
 
@@ -261,17 +254,17 @@
 
 /** 刷新相册详情界面 不能用reload */
 - (void)wp_reloadPhotoDetailViewController {
-    [self wp_reloadAllAvailableCell];
+    [self reloadAllAvailableCell];
     self.toolbar.dictionaryArray = self.dictionaryArray;
 }
 
 /** 获取截图 */
 - (UIView *)wp_getScreenshotsPhotoDetailViewController {
-    return [WXMPhotoAssistant wxmPhoto_snapViewImage:self.view];
+    return [WXMPhotoUIAssistant photoSnapViewImage:self.view];
 }
 
 /** 刷新所有显示的cell */
-- (void)wp_reloadAllAvailableCell {
+- (void)reloadAllAvailableCell {
     [self.toolbar setOriginalEnabled:YES];
     if (self.chooseType == WXMPHAssetMediaTypeVideo && !self.chooseVideoWithPhoto) {
         [self.toolbar setOriginalEnabled:NO];
@@ -279,11 +272,10 @@
 
     /** visibleCells collectionView新的刷新机制会生成新的cell导致不能刷新 */
     NSArray *arrays = self.collectionView.subviews;
-    [arrays enumerateObjectsUsingBlock:^(UIView *obj, NSUInteger idx, BOOL *stop){
-        if ([obj isKindOfClass:[WXMPhotoCollectionCell class]]) {
-            WXMPhotoCollectionCell * cell = (WXMPhotoCollectionCell *)obj;
+    [arrays enumerateObjectsUsingBlock:^(UIView *subView, NSUInteger idx, BOOL *stop){
+        if ([subView isKindOfClass:[WXMPhotoCollectionCell class]]) {
+            WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)subView;
             NSString *localIdentifier = cell.photoAsset.asset.localIdentifier;
-            
             [cell setUserCanTouch:[self judgeCellCanTouch:cell] animation:YES];
             cell.recordModel = [self.dictionaryArray objectForKey:localIdentifier];
         }
@@ -302,7 +294,7 @@
 
 /** 回调 */
 - (void)wp_touchDismissViewController {
-    NSMutableArray * array = @[].mutableCopy;
+    NSMutableArray *array = @[].mutableCopy;
     [_dictionaryArray enumerateObjectsUsingBlock:^(WXMPhotoRecordModel *obj, NSUInteger idx, BOOL stop) {
         if (obj.recordAsset) [array addObject:obj.recordAsset];
     }];
@@ -346,28 +338,32 @@
 }
 
 #pragma mark ----------------------------------- 点击选择框
-#pragma mark ----------------------------------- 点击选择框
-#pragma mark ----------------------------------- 点击选择框
 
 - (void)wp_photoCollectionCellCheckBox:(WXMPhotoCollectionCell *)cell selected:(BOOL)selected {
+    
+    /** return; */
+    
     @synchronized (self) {
         NSInteger maxCount = [self realSelectCount];
         BOOL isFull = (self.dictionaryArray.count >= maxCount);
         
-           /** 删除 */
+        /**< 删除 */
         if (selected) {
+            
             [cell refreshRanking:nil animation:NO];
             [self refreshRanking:cell.photoAsset.asset.localIdentifier];
             [self.dictionaryArray removeObjectForKey:cell.photoAsset.asset.localIdentifier];
             
-            if (isFull) [self wp_reloadAllAvailableCell]; /** 刷新遮罩 */
-            if (self.dictionaryArray.count == 0 &&
-                (!WXMPhotoChooseVideo_Photo || !self.chooseVideoWithPhoto)) {
-                [self wp_reloadAllAvailableCell];
+            if (isFull) [self reloadAllAvailableCell]; /** 刷新遮罩 */
+            if (self.dictionaryArray.count == 0&&(!WXMPhotoChooseVideo_Photo || !self.chooseVideoWithPhoto)) {
+                [self reloadAllAvailableCell];
             }
             
-            /** 添加 */
+        /**< 添加 */
         } else {
+            
+            /**< 判断资源合法  */
+            if (![self legalResources:cell]) return;
             NSIndexPath *indexPath = [self.collectionView indexPathForCell:cell];
             WXMPhotoRecordModel *recordModel = [WXMPhotoRecordModel new];
             recordModel.recordAlbumName = self.phoneList.title;
@@ -378,10 +374,9 @@
             [cell refreshRanking:recordModel animation:YES];
             [self.dictionaryArray setObject:recordModel forKey:cell.photoAsset.asset.localIdentifier];
             
-            if (self.dictionaryArray.count >= maxCount) [self wp_reloadAllAvailableCell];
-            if (self.dictionaryArray.count == 1 &&
-                (!WXMPhotoChooseVideo_Photo || !self.chooseVideoWithPhoto)) {
-                [self wp_reloadAllAvailableCell];
+            if (self.dictionaryArray.count >= maxCount) [self reloadAllAvailableCell];
+            if (self.dictionaryArray.count == 1 && (!WXMPhotoChooseVideo_Photo || !self.chooseVideoWithPhoto)) {
+                [self reloadAllAvailableCell];
             }
         }
         
@@ -399,50 +394,56 @@
         if (recordModel.recordRank > delete.recordRank) {
             recordModel.recordRank = MAX(recordModel.recordRank - 1, 1);
             NSIndexPath *index = recordModel.recordIndexPath;
-            WXMPhotoCollectionCell *cell = nil;
-            cell = (WXMPhotoCollectionCell *)[self.collectionView cellForItemAtIndexPath:index];
+            WXMPhotoCollectionCell *cell = (WXMPhotoCollectionCell *)[self.collectionView cellForItemAtIndexPath:index];
             [cell refreshRanking:recordModel animation:NO];
         }
     }
 }
 
-/** 判断是否可以点击 YES表示可以 */
-- (BOOL)judgeCellCanTouch:(WXMPhotoCollectionCell *)cell {
-    if (self.photoType == WXMPhotoDetailTypeGetPhoto ||
-        self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
-        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize ||
-        self.photoType == WXMPhotoDetailTypeTailoring) {
-        return YES;
-    }
-    
-    /** 进来就不能点的 */
-    if (cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo && !self.canSelectedVideo) {
+/** 判断资源(大小时长)合法 */
+- (BOOL)legalResources:(WXMPhotoCollectionCell *)cell {
+    if (self.unrestrictedmode) return YES;
+    BOOL isVidelCell = cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo;
+    if (isVidelCell && cell.photoAsset.asset.duration > WXMPhotoLimitVideoTime && WXMPhotoLimitVideoTime > 0) {
+        NSString *message = [NSString stringWithFormat:@"不支持超过%d秒的视频", WXMPhotoLimitVideoTime];
+        [WXMPhotoUIAssistant showAlertViewControllerWithTitle:message message:@"" cancel:@"确定" otherAction:nil completeBlock:nil];
         return NO;
     }
-      
-    /** 视频超过时长的 */
-    if (cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo &&
-        cell.photoAsset.asset.duration > WXMPhotoLimitVideoTime &&
-        WXMPhotoLimitVideoTime > 0) return NO;
     
-    /** 不足一秒的 */
-    /** if (cell.photoAsset.asset.duration <= 1 && cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo) return NO; */
+    BOOL isGIFCell = cell.photoAsset.mediaType == WXMPHAssetMediaTypePhotoGif;
+    if (isGIFCell && WXMPhotoLimitGIFSize > 0) {
+        CGFloat multipartfile = [WXMPhotoUIAssistant getOriginalMultipartfile:cell.photoAsset.asset];
+        if (multipartfile > WXMPhotoLimitGIFSize){
+            NSString *message = [NSString stringWithFormat:@"不支持超过%dM的动图", WXMPhotoLimitGIFSize];
+            [WXMPhotoUIAssistant showAlertViewControllerWithTitle:message message:@"" cancel:@"确定" otherAction:nil completeBlock:nil];
+            return NO;
+        }
+    }
+        
+    return YES;
+}
+
+/** 判断数量或者可选模式合法 */
+- (BOOL)judgeCellCanTouch:(WXMPhotoCollectionCell *)cell {
+    if (self.unrestrictedmode) return YES;
     
+    /**< 不能选视频 */
+    BOOL isVidelCell = cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo;
+    if (isVidelCell && self.canSelectedVideo == NO) return NO;
+    
+    /**< 数量不够 */
     NSInteger count = self.dictionaryArray.count;
     NSString *localIdentifier = cell.photoAsset.asset.localIdentifier;
     WXMPhotoRecordModel *recordModel = [self.dictionaryArray objectForKey:localIdentifier];
-    
-    /** 个数不够或者已经被勾选 */
     if (count <= 0 || recordModel != nil) return YES;
-     
-    /** 支持同时选视频和图片 */
-    if (WXMPhotoChooseVideo_Photo && self.chooseVideoWithPhoto) {
-        
+           
+    /**< 支持同时选视频和图片 混合不做限制 */
+    if (self.chooseVideoWithPhoto || self.photoType == WXMPhotoDetailTypeHybrid) {
         return (count < [self realSelectCount]);
         
     } else {
         
-        /** 不支持同时选视频和图片 */
+        /**< 不支持同时选视频和图片 */
         if (self.chooseType == WXMPHAssetMediaTypeVideo) {
             if (count >= self.maxSelectVideoCount) return NO;
             return (cell.photoAsset.mediaType == WXMPHAssetMediaTypeVideo);
@@ -451,6 +452,7 @@
             return (cell.photoAsset.mediaType != WXMPHAssetMediaTypeVideo);
         }
     }
+    
     return YES;
 }
 
@@ -466,14 +468,12 @@
         flow.minimumLineSpacing = kMargin;
         flow.minimumInteritemSpacing = kMargin;
         
-        CGRect re = WXMPhoto_SRect;
-        Class cellClass = [WXMPhotoCollectionCell class];
-        _collectionView = [[UICollectionView alloc] initWithFrame:re collectionViewLayout:flow];
+        _collectionView = [[UICollectionView alloc] initWithFrame:WXMPhoto_SRect collectionViewLayout:flow];
         _collectionView.backgroundColor = [UIColor whiteColor];
         _collectionView.dataSource = self;
         _collectionView.delegate = self;
         _collectionView.alwaysBounceVertical = YES;
-        [_collectionView registerClass:cellClass forCellWithReuseIdentifier:@"cell"];
+        [_collectionView registerClass:[WXMPhotoCollectionCell class] forCellWithReuseIdentifier:@"cell"];
     }
     return _collectionView;
 }
@@ -481,31 +481,27 @@
 /** 用户第一张选择的类型 */
 - (WXMPhotoMediaType)chooseType {
     if (self.dictionaryArray.count == 0) return WXMPHAssetMediaTypeNone;
-    WXMPhotoRecordModel * signModel = self.dictionaryArray.firstObject;
+    WXMPhotoRecordModel *signModel = self.dictionaryArray.firstObject;
     if (signModel.mediaType == WXMPHAssetMediaTypeVideo) return WXMPHAssetMediaTypeVideo;
     return WXMPHAssetMediaTypeImage;
 }
 
 /** 是否显示勾选框 */
 - (BOOL)displayCheckBox:(WXMPhotoAsset *)photoAsset {
-    if (self.photoType == WXMPhotoDetailTypeGetPhoto ||
-        self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
-        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize ||
-        self.photoType == WXMPhotoDetailTypeTailoring) {
-        return NO;
-    }
+    if (self.unrestrictedmode) return NO;
     
-    /** 只能选一个视频时不能勾选 其余可以 */
+    /**< 混合不限制 */
+    if (self.photoType == WXMPhotoDetailTypeHybrid)  return YES;
+    
+    /**< 只能选一个视频时不能勾选 其余可以 */
     if (photoAsset.mediaType == WXMPHAssetMediaTypeVideo && self.maxSelectVideoCount == 1) return NO;
+    
     return YES;
 }
 
 /** 多选是否支持同时选图片和视频 */
 - (BOOL)chooseVideoWithPhoto {
-    if (self.photoType == WXMPhotoDetailTypeGetPhoto ||
-        self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
-        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize ||
-        self.photoType == WXMPhotoDetailTypeTailoring) {
+    if (self.unrestrictedmode) {
         _chooseVideoWithPhoto = NO;
     }
     return _chooseVideoWithPhoto && WXMPhotoChooseVideo_Photo;
@@ -513,17 +509,26 @@
 
 /** 是否显示视频按钮 */
 - (BOOL)showVideo {
-    if (self.photoType == WXMPhotoDetailTypeGetPhoto ||
-        self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
-        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize ||
-        self.photoType == WXMPhotoDetailTypeTailoring) {
-        _showVideo = NO;
+    if (self.unrestrictedmode) {
+        return NO;
     }
     return _showVideo;
 }
 
+/** 无限制模式 */
+- (BOOL)unrestrictedmode {
+    if (self.photoType == WXMPhotoDetailTypeGetPhoto ||
+        self.photoType == WXMPhotoDetailTypeGetPhoto_256 ||
+        self.photoType == WXMPhotoDetailTypeGetPhotoCustomSize ||
+        self.photoType == WXMPhotoDetailTypeTailoring) {
+        return YES;
+    }
+    return NO;
+}
+
 /** 实际上最大选择数量 */
 - (NSInteger)realSelectCount {
+    if (self.photoType == WXMPhotoDetailTypeHybrid) return self.maxSelectImagesCount;
     if (self.chooseVideoWithPhoto && WXMPhotoChooseVideo_Photo) {
         return MAX(self.maxSelectImagesCount, self.maxSelectVideoCount);
     }

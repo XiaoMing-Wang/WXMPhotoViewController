@@ -1,6 +1,6 @@
 //
-//  FZJPhotoTool.h
-//  FZJPhotosFrameWork
+//  WXMPhotoList.h
+//  WXMPhotoList
 //
 //  Created by wq on 16/1/10.
 //  Copyright © 2016年 wq. All rights reserved.
@@ -31,9 +31,10 @@ typedef enum {
 /** 相片对象 */
 @interface WXMPhotoAsset : NSObject
 @property (nonatomic, strong) PHAsset *asset;              /** 相片媒介 */
-@property (nonatomic, strong) UIImage *cacheImage;
-@property (nonatomic, copy) NSURL *videoUrl;               /** video url */
-@property (nonatomic, copy) NSString *videoDrantion;       /** video 时间 */
+@property (nonatomic, strong) UIImage *cacheImage;         /** 显示用的缓存image */
+@property (nonatomic, strong) NSURL *videoUrl;             /** video url */
+@property (nonatomic, strong) NSString *videoDrantion;     /** video 时间 */
+@property (nonatomic, assign) NSTimeInterval assetDrantion;/** video 时间 */
 @property (nonatomic, assign) int32_t requestID;           /** 下载唯一id */
 @property (nonatomic, assign) CGFloat bytes;               /** 大小 */
 @property (nonatomic, assign) CGFloat aspectRatio;         /** 高/宽比例 */
@@ -53,8 +54,7 @@ typedef enum {
 - (NSArray<PHAsset *> *)getAllAssetInPhotoAblumWithAscending:(BOOL)ascending;
 
 /**  获取指定相册的所有图片 */
-- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection
-                                         ascending:(BOOL)ascending;
+- (NSArray<PHAsset *> *)getAssetsInAssetCollection:(PHAssetCollection *)assetCollection ascending:(BOOL)ascending;
 
 /**
  *  取到对应的照片实体
@@ -73,11 +73,8 @@ typedef enum {
                  deliveryMode:(PHImageRequestOptionsDeliveryMode)deliveryMode
                    completion:(void (^)(UIImage *AssetImage))completion;
 
-
 /** 获取高质量原图 */
-- (int32_t)getPicturesOriginal:(PHAsset *)asset
-                   synchronous:(BOOL)synchronous
-                    completion:(void (^)(UIImage *image))completion;
+- (int32_t)getPicturesOriginal:(PHAsset *)asset synchronous:(BOOL)synchronous completion:(void (^)(UIImage *image))completion;
 
 /** 获取自定义尺寸 设置PHImageRequestOptionsResizeModeExact是有效 */
 - (int32_t)getPicturesCustomSize:(PHAsset *)asset
@@ -86,10 +83,7 @@ typedef enum {
                       completion:(void (^)(UIImage *image))completion;
 
 /** 同步获取图片 size为zero获取原图 */
-- (int32_t)synchronousGetPictures:(PHAsset *)asset
-                             size:(CGSize)size
-                       completion:(void (^)(UIImage *image))comple;
-
+- (int32_t)synchronousGetPictures:(PHAsset *)asset size:(CGSize)size completion:(void (^)(UIImage *image))comple;
 
 /** 获取GIF data */
 - (int32_t)getGIFByAsset:(PHAsset *)asset completion:(void (^)(NSData *))completion;
@@ -100,12 +94,14 @@ typedef enum {
 /** 获取视频路径 */
 - (void)getVideoByAsset:(PHAsset *)assetData completion:(void (^)(AVURLAsset *, NSURL * , NSData *))completiont;
 
+/** 获取视频路径 */
+- (void)getVideoPhotoAblum:(NSString *)target complete:(void (^) (AVURLAsset *))complete;
+
 /** 获取livephoto 系统大于9.1 */
-- (void)getLivePhotoByAsset:(PHAsset *)assetData
-                   liveSize:(CGSize)liveSize
-                 completion:(void (^)(PHLivePhoto *))completiont API_AVAILABLE(ios(9.1));
+- (void)getLivePhotoByAsset:(PHAsset *)assetData liveSize:(CGSize)liveSize completion:(void (^)(PHLivePhoto *))completiont API_AVAILABLE(ios(9.1));
 
 /** 取消请求 */
 - (void)cancelRequestWithID:(int32_t)requestID;
+
 @end
 

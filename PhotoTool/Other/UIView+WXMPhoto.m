@@ -225,15 +225,30 @@ static char p_rightNameKey;
 
 @end
 
-@implementation UIImage (WXMPhoto)
+@implementation UIImage (WXMPhotoCategory)
 
-- (UIImage *)wp_redraw {
+- (void)wp_redraw:(void (^)(UIImage * image))callback {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        CGFloat width = CGImageGetWidth(self.CGImage);
+        CGFloat height = CGImageGetHeight(self.CGImage);
+        UIGraphicsBeginImageContext(CGSizeMake(width, height));
+        [self drawInRect:CGRectMake(0, 0, width, height)];
+        UIImage *images = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        dispatch_async(dispatch_get_main_queue(), ^{
+            callback(images);
+        });
+    });
+}
+
+- (UIImage *)wp_redrawImage {
     CGFloat width = CGImageGetWidth(self.CGImage);
     CGFloat height = CGImageGetHeight(self.CGImage);
     UIGraphicsBeginImageContext(CGSizeMake(width, height));
     [self drawInRect:CGRectMake(0, 0, width, height)];
-    UIImage* images = UIGraphicsGetImageFromCurrentImageContext();
+    UIImage *images = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return images;
 }
+
 @end

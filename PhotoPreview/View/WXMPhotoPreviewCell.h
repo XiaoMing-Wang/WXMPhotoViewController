@@ -12,6 +12,8 @@
 
 @interface WXMPhotoPreviewCell : UICollectionViewCell
 
+@property (nonatomic, assign) BOOL supportGIF;
+
 @property (nonatomic, strong) WXMPhotoAsset *photoAsset;
 
 @property (nonatomic, assign) id<WXMPreviewCellProtocol> delegate;

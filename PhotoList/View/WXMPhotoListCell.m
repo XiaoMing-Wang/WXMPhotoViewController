@@ -31,7 +31,7 @@
     
     self.titleLable = [[UILabel alloc] init];
     self.titleLable.frame = CGRectMake(left, 0, self.frame.size.width - 125, WXMPhotoListCellH);
-    self.titleLable.font = [UIFont systemFontOfSize:15];
+    self.titleLable.font = [UIFont systemFontOfSize:16];
     self.titleLable.textColor = [UIColor blackColor];
     self.titleLable.textAlignment = NSTextAlignmentLeft;
     
@@ -43,7 +43,7 @@
 - (void)setPhoneList:(WXMPhotoList *)phoneList {
     _phoneList = phoneList;
     
-    CGFloat wh = self.posterImageView.width * 2.0;
+    CGFloat wh = self.posterImageView.width * 1.5;
     NSString *infoHelp = [NSString stringWithFormat:@"  (%zd)", _phoneList.photoNum];
     NSString *info = [_phoneList.title stringByAppendingString:infoHelp];
     self.titleLable.text = info;

@@ -18,7 +18,7 @@
 @end
 
 @implementation WXMPhotoImageView
-const NSTimeInterval kMaxTimeStep = 1; // note: To avoid spiral-o-death
+const NSTimeInterval wkMaxTimeStep = 1; // note: To avoid spiral-o-death
 @synthesize runLoopMode = _runLoopMode;
 @synthesize displayLink = _displayLink;
 
@@ -124,7 +124,7 @@ const NSTimeInterval kMaxTimeStep = 1; // note: To avoid spiral-o-death
     if (self.currentFrameIndex >= [self.animatedImage.images count]) {
         return;
     }
-    self.accumulator += fmin(displayLink.duration, kMaxTimeStep);
+    self.accumulator += fmin(displayLink.duration, wkMaxTimeStep);
     
     while (self.accumulator >= self.animatedImage.frameDurations[self.currentFrameIndex]) {
         self.accumulator -= self.animatedImage.frameDurations[self.currentFrameIndex];

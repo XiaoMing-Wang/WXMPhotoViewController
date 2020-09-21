@@ -10,28 +10,28 @@
 
 @implementation WXMCompression
 
++ (BOOL)fileExist:(NSString*)file {
+    BOOL isDir = NO;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    return [fileManager fileExistsAtPath:file isDirectory:&isDir];
+}
+
 /// 系统自带的视频解压
 static int errorCount = 0;
 + (void)wp_compressionVideo:(NSString *)inputString
                   outString:(NSString *)outString
                     avAsset:(AVURLAsset *)avAsset
                    callback:(void (^)(BOOL success))callback {
+        
+    
+    CGFloat bitys = [self fileSize:[NSURL URLWithString:inputString]];
+    NSString *presetName = AVAssetExportPresetMediumQuality;
+    
     
 #if DEBUG
     NSLog(@"==================================压缩视频-输入地址 %@",inputString);
     NSLog(@"==================================压缩视频-输出地址 %@",outString);
 #endif
-    
-    CGFloat bitys = [self fileSize:[NSURL URLWithString:inputString]];
-    
-    /** 小于2.5的不压缩 小于5M的用高清压缩 */
-    NSString *presetName = AVAssetExportPresetMediumQuality;
-    if (bitys <= 8.0) presetName = AVAssetExportPresetHighestQuality;
-    if (bitys <= 2.5) {
-        callback(NO);
-        NSLog(@"不压缩完毕, %fMB ", bitys);
-        return;
-    }
     
     /** 创建AVAsset对象 */
     AVAsset *asset = [AVAsset assetWithURL:[NSURL URLWithString:inputString]];
@@ -48,36 +48,43 @@ static int errorCount = 0;
     /** 设置输出路径 */
     session.outputURL = [NSURL fileURLWithPath:outString];
     
-    AVMutableVideoComposition *videoComposition = [self fixedCompositionWithAsset:avAsset];
-    if (videoComposition.renderSize.width) {
-        session.videoComposition = videoComposition;
-    }
-    
+//    AVMutableVideoComposition *videoComposition = [self fixedCompositionWithAsset:avAsset];
+//    if (videoComposition.renderSize.width) {
+//        session.videoComposition = videoComposition;
+//    }
+//
     /** 设置输出类型  这里可以更改输出的类型 具体可以看文档描述 */
     NSArray *supportedTypeArray = session.supportedFileTypes;
     if ([supportedTypeArray containsObject:AVFileTypeMPEG4]) {
+        
         session.outputFileType = AVFileTypeMPEG4;
+        
     } else if (supportedTypeArray.count == 0) {
+        
         NSLog(@"No supported file types 视频类型暂不支持导出");
         return;
+        
     } else {
         
         //不是MP4
         session.outputFileType = [supportedTypeArray objectAtIndex:0];
-        if (avAsset.URL && avAsset.URL.lastPathComponent) {
-            outString = [outString stringByReplacingOccurrencesOfString:@".mp4" withString:[NSString stringWithFormat:@"-%@", avAsset.URL.lastPathComponent]];
-        }
+//        if (avAsset.URL && avAsset.URL.lastPathComponent) {
+//            outString = [outString stringByReplacingOccurrencesOfString:@".mp4" withString:[NSString stringWithFormat:@"-%@", avAsset.URL.lastPathComponent]];
+//        }
     }
     
     dispatch_async(dispatch_get_main_queue(), ^{
         
         [session exportAsynchronouslyWithCompletionHandler:^{
+            
             if (session.status == AVAssetExportSessionStatusCompleted) {
+                
                 dispatch_async(dispatch_get_main_queue(), ^{
                     NSLog(@"压缩完毕, 压缩前%fMB 压缩后 %f MB", bitys, [self fileSize:session.outputURL]);
                     if (callback) callback(YES);
                 });
                 errorCount = 0;
+                
             } else if (session.status == AVAssetExportSessionStatusFailed ||
                        session.status == AVAssetExportSessionStatusCancelled) {
                 

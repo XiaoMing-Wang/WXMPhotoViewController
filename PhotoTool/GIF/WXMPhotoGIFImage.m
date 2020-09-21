@@ -14,7 +14,7 @@
 #define FLT_EPSILON __FLT_EPSILON__
 #endif
 
-inline static NSTimeInterval CGImageSourceGetGifFrameDelay(CGImageSourceRef imageSource, NSUInteger index) {
+inline static NSTimeInterval wkCGImageSourceGetGifFrameDelay(CGImageSourceRef imageSource, NSUInteger index) {
     NSTimeInterval frameDuration = 0;
     CFDictionaryRef theImageProperties;
     if ((theImageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, index, NULL))) {
@@ -45,11 +45,11 @@ inline static NSTimeInterval CGImageSourceGetGifFrameDelay(CGImageSourceRef imag
     return frameDuration;
 }
 
-inline static BOOL CGImageSourceContainsAnimatedGif(CGImageSourceRef imageSource) {
+inline static BOOL wkCGImageSourceContainsAnimatedGif(CGImageSourceRef imageSource) {
     return imageSource && UTTypeConformsTo(CGImageSourceGetType(imageSource), kUTTypeGIF) && CGImageSourceGetCount(imageSource) > 1;
 }
 
-inline static BOOL isRetinaFilePath(NSString *path) {
+inline static BOOL wkisRetinaFilePath(NSString *path) {
     NSRange retinaSuffixRange = [[path lastPathComponent] rangeOfString:@"@2x" options:NSCaseInsensitiveSearch];
     return retinaSuffixRange.length && retinaSuffixRange.location != NSNotFound;
 }
@@ -60,7 +60,7 @@ inline static BOOL isRetinaFilePath(NSString *path) {
 @property (nonatomic, readwrite) NSUInteger loopCount;
 @property (nonatomic, readwrite) CGImageSourceRef incrementalSource;
 @end
-static NSUInteger _prefetchedNum = 10;
+static NSUInteger _wkPrefetchedNum = 10;
 @implementation WXMPhotoGIFImage {
     dispatch_queue_t readFrameQueue;
     CGImageSourceRef _imageSourceRef;
@@ -76,7 +76,7 @@ static NSUInteger _prefetchedNum = 10;
 
 + (id)imageWithContentsOfFile:(NSString *)path {
     return [self imageWithData:[NSData dataWithContentsOfFile:path]
-                         scale:isRetinaFilePath(path) ? 2.0f : 1.0f];
+                         scale:wkisRetinaFilePath(path) ? 2.0f : 1.0f];
 }
 
 + (id)imageWithData:(NSData *)data {
@@ -91,7 +91,7 @@ static NSUInteger _prefetchedNum = 10;
     CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)(data), NULL);
     UIImage *image;
     
-    if (CGImageSourceContainsAnimatedGif(imageSource)) {
+    if (wkCGImageSourceContainsAnimatedGif(imageSource)) {
         image = [[self alloc] initWithCGImageSource:imageSource scale:scale];
     } else {
         image = [super imageWithData:data scale:scale];
@@ -107,7 +107,7 @@ static NSUInteger _prefetchedNum = 10;
 #pragma mark - Initialization methods
 
 - (id)initWithContentsOfFile:(NSString *)path {
-    return [self initWithData:[NSData dataWithContentsOfFile:path] scale:isRetinaFilePath(path) ? 2.0f : 1.0f];
+    return [self initWithData:[NSData dataWithContentsOfFile:path] scale:wkisRetinaFilePath(path) ? 2.0f : 1.0f];
 }
 
 - (id)initWithData:(NSData *)data {
@@ -119,7 +119,7 @@ static NSUInteger _prefetchedNum = 10;
     
     CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)(data), NULL);
     
-    if (CGImageSourceContainsAnimatedGif(imageSource)) {
+    if (wkCGImageSourceContainsAnimatedGif(imageSource)) {
         self = [self initWithCGImageSource:imageSource scale:scale];
     } else {
         if (scale == 1.0f) {
@@ -156,13 +156,13 @@ static NSUInteger _prefetchedNum = 10;
     NSNull *aNull = [NSNull null];
     for (NSUInteger i = 0; i < numberOfFrames; ++i) {
         [self.images addObject:aNull];
-        NSTimeInterval frameDuration = CGImageSourceGetGifFrameDelay(imageSource, i);
+        NSTimeInterval frameDuration = wkCGImageSourceGetGifFrameDelay(imageSource, i);
         self.frameDurations[i] = frameDuration;
         self.totalDuration += frameDuration;
     }
     // CFTimeInterval start = CFAbsoluteTimeGetCurrent();
     // Load first frame
-    NSUInteger num = MIN(_prefetchedNum, numberOfFrames);
+    NSUInteger num = MIN(_wkPrefetchedNum, numberOfFrames);
     for (NSUInteger i = 0; i < num; i++) {
         CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, i, NULL);
         if (image != NULL) {
@@ -198,11 +198,11 @@ static NSUInteger _prefetchedNum = 10;
             CFRelease(image);
         }
     }
-    if(self.images.count > _prefetchedNum) {
+    if(self.images.count > _wkPrefetchedNum) {
         if(idx != 0) {
             [self.images replaceObjectAtIndex:idx withObject:[NSNull null]];
         }
-        NSUInteger nextReadIdx = (idx + _prefetchedNum);
+        NSUInteger nextReadIdx = (idx + _wkPrefetchedNum);
         for(NSUInteger i=idx+1; i<=nextReadIdx; i++) {
             NSUInteger _idx = i%self.images.count;
             if([self.images[_idx] isKindOfClass:[NSNull class]]) {

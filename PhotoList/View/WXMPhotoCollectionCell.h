@@ -43,4 +43,7 @@
 /** 显示遮罩 */
 - (void)setUserCanTouch:(BOOL)userCanTouch animation:(BOOL)animation;
 
+/** 隐藏标记(视频和gif) */
+- (void)hideSign;
+
 @end

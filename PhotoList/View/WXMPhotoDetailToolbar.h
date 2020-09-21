@@ -12,6 +12,9 @@
 
 @interface WXMPhotoDetailToolbar : UIView
 
+/** 当前相册名字 */
+@property (nonatomic, strong) NSString *albumName;
+
 /** 存储被标记的图片model */
 @property (nonatomic, strong) WXMDictionary_Array *dictionaryArray;
 

@@ -16,6 +16,7 @@
 
 /** 期望获取图片大小 */
 @property (nonatomic, assign) CGSize expectSize;
+@property (nonatomic, assign) BOOL donePop;
 
 @end
 

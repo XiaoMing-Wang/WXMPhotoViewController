@@ -17,10 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param inputString 输入地址
 /// @param outString 输入地址
 /// @param callback 解压完成回调
-+ (void)wp_compressionVideo:(NSString *)inputString
-                  outString:(NSString *)outString
-                    avAsset:(AVURLAsset *)avAsset
-                   callback:(void (^)(BOOL success))callback;
++ (void)wp_compressionVideo:(NSString *)inputString outString:(NSString *)outString avAsset:( AVURLAsset *)avAsset callback:(void (^)(BOOL success))callback;
 
 @end
 

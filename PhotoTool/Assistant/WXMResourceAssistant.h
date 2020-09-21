@@ -55,13 +55,6 @@ NS_ASSUME_NONNULL_BEGIN
               isShowLoad:(BOOL)isShowLoad
           viewController:(UIViewController *)controller;
 
-/// 压缩视频
-/// @param inputString 输入路径
-/// @param outString 输出路径
-/// @param callback 回调
-+ (void)compressedVideo:(NSString *)inputString
-              outString:(NSString *)outString
-               callback:(void (^)(BOOL success))callback;
 @end
 
 NS_ASSUME_NONNULL_END

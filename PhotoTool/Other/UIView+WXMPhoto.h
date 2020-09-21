@@ -58,6 +58,7 @@
                            bottom:(CGFloat)bottom;
 @end
 
-@interface UIImage (WXMPhoto)
-- (UIImage *)wp_redraw;
+@interface UIImage (WXMPhotoCategory)
+- (UIImage *)wp_redrawImage;
+- (void)wp_redraw:(void (^)(UIImage *image))callback;
 @end

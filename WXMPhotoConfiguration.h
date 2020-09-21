@@ -21,8 +21,7 @@ if (@available(iOS 11.0, *)) { \
 
 #define WXMPhoto_KWindow [[[UIApplication sharedApplication] delegate] window]
 
-#define WXMPhoto_SRect \
-CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_BarHeight)
+#define WXMPhoto_SRect CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_BarHeight)
 
 #define WXMPhoto_RGBColor(r, g, b)\
 [UIColor colorWithRed:(r)/255.0f green:(g)/255.0f blue:(b)/255.0f alpha:1]
@@ -33,7 +32,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #import <UIKit/UIKit.h>
 #import "UIView+WXMPhoto.h"
 #import "WXMPhotoResources.h"
-#import "WXMPhotoAssistant.h"
+#import "WXMPhotoUIAssistant.h"
 
 #pragma mark 查看界面
 
@@ -56,13 +55,16 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoCompressionRatio 0.3
 
 /** 限制可选视频最大时间长度 */
-#define WXMPhotoLimitVideoTime 60.5
+#define WXMPhotoLimitVideoTime 300
+
+/** 限制最大GIF 单位M */
+#define WXMPhotoLimitGIFSize 5
 
 /** 全局是否支持显示视频 (NO会显示视频的第一帧 且WXMPhotoViewController设置showVideo也无效)*/
 #define WXMPhotoSupportVideo YES
 
 /** 是否显示GIF标志 WXMPhotoDetailViewController */
-#define WXMPhotoShowGIFSign NO
+#define WXMPhotoShowGIFSign YES
 
 /** 是否可以选择原图 */
 #define WXMPhotoSelectOriginal NO
@@ -111,6 +113,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 
 /** 选中颜色  */
 #define WXMSelectedColor [WXMPhoto_RGBColor(31, 185, 34) colorWithAlphaComponent:0.9]
+#define WXMDisAbleColor [WXMPhoto_RGBColor(99, 99, 99) colorWithAlphaComponent:0.9]
 
 /** 查看界面cell图片大小 */
 #define WXMItemWidth ((WXMPhoto_Width - 7.5) / 4) * 2.0
@@ -121,9 +124,9 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** WXMPhotoDetailViewController界面 选中图标字体大小  */
 #define WXMSelectedFont 15
 
-/** 混合的情况下以 WXMMultiSelectVideoMax为最大个数 */
+/** 混合的情况下以 WXMMultiSelectMax为最大个数 */
 /** WXMPhotoDetailTypeMultiSelect 默认最大张数 */
-#define WXMMultiSelectMax 6
+#define WXMMultiSelectMax 9
 
 /** WXMPhotoDetailTypeMultiSelect 支持最大视频数 */
 #define WXMMultiSelectVideoMax 1
@@ -138,7 +141,7 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 #define WXMPhotoPreviewImageWH 53
 
 /** 手势下拉缩小最小倍数 */
-#define WXMPhotoMinification 0.3
+#define WXMPhotoMinification 0.48
 
 /** 播放按钮大小 */
 #define WXMPhotoVideoSignSize CGSizeMake(70, 70)
@@ -152,16 +155,15 @@ CGRectMake(0, WXMPhoto_BarHeight, WXMPhoto_Width, WXMPhoto_Height - WXMPhoto_Bar
 /** list个数 */
 #define WXMPhotoListCellCount (WXMPhoto_Width == 320 ? 5 : (WXMPhoto_Width == 375 ? 6 : 7))
 
-/** 全屏 */
-/** #define WXMPhotoListCellCount 0 */
-
 /** 类型 */
 typedef NS_ENUM(NSInteger, WXMPhotoDetailType) {
     WXMPhotoDetailTypeGetPhoto = 0,             /* 单选原图大小 */
     WXMPhotoDetailTypeGetPhoto_256 = 1,         /* 单选256*256 */
     WXMPhotoDetailTypeGetPhotoCustomSize = 2,   /* 单选自定义大小 */
-    WXMPhotoDetailTypeMultiSelect = 3,          /* 多选 + 预览 */
+    WXMPhotoDetailTypeMultiSelect = 3,          /* 多选 + 预览() */
     WXMPhotoDetailTypeTailoring = 4,            /* 预览 + 裁剪 */
+    WXMPhotoDetailTypeHybrid = 5,               /* 混合(不限制) */
+    WXMPhotoDetailTypeSingleType = 6,           /* 单一类型(只能选图片或者视频) */
 };
 
 /** 预览类型 */
@@ -172,7 +174,7 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 
 /** 获取相册回调协议 */
 @protocol WXMPhotoProtocol <NSObject>
-@optional;
+@optional
 
 /** cover 封面(除256和原图外设置用户可设置返回图片大小 不设置返回预览时大小) */
 /** data 选中image时返回宏设置压缩比大小(默认大约为原图1/4大小 视频和gif返回原始data) */
@@ -181,13 +183,6 @@ typedef NS_ENUM(NSInteger, WXMPhotoPreviewType) {
 @end
 
 #pragma mark _____________________________________________ 多选模式
-
-/** 点击标记Sign选中view回调 WXMPhotoDetailTypeMultiSelect模式 */
-@protocol WXMPhotoSignProtocol <NSObject>
-- (NSInteger)touchWXMPhotoSignView:(NSIndexPath *)index selected:(BOOL)selected;
-- (NSInteger)wp_maxCountPhotoNumber;
-- (void)wp_cantTouchWXMPhotoSignView:(WXMPhotoMediaType)mediaType;
-@end
 
 /** 预览缩放cell回调 */
 @protocol WXMPreviewCellProtocol <NSObject>

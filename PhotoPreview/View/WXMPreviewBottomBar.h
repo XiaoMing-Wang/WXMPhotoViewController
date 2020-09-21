@@ -28,6 +28,9 @@
 /** 当前选中的Idx */
 @property (nonatomic, assign) NSInteger seletedIdx;
 
+/** 相册名字 */
+@property (nonatomic, strong) NSString *recordAlbumName;
+
 /** 全部选中的 */
 @property (nonatomic, strong) WXMDictionary_Array *dictionaryArray;
 @property (nonatomic, assign) id<WXMPreviewToolbarProtocol> delegate;
@@ -37,6 +40,9 @@
 
 /** 显示原图大小 */
 - (void)setRealImageByte:(NSString *)realImageByte video:(BOOL)video;
+
+/** 完成按钮可用 */
+- (void)finashButtonEnabled:(BOOL)enabled;
 
 /**  */
 - (void)setAccordingState:(BOOL)state;

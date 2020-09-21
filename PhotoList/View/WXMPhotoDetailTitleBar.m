@@ -23,12 +23,11 @@
 
 - (void)initializeInterface {
     self.titleLabels = [[UILabel alloc] init];
-    self.titleLabels.font = [UIFont systemFontOfSize:16];
+    self.titleLabels.font = [UIFont systemFontOfSize:17];
     self.titleLabels.textColor = [UIColor blackColor];
-    
     self.arrowView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
     self.arrowView.image = [UIImage imageNamed:@"photo_arrow"];
-         
+    
     [self layoutAllSubviews];
     [self addSubview:self.titleLabels];
     [self addSubview:self.arrowView];

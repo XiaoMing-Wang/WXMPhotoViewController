@@ -6,7 +6,7 @@
 //  Copyright © 2019年 wxm. All rights reserved.
 //
 #define KNotificationCenter [NSNotificationCenter defaultCenter]
-#import "WXMDirectionPanGestureRecognizer.h"
+#import "WXMPhotoDirectionPan.h"
 #import "WXMPhotoConfiguration.h"
 #import <objc/runtime.h>
 #import "WXMPhotoImageView.h"
@@ -16,8 +16,8 @@
 @property (nonatomic, strong) UIScrollView *contentScrollView;
 @property (nonatomic, strong) WXMPhotoImageView *imageView;
 @property (nonatomic, strong) UIImageView *playIcon;
-@property (nonatomic, strong) UIView *wp_blackView;
-@property (nonatomic, strong) WXMDirectionPanGestureRecognizer *recognizer;
+@property (nonatomic, strong) UIView *blackView;
+@property (nonatomic, strong) WXMPhotoDirectionPan *recognizer;
 
 /** 播放器 */
 @property (strong, nonatomic) AVPlayer *wp_avPlayer;
@@ -25,11 +25,9 @@
 @property (strong, nonatomic) AVPlayerLayer *wp_playerLayer;
 
 /** 距离原点的比例 */
-@property (nonatomic, assign) CGFloat wp_x;
-@property (nonatomic, assign) CGFloat wp_y;
-@property (nonatomic, assign) CGFloat wp_zoomScale;
-@property (nonatomic, assign) CGPoint wp_lastPoint;
-
+@property (nonatomic, assign) CGFloat offX;
+@property (nonatomic, assign) CGFloat offY;
+@property (nonatomic, assign) CGPoint lastPoint;
 @property (nonatomic, assign) int32_t currentRequestID;
 @end
 
@@ -67,7 +65,7 @@
     self.playIcon.userInteractionEnabled = NO;
     [self.imageView addSubview:self.playIcon];
     
-    [self.contentView addSubview:self.wp_blackView];
+    [self.contentView addSubview:self.blackView];
     [self.contentView addSubview:self.contentScrollView];
     [self wp_addTapGestureRecognizer];
     
@@ -91,7 +89,7 @@
     tapSingle.numberOfTapsRequired = 1;
     
     SEL handle = @selector(wp_handlePan:);
-    self.recognizer = [[WXMDirectionPanGestureRecognizer alloc] initWithTarget:self action:handle];
+    self.recognizer = [[WXMPhotoDirectionPan alloc] initWithTarget:self action:handle];
     self.recognizer->_direction = DirectionPanGestureRecognizerBottom;
     self.recognizer.maximumNumberOfTouches = 1;
     
@@ -133,7 +131,7 @@
     
     if (self.currentRequestID) [manager cancelRequestWithID:self.currentRequestID];
     int32_t ids = [manager getPicturesCustomSize:asset synchronous:NO assetSize:size completion:^(UIImage *image) {
-        self.imageView.image = image.wp_redraw;
+        self.imageView.image = image;
         [self setLocation:_photoAsset.aspectRatio];
     }];
     
@@ -213,54 +211,49 @@
 - (void)wp_handlePan:(UIPanGestureRecognizer *)recognizer {
     [recognizer.view.superview bringSubviewToFront:recognizer.view];
     CGPoint center = recognizer.view.center;
-    CGPoint translation = [recognizer translationInView:self];  /** 位移 */
-    CGFloat wp_centery = center.y + translation.y;           /** y轴位移 */
-    CGFloat recognizer_W = recognizer.view.frame.size.width;
-    CGFloat recognizer_H = recognizer.view.frame.size.height;
+    CGPoint location = [recognizer locationInView:self];
     
     if (recognizer.state == UIGestureRecognizerStateBegan) {
-        CGPoint point = [recognizer locationInView:self];
-        self.wp_x = point.x / recognizer_W;
-        self.wp_y = point.y / recognizer_H;
-        self.wp_lastPoint = recognizer.view.center;
+        self.lastPoint = recognizer.view.center;
+        self.offX = (WXMPhoto_Width / 2.0) - location.x;
+        self.offY = (WXMPhoto_Height / 2.0) - location.y;
         if ([self.delegate respondsToSelector:@selector(wp_respondsBeginDragCell)]) {
             [self.delegate wp_respondsBeginDragCell];
         }
         
     } else if (recognizer.state == UIGestureRecognizerStateChanged) {
-        CGFloat displacement = wp_centery - self.wp_lastPoint.y;
+        CGFloat displacement = center.y - self.lastPoint.y;
         CGFloat proportion = 1;
         CGFloat scaleAlpha = 1;
-        if (displacement <= 0) proportion = 1;
-        else {
-            CGFloat maxH = WXMPhoto_Height * 1.25;
+        if (displacement <= 0)  {
+            proportion = 1;
+        } else {
+            CGFloat maxH = WXMPhoto_Height * 0.80;
             CGFloat scale = displacement / maxH;
             scaleAlpha = 1 - (displacement / (WXMPhoto_Height * 0.6));
             proportion = MAX(1 - scale, WXMPhotoMinification);
             if (displacement <= 0) scaleAlpha = 1;
         }
-        self.wp_blackView.alpha = scaleAlpha;
-        recognizer.view.transform = CGAffineTransformScale(CGAffineTransformIdentity, proportion, proportion);
         
-        CGPoint point_XY = [recognizer locationInView:self];
-        CGFloat distance_x = recognizer_W * _wp_x;
-        CGFloat distance_y = recognizer_H * _wp_y;
-        CGRect rect = recognizer.view.frame;
-        rect.origin.x = point_XY.x - distance_x;
-        rect.origin.y = point_XY.y - distance_y;
-        recognizer.view.frame = rect;
-        /** [recognizer setTranslation:CGPointZero inView:self]; */
+        CGFloat narrowProportion = recognizer.view.width / WXMPhoto_Width;
+        CGFloat centerX = location.x + (self.offX * narrowProportion);
+        CGFloat centerY = location.y + (self.offY * narrowProportion);
+        
+        self.blackView.alpha = scaleAlpha;
+        recognizer.view.transform = CGAffineTransformScale(CGAffineTransformIdentity, proportion, proportion);
+        recognizer.view.center = CGPointMake(centerX, centerY);
+        [recognizer setTranslation:CGPointZero inView:self];
     }
     
     if (recognizer.state == UIGestureRecognizerStateEnded ||
         recognizer.state == UIGestureRecognizerStateCancelled) {
         CGPoint velocity = [recognizer velocityInView:self];  /** 速度 */
-        BOOL cancle = (velocity.y < 5 || self.wp_blackView.alpha >= 1);
+        BOOL cancle = (velocity.y < 5 || self.blackView.alpha >= 1);
         if (cancle) {
             [UIView animateWithDuration:0.35 animations:^{
                 recognizer.view.transform = CGAffineTransformIdentity;
-                recognizer.view.center = self.wp_lastPoint;
-                self.wp_blackView.alpha = 1;
+                recognizer.view.center = self.lastPoint;
+                self.blackView.alpha = 1;
             } completion:^(BOOL finished) {
                 if ([self.delegate respondsToSelector:@selector(wp_respondsEndDragCell:)]) {
                     [self.delegate wp_respondsEndDragCell:nil];
@@ -277,14 +270,14 @@
 }
 
 /** 黑色遮罩 */
-- (UIView *)wp_blackView {
-    if (!_wp_blackView)  {
+- (UIView *)blackView {
+    if (!_blackView)  {
         CGRect rect = CGRectMake(0, 0, WXMPhoto_Width, WXMPhoto_Height);
-        _wp_blackView = [[UIView alloc] initWithFrame:rect];
-        _wp_blackView.backgroundColor = [UIColor blackColor];
-        objc_setAssociatedObject(_contentScrollView, @"black",_wp_blackView, 1);
+        _blackView = [[UIView alloc] initWithFrame:rect];
+        _blackView.backgroundColor = [UIColor blackColor];
+        objc_setAssociatedObject(_contentScrollView, @"black", _blackView, 1);
     }
-    return _wp_blackView;
+    return _blackView;
 }
 
 - (void)wp_runAgain {

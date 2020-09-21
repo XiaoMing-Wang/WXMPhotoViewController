@@ -10,6 +10,7 @@
 #import "WXMPhotoDetailToolbar.h"
 #import "WXMPhotoConfiguration.h"
 #import "UIImage+WXMPhoto.h"
+#import "WXMPhotoRecordModel.h"
 
 @interface WXMPhotoDetailToolbar ()
 @property (nonatomic, strong) UIButton *previewButton;
@@ -39,7 +40,7 @@
     
     self.previewButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 3, 60, coHeight - 3)];
     self.previewButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-    self.previewButton.titleLabel.font = [UIFont systemFontOfSize:16];
+    self.previewButton.titleLabel.font = [UIFont systemFontOfSize:17];
     self.previewButton.left = 14;
     self.previewButton.enabled = NO;
     [self.previewButton setTitleColor:WXMPhotoDetailToolbarTextColor forState:0];
@@ -51,7 +52,7 @@
     UIImage *images = [UIImage imageFromColor:WXMSelectedColor];
     self.completeButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
     self.completeButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
-    self.completeButton.titleLabel.font = [UIFont systemFontOfSize:16];
+    self.completeButton.titleLabel.font = [UIFont systemFontOfSize:17];
     self.completeButton.enabled = NO;
     [self.completeButton setTitleColor:UIColor.whiteColor forState:UIControlStateNormal];
     [self.completeButton setTitleColor:UIColor.whiteColor forState:UIControlStateDisabled];
@@ -88,12 +89,7 @@
     self.layer.shadowOffset = CGSizeMake(0, -0.2);
     self.layer.shadowOpacity = 0.2;
     self.layer.shadowRadius = 0.1;
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(originalNoti:)
-                                                 name:WXMPhoto_originalNoti
-                                               object:nil];
-    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(originalNoti:) name:WXMPhoto_originalNoti object:nil];
 }
 
 /** 原图通知 */
@@ -118,10 +114,16 @@
 
 - (void)setDictionaryArray:(WXMDictionary_Array *)dictionaryArray {
     _dictionaryArray = dictionaryArray;
-    _previewButton.enabled = (_dictionaryArray.count > 0);
-    _completeButton.enabled = (_dictionaryArray.count > 0);
     _photoNumber.hidden = (_dictionaryArray.count <= 0);
-    
+    _completeButton.enabled = (_dictionaryArray.count > 0);
+    _previewButton.enabled = NO;
+    [dictionaryArray enumerateObjectsUsingBlock:^(WXMPhotoRecordModel *obj, NSUInteger idx, BOOL stop) {
+        if ([obj.recordAlbumName isEqualToString:self.albumName]) {
+            self.previewButton.enabled = YES;
+            stop = YES;
+        }
+    }];
+        
     if (_dictionaryArray.count == 0) {
         self.completeButton.width = 60;
         [self.completeButton setTitle:@"完成" forState:UIControlStateNormal];
@@ -151,12 +153,12 @@
         _originalImageButton = [[UIButton alloc] init];
         _originalImageButton.size = CGSizeMake(80, 42);
         _originalImageButton.titleLabel.font = [UIFont systemFontOfSize:15];
-        [_originalImageButton setTitle:@"  原图" forState:UIControlStateNormal];
-        [_originalImageButton wp_addTarget:self action:@selector(originalEvent:)];
         _originalImageButton.centerX = self.width / 2;
         _originalImageButton.top = 3;
         _originalImageButton.hidden = !WXMPhotoSelectOriginal;
-
+        [_originalImageButton setTitle:@"  原图" forState:UIControlStateNormal];
+        [_originalImageButton wp_addTarget:self action:@selector(originalEvent:)];
+        
         UIImage *defImage = [UIImage imageNamed:@"photo_original_def"];
         UIImage *seleImage = [UIImage imageNamed:@"photo_original_selected"];
         [_originalImageButton setTitleColor:WXMPhotoDetailToolbarTextColor forState:0];
@@ -167,6 +169,5 @@
     }
     return _originalImageButton;
 }
-
 
 @end
